@@ -1,0 +1,5 @@
+# Ignore build folder
+build/
+
+# Ignore old configurations
+sdkconfig.old
