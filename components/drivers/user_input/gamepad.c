@@ -14,7 +14,15 @@ void gamepad_init(){
         
     btn_config.intr_type = GPIO_INTR_ANYEDGE; //Enable interrupt on both rising and falling edges
     btn_config.mode = GPIO_MODE_INPUT;        //Set as Input
-    btn_config.pin_bit_mask = ((1ULL<<BTN_UP) | (1ULL<<BTN_DOWN)) ;
+    btn_config.pin_bit_mask = (uint64_t)      //Bitmask
+                              ((uint64_t)1 << BTN_UP)   |
+                              ((uint64_t)1 << BTN_DOWN) |
+                              ((uint64_t)1 << BTN_RIGHT)|
+                              ((uint64_t)1 << BTN_LEFT) |
+                              ((uint64_t)1 << BTN_A)    |
+                              ((uint64_t)1 << BTN_B)    |
+                              ((uint64_t)1 << BTN_START)|
+                              ((uint64_t)1 << BTN_SELECT);
 
 
     btn_config.pull_up_en = 0;      //Disable pullup
@@ -23,14 +31,9 @@ void gamepad_init(){
 
 }
 
-void gamepad_task(void * arg){
-    gamepad_init();
-    
-    while(1){
-        uint8_t level = 0;
-        level = gpio_get_level(BTN_UP);
-        if(level == 1) printf("btn\r\n");
-        vTaskDelay(10 / portTICK_PERIOD_MS);
-    }
+
+uint8_t gamepad_state(uint8_t btn){
+
+    return gpio_get_level(btn);
 }
 

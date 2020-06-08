@@ -1,4 +1,4 @@
 #include <stdint.h>
 
 void gamepad_init();
-void gamepad_task(void * arg);
+uint8_t gamepad_state(uint8_t btn);
