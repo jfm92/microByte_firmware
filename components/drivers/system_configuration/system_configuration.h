@@ -21,7 +21,7 @@
 
 #define BTN_UP          34
 #define BTN_DOWN        35
-#define BTN_RIGTH       25
+#define BTN_RIGHT       25
 #define BTN_LEFT        32
 #define BTN_A           26
 #define BTN_B           12
@@ -35,10 +35,8 @@
 #define VSPI_MOSI       23 
 #define VSPI_MISO       19 
 #define VSPI_CLK        18        
-#define VSPI_CS0        5         
-#define VSPI_HD         21
-#define VSPI_WP         22          
-#define VSPI_CLK_SPEED  20*1000*1000
+#define VSPI_CS0        5                  
+#define VSPI_CLK_SPEED  40*1000*1000
 #define FLASH_SIZE      128     //128 MBytes
 
 /********************************
