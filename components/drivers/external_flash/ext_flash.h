@@ -27,8 +27,8 @@ extern "C" {
 * GLOBAL PROTOTYPES
 **********************/
 
-void ext_flash_init();
-uint8_t ext_flash_ussage();
+void ext_flash_init(void);
+uint8_t ext_flash_ussage(void);
 uint8_t ext_flash_game_list(char * game_name);
 
 #ifdef __cplusplus

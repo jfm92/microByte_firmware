@@ -48,8 +48,12 @@ static const char *TAG = "External_Flash";
 /**********************
  *   GLOBAL FUNCTIONS
  **********************/
+ 
+/*
+*This function initiliaze the VSPI bus and config the external flash memory.
+*/
 
-void ext_flash_init(){
+void ext_flash_init(void){
 
     /****************SPI Bus configuration*****************/
 
@@ -134,6 +138,11 @@ void ext_flash_init(){
 
 }
 
+/**
+* This function return the number of games available on the external flash
+* and pass by reference the names of each games.
+*/
+
 uint8_t ext_flash_game_list(char * game_name){
     
     struct dirent *entry;
@@ -156,7 +165,11 @@ uint8_t ext_flash_game_list(char * game_name){
     return i;
 }
 
-uint8_t ext_flash_ussage(){
+/*
+* This function returns the percentage of memory ussage on the external flash
+*/
+
+uint8_t ext_flash_ussage(void){
     FATFS *fs;
     size_t free_clusters;
     int res = f_getfree("0:", &free_clusters, &fs);
