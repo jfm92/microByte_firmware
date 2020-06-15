@@ -35,16 +35,16 @@ void scr_spi_init(void){
         .sclk_io_num = HSPI_CLK,
         .quadwp_io_num = -1,
         .quadhd_io_num = -1,
-        .max_transfer_sz = 4 * 320 * 2 + 8};
+        .max_transfer_sz = 153600};
     
     spi_device_interface_config_t devcfg = {
         .clock_speed_hz = HSPI_CLK_SPEED,
-        .mode = 2,                   //SPI mode 0
+        .mode = 2,                   //SPI mode 2
         .spics_io_num = -1, //CS pin
         .queue_size = 7,
         .pre_cb = scr_spi_pre_transfer_callback,
         .post_cb = NULL,
-        .flags = SPI_DEVICE_HALFDUPLEX
+        //.flags = SPI_DEVICE_HALFDUPLEX
     };
 
     // SPI bus initialization
@@ -61,13 +61,16 @@ void scr_spi_send(uint8_t *data, uint16_t length, int dc){
     if (length == 0)
         return; //no need to send anything
 
-    spi_transaction_t t;
-    memset(&t, 0, sizeof(t)); //Zero out the transaction
-    t.length = length * 8;    //Length is in bytes, transaction length is in bits.
-    t.tx_buffer = data;       //Data
-    t.user = (void *)dc;
-
-    spi_device_queue_trans(spi, &t, portMAX_DELAY);
+    spi_transaction_ext_t t = {0};
+   
+    t.base.length = length * 8;    //Length is in bytes, transaction length is in bits.
+    t.base.tx_buffer = data;       //Data
+    t.base.user = (void *)dc;
+  
+    static spi_transaction_ext_t queuedt;
+    memcpy(&queuedt, &t, sizeof t);
+    spi_device_queue_trans(spi, (spi_transaction_t *) &queuedt, portMAX_DELAY);
+    
 
     spi_transaction_t *rt;
     spi_device_get_trans_result(spi, &rt, portMAX_DELAY);
@@ -117,6 +120,10 @@ void scr_spi_send_lines(int ypos, int xpos, int width, uint16_t *linedata, int l
         ret = spi_device_queue_trans(spi, &trans[x], portMAX_DELAY);
         assert(ret == ESP_OK);
     }
+}
+
+void scr_spi_send_color(const uint8_t *data, uint16_t length,uint64_t addr){
+
 }
 
 /**********************

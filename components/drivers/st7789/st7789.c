@@ -27,6 +27,7 @@
 static void st7789_send_cmd(uint8_t cmd);
 static void st7789_send_data(void *data, uint16_t length);
 static void st7789_send_buffer(uint16_t *data, uint32_t data_size);
+static void st7789_send_color(void * data, uint16_t length);
 
  /**********************
  *   GLOBAL FUNCTIONS
@@ -83,61 +84,43 @@ void st7789_init(void){
 
 }
 
-/*void st7789_flush(lv_disp_drv_t * drv, const lv_area_t * area, lv_color_t * color_map)
+
+void st7789_flush(lv_disp_drv_t * drv, const lv_area_t * area, lv_color_t * color_map)
 {
     uint8_t data[4] = {0};
 
-    //Column addresses
+    uint16_t offsetx1 = area->x1;
+    uint16_t offsetx2 = area->x2;
+    uint16_t offsety1 = area->y1;
+    uint16_t offsety2 = area->y2;
+
+      /*Column addresses*/
     st7789_send_cmd(ST7789_CASET);
-    data[0] = (area->x1 >> 8) & 0xFF;
-    data[1] = area->x1 & 0xFF;
-    data[2] = (area->x2 >> 8) & 0xFF;
-    data[3] = area->x2 & 0xFF;
+    data[0] = (offsetx1 >> 8) & 0xFF;
+    data[1] = offsetx1 & 0xFF;
+    data[2] = (offsetx2 >> 8) & 0xFF;
+    data[3] = offsetx2 & 0xFF;
     st7789_send_data(data, 4);
 
-    //Page addresses
+    /*Page addresses*/
     st7789_send_cmd(ST7789_RASET);
-    data[0] = (area->y1 >> 8) & 0xFF;
-    data[1] = area->y1 & 0xFF;
-    data[2] = (area->y2 >> 8) & 0xFF;
-    data[3] = area->y2 & 0xFF;
+    data[0] = (offsety1 >> 8) & 0xFF;
+    data[1] = offsety1 & 0xFF;
+    data[2] = (offsety2 >> 8) & 0xFF;
+    data[3] = offsety2 & 0xFF;
     st7789_send_data(data, 4);
 
-    //Memory write
+    /*Memory write*/
     st7789_send_cmd(ST7789_RAMWR);
 
     uint32_t size = lv_area_get_width(area) * lv_area_get_height(area);
 
-   // st7789_send_color((void*)color_map, size * 2);
-   //TODO: Finish with menu work
+    st7789_send_data((void *)color_map, size * 2);
+ 
+    lv_disp_flush_ready(drv);
+}
 
-}*/
 
-/*void st7789_send_lines(uint8_t y_pos, uint8_t x_pos, uint8_t width, uint16_t *data, uint16_t frame_line){
-    uint8_t data_buffer[4] = {0};
-    uint8_t buffer_length = 0;
-    
-    // Column address set
-    st7789_send_cmd(0x2A);
-    data_buffer[0] = x_pos >> 8;
-    data_buffer[1] = x_pos & 0xff;
-    data_buffer[2] = (width + x_pos -1) >> 8;
-    data_buffer[3] = (width + x_pos -1) & 0xFF;
-    st7789_send_data(data_buffer,4);
-
-    // Page address set
-    st7789_send_cmd(0x2B);
-    data_buffer[0] = y_pos >> 8;
-    data_buffer[1] = y_pos & 0xff;
-    data_buffer[2] = (y_pos + frame_line) >> 8;
-    data_buffer[3] = (y_pos + frame_line) & 0xFF;
-    st7789_send_data(data_buffer,4);
-
-    st7789_send_cmd(0x2C);
-    buffer_length = width * 2 * 8 * frame_line;
-    st7789_send_buffer(data,buffer_length);
-
-}*/
 
 
 /**********************
@@ -152,6 +135,7 @@ static void st7789_send_data(void *data, uint16_t length){
 	scr_spi_send(data, length, DATA_ON);
 }
 
-/*static void st7789_send_buffer(uint16_t *data, uint32_t data_size){
-    scr_spi_send_buffer(data, data_size);
-}*/
+static void st7789_send_color(void * data, uint16_t length)
+{
+   // scr_spi_transaction(data, length, 0);
+}

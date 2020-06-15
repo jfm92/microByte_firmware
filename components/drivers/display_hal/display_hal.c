@@ -50,8 +50,8 @@ void display_clear(void){
     }
 }
 
-void display_image(){
-    // TODO: Add support for display images
+void display_flush(lv_disp_drv_t * drv, const lv_area_t * area, lv_color_t * color_map){
+    st7789_flush(drv,area,color_map);
 }
 
 void display_gb_frame(const uint16_t *data){

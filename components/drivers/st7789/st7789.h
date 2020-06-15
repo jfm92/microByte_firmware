@@ -9,7 +9,7 @@ extern "C"
 /*********************
  *      INCLUDES
  *********************/
-
+#include "lvgl/lvgl.h"
 /*********************
  *      DEFINES
  *********************/
@@ -103,6 +103,7 @@ typedef struct
 void st7789_init(void);
 void st7789_send_lines(uint8_t y_pos, uint8_t x_pos, uint8_t width, uint16_t *data, uint16_t frame_line);
 void st7789_clear();
+void st7789_flush(lv_disp_drv_t * drv, const lv_area_t * area, lv_color_t * color_map);
 
 #ifdef __cplusplus
 } /* extern "C" */

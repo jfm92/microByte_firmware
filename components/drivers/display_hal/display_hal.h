@@ -9,7 +9,7 @@ extern "C"
 /*********************
  *      INCLUDES
  *********************/
-
+#include "lvgl/lvgl.h"
 /*********************
  *      DEFINES
  *********************/ 
@@ -27,7 +27,7 @@ extern "C"
 void display_init(void);
 void display_clear(void);
 void display_gb_frame(const uint16_t *data);
-
+void display_flush(lv_disp_drv_t * drv, const lv_area_t * area, lv_color_t * color_map);
 
 #ifdef __cplusplus
 } /* extern "C" */
