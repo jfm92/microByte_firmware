@@ -1,5 +1,3 @@
-#include "lvgl.h"
-
 #include <stdbool.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -10,6 +8,11 @@
 #include "driver/gpio.h"
 #include "sdkconfig.h"
 
+#include "freertos/queue.h"
+#include "GUI.h"
+#include "ext_flash.h"
+#include <loader.h>
+#include "lvgl.h"
 /*********************
  *      DEFINES
  *********************/
@@ -49,8 +52,6 @@ uint32_t btn_left_time = 0;
 uint32_t btn_right_time = 0;
 
 //Temporary
-uint8_t games_num = 3;
-char game_names[3][256] = {"Mario.gb","SuperMario.gbc","SuperMario1.gbc"};
 
 char wifi_name[256] = {"foo_123g"};
 char wifi_password[256] = {"12345"};
@@ -119,6 +120,7 @@ void GUI_menu(){
 }
 
 static void game_menu(lv_obj_t * parent){
+    // TODO add image as button
     game_lib_btn = lv_btn_create(parent, NULL);
     lv_obj_align(game_lib_btn, NULL, LV_ALIGN_CENTER, 0, 0);
     lv_obj_t * label = lv_label_create(game_lib_btn, NULL);
@@ -130,13 +132,14 @@ static void game_menu(lv_obj_t * parent){
 }
 
 static void upload_menu(lv_obj_t * parent){
+    // TODO add image as button
     add_game_btn = lv_btn_create(parent, NULL);
     lv_obj_align(add_game_btn, NULL, LV_ALIGN_CENTER, 0, 0);
-   lv_obj_t * label = lv_label_create(add_game_btn, NULL);
-   lv_label_set_text(label, "Add a game");
+    lv_obj_t * label = lv_label_create(add_game_btn, NULL);
+    lv_label_set_text(label, "Add a game");
 
-   lv_obj_set_event_cb(add_game_btn, upload_event_cb); 
-   lv_group_add_obj(group_kp, add_game_btn);
+    lv_obj_set_event_cb(add_game_btn, upload_event_cb); 
+    lv_group_add_obj(group_kp, add_game_btn);
 }
 
 static void config_menu(lv_obj_t * parent){
@@ -152,14 +155,18 @@ static void config_menu(lv_obj_t * parent){
 
 static void game_menu_event_cb(lv_obj_t * parent, lv_event_t e){
     if(e == LV_EVENT_CLICKED){
-        // TODO: Get games name
+        //Get the games names and how many are available
+        char game_names[30][100];
+        uint8_t games_num = ext_flash_game_list(game_names);
+ 
         if(games_num>0){
-            // If almost one game is inside teh memory, create a list with the games names
+            // Create a list with the name of the games
             game_list = lv_list_create(lv_layer_top(), NULL);
             lv_obj_set_size(game_list, 230, 180);
             lv_obj_align(game_list, NULL, LV_ALIGN_CENTER, 0, 0);
             lv_obj_set_event_cb(game_list, game_list_event);
-
+            
+            // Add a button for each game
             for(int i=0;i<games_num;i++){
                 lv_obj_t * game_btn = lv_list_add_btn(game_list, LV_SYMBOL_VIDEO, game_names[i]);
                 lv_obj_set_event_cb(game_btn, game_execute_cb);
@@ -168,7 +175,7 @@ static void game_menu_event_cb(lv_obj_t * parent, lv_event_t e){
             lv_group_focus_obj(game_list);
         }
         else{
-            // Show a message saying that any game is inside of the video console
+            // Show a message informs any game is available
             lv_obj_t * mbox = lv_msgbox_create(lv_layer_top(), NULL);
             lv_msgbox_set_text(mbox, "Any game available.\n Please, upload a new one!");
             lv_obj_set_event_cb(mbox, msgbox_event_cb);
@@ -205,8 +212,25 @@ static void msgbox_event_cb(lv_obj_t * msgbox, lv_event_t e)
 
 static void game_execute_cb(lv_obj_t * parent, lv_event_t e){
     if(e == LV_EVENT_CLICKED) {
-        // Call to the execution of the game
-        printf("Clicked: %s\n", lv_list_get_btn_text(parent));
+
+        if( xQueueSend( loader_name,(char *)lv_list_get_btn_text(parent) , ( TickType_t ) 10) != pdPASS )
+        {
+            printf("Failed to send\r\n");
+        }
+        char msg_box_txt[200]={0};
+        sprintf(msg_box_txt,"Loading: %s",lv_list_get_btn_text(parent));
+        lv_obj_t * mbox = lv_msgbox_create(lv_layer_top(), NULL);
+        lv_msgbox_set_text(mbox, msg_box_txt);
+        lv_obj_set_event_cb(mbox, msgbox_event_cb);
+        lv_group_add_obj(group_kp, mbox);
+        lv_group_focus_obj(mbox);
+        lv_obj_del(game_list);
+        lv_group_focus_freeze(group_kp, true);
+        lv_obj_set_style_local_bg_opa(lv_layer_top(), LV_OBJ_PART_MAIN, LV_STATE_DEFAULT, LV_OPA_70);
+        lv_obj_set_style_local_bg_color(lv_layer_top(), LV_OBJ_PART_MAIN, LV_STATE_DEFAULT, LV_COLOR_GRAY);
+        lv_obj_set_click(lv_layer_top(), true);
+
+        
     }
 }
 

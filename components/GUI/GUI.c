@@ -15,6 +15,7 @@
 
 #include "display_hal.h"
 #include "gamepad.h"
+#include "ext_flash.h"
 
 /*********************
  *      DEFINES
@@ -45,12 +46,12 @@ void GUI_init(void){
 
     //Screen Buffer initialization
     static lv_color_t buf1[DISP_BUF_SIZE];
-    static lv_color_t buf2[DISP_BUF_SIZE];
+    //static lv_color_t buf2[DISP_BUF_SIZE];
 
     static lv_disp_buf_t disp_buf;
     uint32_t size_in_px = DISP_BUF_SIZE; 
 
-    lv_disp_buf_init(&disp_buf, buf1, buf2, size_in_px);
+    lv_disp_buf_init(&disp_buf, buf1, NULL, size_in_px);
 
     // Initialize LVGL display and attach the flush function
     lv_disp_drv_t disp_drv;
@@ -80,7 +81,8 @@ void GUI_task(void *arg){
     // Init peripherals
     gamepad_init();
     display_init();
-
+    ext_flash_init();
+    ext_flash_mount_fs();
     // Initialize LVGL GUI
     GUI_init();
 
