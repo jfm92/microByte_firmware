@@ -110,7 +110,7 @@ void ext_flash_init(void){
 
     const char partition_label = "ext_storage";
 
-   printf("Adding external Flash as a partition, size=%d KB", ext_flash->size / 1024);
+   ESP_LOGI(TAG,"Add external Flash as a partition, size=%d KB", ext_flash->size / 1024);
     const esp_partition_t* fat_partition;
     esp_partition_register_external(ext_flash, 0, ext_flash->size, "ext_storage", ESP_PARTITION_TYPE_DATA, ESP_PARTITION_SUBTYPE_DATA_FAT, &fat_partition);
 
@@ -143,7 +143,7 @@ void ext_flash_mount_fs(void){
             .format_if_mount_failed = true,
             .allocation_unit_size = CONFIG_WL_SECTOR_SIZE
     };
-    if(esp_vfs_fat_spiflash_mount("/ext_flash", "ext_storage", &mount_config, &s_wl_handle)!=ESP_OK) printf("Error mount\r\n");
+    if(esp_vfs_fat_spiflash_mount("/ext_flash", "ext_storage", &mount_config, &s_wl_handle)!=ESP_OK) ESP_LOGE(TAG,"Ext_Flash mount error");
 }
 
 /*
@@ -152,7 +152,7 @@ void ext_flash_mount_fs(void){
 */
 
 void ext_flash_unmount_fs(void){
-    if(esp_vfs_fat_spiflash_unmount("/ext_flash",  s_wl_handle)!=ESP_OK ) printf("Error unmount\r\n");
+    if(esp_vfs_fat_spiflash_unmount("/ext_flash",  s_wl_handle)!=ESP_OK ) ESP_LOGE(TAG,"Ext_Flash unmount error");
 }
 
 /**
@@ -206,6 +206,55 @@ int ext_flash_ussage(void){
     uint8_t percentage = 100-(100*bytes_free)/bytes_total;
     if(percentage==0) percentage=1; //The web server gives error if we percentage is 0.
     return percentage;
+}
+
+/*
+* This function read a file from the external flash and copy to the partition storage of the internal flash.
+* This returns a pointer to the memory direction on the internal memory wich will be handle on the GNU Boy
+* loader function.
+*/
+
+char * IRAM_ATTR ext_flash_get_file (const char *path){
+
+    char *map_ptr;// Pointer to file in the internal flash.
+    spi_flash_mmap_handle_t map_handle;
+    uint16_t read_chunk = 4096*2; // We split the read into 8KB
+    size_t mem_offset = 0;
+    char * temp_buffer; //Buffer to save on RAM the data obtained from the external flash.
+
+    temp_buffer = malloc(read_chunk);
+	esp_fill_random(temp_buffer,read_chunk); // To avoid the storage of this buffer on flash, we fill with random numbers
+
+	// Find the partition storage on the internal flash
+	const esp_partition_t *partition = esp_partition_find_first(ESP_PARTITION_TYPE_DATA, ESP_PARTITION_SUBTYPE_ANY, "storage");
+    assert(partition != NULL);
+
+    // Erase the partition to avoid corrupted previous data
+	ESP_ERROR_CHECK(esp_partition_erase_range(partition, 0, partition->size));
+	ESP_LOGI(TAG,"Partition Size %i\r\n",partition->size);
+	
+    //Open the file we want to copy to the internal flash
+	FILE *fd = fopen(path, "rb");
+	
+	while(1){
+		__asm__("memw");
+        // Read 8K of data from the external flash and save it on the RAM
+		size_t count = fread(temp_buffer, 1, read_chunk, fd);
+
+        // Save the data storage on the RAM to the intenal FLASH
+		esp_partition_write(partition, mem_offset, temp_buffer, read_chunk);
+		__asm__("memw");
+
+		mem_offset +=count;
+		if(count < read_chunk) break;
+	
+	}
+	free(temp_buffer);
+	fclose(fd);
+    // Return a pointer to the position of the saved file on the internal flash.
+	esp_partition_mmap(partition, 0, partition->size, SPI_FLASH_MMAP_DATA, &map_ptr, &map_handle);
+
+	return map_ptr;
 }
 
 /**********************
