@@ -175,7 +175,6 @@ uint8_t ext_flash_game_list(char * game_name){
     while((entry = readdir(dir)) != NULL){
         sprintf(&game_name[i],"%s",entry->d_name);
         ESP_LOGI(TAG, "Found %s ",entry->d_name);
-
         i++;
     }
     // Return the number of files obtained
