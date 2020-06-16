@@ -38,7 +38,7 @@
 /**********************
  *  STATIC VARIABLES
  **********************/
-static wl_handle_t s_wl_handle = WL_INVALID_HANDLE;
+static wl_handle_t s_wl_handle;
 static const char *TAG = "External_Flash";
 
 /**********************
@@ -128,14 +128,31 @@ void ext_flash_init(void){
 
     esp_partition_iterator_release(it);
 
+
+
+}
+
+/*
+*   Function to mount the Fat Filesystem, to handle in an easier way the files on the external flash
+*/
+
+void ext_flash_mount_fs(void){
     ESP_LOGI(TAG, "Mounting FAT filesystem");
     const esp_vfs_fat_mount_config_t mount_config = {
             .max_files = 16,
             .format_if_mount_failed = true,
             .allocation_unit_size = CONFIG_WL_SECTOR_SIZE
     };
-    esp_vfs_fat_spiflash_mount("/ext_flash", "ext_storage", &mount_config, &s_wl_handle);
+    if(esp_vfs_fat_spiflash_mount("/ext_flash", "ext_storage", &mount_config, &s_wl_handle)!=ESP_OK) printf("Error mount\r\n");
+}
 
+/*
+*   Function to umount the Flash file system. Due to the Fat FS use a high amount of RAM, is recommendable to umount,
+*   after use it.
+*/
+
+void ext_flash_unmount_fs(void){
+    if(esp_vfs_fat_spiflash_unmount("/ext_flash",  s_wl_handle)!=ESP_OK ) printf("Error unmount\r\n");
 }
 
 /**
@@ -169,7 +186,7 @@ uint8_t ext_flash_game_list(char * game_name){
 * This function returns the percentage of memory ussage on the external flash
 */
 
-uint8_t ext_flash_ussage(void){
+int ext_flash_ussage(void){
     FATFS *fs;
     size_t free_clusters;
     int res = f_getfree("0:", &free_clusters, &fs);
@@ -187,7 +204,7 @@ uint8_t ext_flash_ussage(void){
 
     //Calcule the percentage
     uint8_t percentage = 100-(100*bytes_free)/bytes_total;
-    if(percentage==0) percentage=1;
+    if(percentage==0) percentage=1; //The web server gives error if we percentage is 0.
     return percentage;
 }
 

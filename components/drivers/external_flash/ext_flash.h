@@ -28,8 +28,10 @@ extern "C" {
 **********************/
 
 void ext_flash_init(void);
-uint8_t ext_flash_ussage(void);
+int ext_flash_ussage(void);
 uint8_t ext_flash_game_list(char * game_name);
+void ext_flash_mount_fs(void);
+void ext_flash_unmount_fs(void);
 
 #ifdef __cplusplus
 } /* extern "C" */
