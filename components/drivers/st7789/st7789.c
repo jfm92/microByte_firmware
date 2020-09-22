@@ -8,6 +8,8 @@
 #include "driver/rtc_io.h"
 #include "esp_system.h"
 
+#include "driver/ledc.h"
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -15,19 +17,34 @@
 
 #include "st7789.h"
 #include "scr_spi.h"
+#include "system_configuration.h"
+
+/**********************
+ *      DEFINE
+ **********************/
 
 #define LINE_BUFFERS (2)
 #define LINE_COUNT   (4)
 
+/**********************
+ *  STATIC VARIABLES
+ **********************/
 
- /**********************
+static ledc_channel_config_t backlight_channel;
+
+/**********************
+ *      VARIABLES
+ **********************/
+uint32_t backlight_level = 80; // 80% of the brightness
+
+/**********************
  *  STATIC PROTOTYPES
  **********************/
 
 static void st7789_send_cmd(uint8_t cmd);
 static void st7789_send_data(void *data, uint16_t length);
 static void st7789_send_buffer(uint16_t *data, uint32_t data_size);
-static void st7789_send_color(void * data, uint16_t length);
+static void st7789_backlight_init();
 
  /**********************
  *   GLOBAL FUNCTIONS
@@ -82,6 +99,9 @@ void st7789_init(void){
 		cmd++;
 	}
 
+    st7789_backlight_init();
+    st7789_backlight_set(backlight_level);
+
 }
 
 
@@ -118,6 +138,21 @@ void st7789_flush(lv_disp_drv_t * drv, const lv_area_t * area, lv_color_t * colo
     st7789_send_data((void *)color_map, size * 2);
  
     lv_disp_flush_ready(drv);
+    
+}
+
+void st7789_backlight_set(uint8_t level){
+    backlight_level = ((level * 5000)/100);
+
+    ledc_set_fade_with_time(backlight_channel.speed_mode,
+                    backlight_channel.channel, backlight_level, 1000);
+    ledc_fade_start(backlight_channel.speed_mode,
+            backlight_channel.channel, LEDC_FADE_NO_WAIT);
+    
+}
+
+uint8_t st7789_backlight_get(){
+    return backlight_level;
 }
 
 
@@ -135,7 +170,25 @@ static void st7789_send_data(void *data, uint16_t length){
 	scr_spi_send(data, length, DATA_ON);
 }
 
-static void st7789_send_color(void * data, uint16_t length)
-{
-   // scr_spi_transaction(data, length, 0);
+static void st7789_backlight_init(){
+
+    ledc_timer_config_t backligth_timer = {
+        .duty_resolution = LEDC_TIMER_13_BIT, // resolution of PWM duty
+        .freq_hz = 5000,                      // frequency of PWM signal
+        .speed_mode = LEDC_HIGH_SPEED_MODE,   // timer mode
+        .timer_num = LEDC_TIMER_0,            // timer index
+        .clk_cfg = LEDC_AUTO_CLK,              // Auto select the source clock
+    };
+
+    ledc_timer_config(&backligth_timer);
+
+    backlight_channel.channel   = LEDC_CHANNEL_0;
+    backlight_channel.duty      = 100;
+    backlight_channel.gpio_num  = HSPI_BACKLIGTH;
+    backlight_channel.hpoint    = 0;
+    backlight_channel.timer_sel = LEDC_TIMER_0;
+
+    ledc_channel_config(&backlight_channel);
+
+    ledc_fade_func_install(0);
 }
