@@ -11,7 +11,7 @@
 #define HSPI_RST         33
 #define HSPI_DC          32
 #define HSPI_BACKLIGTH   15
-#define HSPI_CLK_SPEED   40*1000*1000
+#define HSPI_CLK_SPEED   60*1000*1000 // 60Mhz
 
 
 /********************************
@@ -22,7 +22,6 @@
 #define VSPI_MISO       19 
 #define VSPI_CLK        18        
 #define VSPI_CS0        5                  
-#define VSPI_CLK_SPEED  18*1000*1000
 
 /********************************
  *   Pin Mux pin configuration
@@ -31,5 +30,5 @@
 #define MUX_SDA         21
 #define MUX_SCL         22
 #define MUX_INT         34
-#define I2C_CLK         400*1000
+#define I2C_CLK         400*1000 //400Khz
 #define I2C_dev_address 0x20
