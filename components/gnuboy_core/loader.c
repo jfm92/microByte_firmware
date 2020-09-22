@@ -4,14 +4,13 @@
 #include <time.h>
 #include <ctype.h>
 
-#include "nvs_flash.h"
 #include "esp_partition.h"
 #include "esp_system.h"
 #include "esp_heap_caps.h" 
 
 #include "esp_timer.h"
 
-#include "ext_flash.h"
+#include "sd_storage.h"
 
 #include "gnuboy.h"
 #include "defs.h"
@@ -114,16 +113,18 @@ int rom_load(const char *game_name)
 {
 	
 	byte c;
-	const char *data, *header;
+	const char  *header;
 	int len = 0, rlen;
 
+	char * data = NULL;
+
 	char rom_name[300];
-	sprintf(&rom_name,"/ext_flash/%s",game_name);
+	sprintf(&rom_name,"/sdcard/GameBoy_Color/%s",game_name);
 
 
 
 	data = (void*)0x3f800000;
-	data = ext_flash_get_file(rom_name);
+	sd_get_file(rom_name,data);
 
 	printf("Initialized. ROM@%p\n", data);
 	header = data;
@@ -229,6 +230,7 @@ int rom_load(const char *game_name)
 	hw.gba = (hw.cgb && gbamode);
 	//mem_updatemap();
 	return 0;
+
 }
 
 int sram_load()
