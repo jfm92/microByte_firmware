@@ -116,13 +116,13 @@ int rom_load(const char *game_name)
 	const char  *header;
 	int len = 0, rlen;
 
-	char * data = NULL;
+	
 
 	char rom_name[300];
 	sprintf(&rom_name,"/sdcard/GameBoy_Color/%s",game_name);
 
 
-
+	char * data = heap_caps_malloc(1024*1024, MALLOC_CAP_SPIRAM);
 	data = (void*)0x3f800000;
 	sd_get_file(rom_name,data);
 
@@ -198,7 +198,7 @@ int rom_load(const char *game_name)
 
 	// SRAM
 	ram.sram_dirty = 1;
-	ram.sbank = malloc(sram_length);
+	ram.sbank = heap_caps_malloc(sram_length, MALLOC_CAP_SPIRAM);
 	if (!ram.sbank)
 	{
 		printf("RAM error\r\n");
