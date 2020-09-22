@@ -4,12 +4,9 @@
 #include "driver/i2s.h"
 #include "driver/rtc_io.h"
 
-static float Volume = 1.0f;
-//static esplay_volume_level volumeLevel = ESPLAY_VOLUME_LEVEL1;
-static int volumeLevels[] = {0, 25, 40, 80, 120};
+// TODO: Save the volume level on the static memory
 
-
-
+static float volume_level = 0.8f; // 80% of the sound level
 
 void audio_init(int sample_rate)
 {
@@ -44,7 +41,7 @@ void audio_submit(short *stereoAudioBuffer, int frameCount)
 
     for (short i = 0; i < currentAudioSampleCount; ++i)
     {
-        int sample = stereoAudioBuffer[i] * Volume;
+        int sample = stereoAudioBuffer[i] * volume_level;
         if (sample > 32767)
             sample = 32767;
         else if (sample < -32767)
@@ -69,4 +66,13 @@ void audio_terminate()
     i2s_stop(I2S_NUM);
 
     i2s_start(I2S_NUM);
+}
+
+uint8_t audio_volume_get(){
+    return volume_level*100;
+}
+
+void audio_volume_set(float level){
+    volume_level = level/100.0f;
+    printf("volume %f\r\n",volume_level);
 }
