@@ -4,18 +4,22 @@
 
 #include <stdio.h>
 #include <string.h>
+
 #include <dirent.h>
 #include <errno.h>
 #include <sys/unistd.h>
 #include <sys/stat.h>
+
 #include "esp_err.h"
 #include "esp_log.h"
 #include "esp_vfs_fat.h"
+
 #include "driver/sdmmc_host.h"
 #include "driver/sdspi_host.h"
 #include "sdmmc_cmd.h"
 
 #include "system_configuration.h"
+#include "system_manager.h"
 
 /*********************
  *      DEFINES
@@ -23,13 +27,11 @@
 #define MOUNT_POINT     "/sdcard"
 #define SPI_DMA_CHAN    2
 
-/**********************
- *      TYPEDEFS
- **********************/
 
 /**********************
- *  STATIC PROTOTYPES
- **********************/
+*      VARIABLES
+**********************/
+bool SD_mount = false;
 
 /**********************
 *  STATIC VARIABLES
@@ -44,7 +46,7 @@ static const char *TAG = "SD_CARD";
  *   GLOBAL FUNCTIONS
  **********************/
 
-void sd_init(){
+uint8_t sd_init(){
     ESP_LOGI(TAG, "Init SD Card");
 
     sdmmc_host_t host = SDSPI_HOST_DEFAULT();
@@ -73,10 +75,10 @@ void sd_init(){
         } else {
             ESP_LOGE(TAG, "Failed to initialize the card.");
         }
-        return;
+        return -1;
     }
 
-    // Check if the folder trees exists. If not create it.
+    // Check if the folder tree exists. If not create it.
     struct stat st;
     if(stat("/sdcard/NES", &st) == -1){
         ESP_LOGI(TAG, "No NES folder found, creating it");
@@ -84,12 +86,12 @@ void sd_init(){
         mkdir("/sdcard/NES/Save_Data", 0700);
     }
     if(stat("/sdcard/GameBoy_Color", &st) == -1){
-        ESP_LOGI(TAG, "No Game Boy Color folder found, creating it");
+        ESP_LOGI(TAG, "No GameBoy Color folder found, creating it");
         mkdir("/sdcard/GameBoy_Color", 0700);
         mkdir("/sdcard/GameBoy_Color/Save_Data", 0700);
     }
     if(stat("/sdcard/GameBoy", &st) == -1){
-        ESP_LOGI(TAG, "No Game Boy folder found, creating it");
+        ESP_LOGI(TAG, "No GameBoy folder found, creating it");
         mkdir("/sdcard/GameBoy", 0700);
         mkdir("/sdcard/GameBoy/Save_Data", 0700);
     }
@@ -101,22 +103,24 @@ void sd_init(){
     if(stat("/sdcard/Master_System", &st) == -1){
         ESP_LOGI(TAG, "No Master_System folder found, creating it");
         mkdir("/sdcard/Master_System", 0700);
-        mkdir("/sdcard/Master_Systemr/Save_Data", 0700);
+        mkdir("/sdcard/Master_System/Save_Data", 0700);
     }
 
+    SD_mount = true;
+    return 1;
 }
 
-// TODO:Improve folder route
+
 uint8_t sd_game_list(char game_name[30][100],uint8_t console){
     
     struct dirent *entry;
 
     DIR *dir = NULL;
-    if(console == 0x00) dir =  opendir("/sdcard/NES");
-    else if(console == 0x01) dir =  opendir("/sdcard/GameBoy");
-    else if(console == 0x02) dir =  opendir("/sdcard/GameBoy_Color");
-    else if(console == 0x03) dir =  opendir("/sdcard/SNES");
-    else if(console == 0x04) dir =  opendir("/sdcard/Master_System");
+    if(console == NES) dir =  opendir("/sdcard/NES");
+    else if(console == GAMEBOY) dir =  opendir("/sdcard/GameBoy");
+    else if(console == GAMEBOY_COLOR) dir =  opendir("/sdcard/GameBoy_Color");
+    else if(console == SNES) dir =  opendir("/sdcard/SNES");
+    else if(console == SMS) dir =  opendir("/sdcard/Master_System");
 
     if (!dir) {
         ESP_LOGE(TAG, "Failed to stat dir : 0x%02x", console);
@@ -125,7 +129,7 @@ uint8_t sd_game_list(char game_name[30][100],uint8_t console){
     // Save the name of all the files available on the external flash
     uint8_t i =0;
     while((entry = readdir(dir)) != NULL){
-        // The Save Data folder is not necessary to show on the menu
+        // List everyfile except the save folder
         if(strcmp(entry->d_name,"Save_Data")!=0){
             sprintf(game_name[i],"%s",entry->d_name);
             ESP_LOGI(TAG, "Found %s ",game_name[i]);
@@ -137,7 +141,7 @@ uint8_t sd_game_list(char game_name[30][100],uint8_t console){
     return i;
 }
 
-// TODO: Allocate memory for the game
+
 void IRAM_ATTR sd_get_file (const char *path, void * data){
     const size_t BLOCK_SIZE = 512;// We're going to read file in chunk of 512 Bytes
     size_t r = 0;
@@ -148,17 +152,18 @@ void IRAM_ATTR sd_get_file (const char *path, void * data){
        ESP_LOGE(TAG, "Error opening: %s ",path);
     }
     while (true){
-       // __asm__("memw"); // Protect the write into the RAM memory.
+        __asm__("memw"); // Protect the write into the RAM memory.
         size_t count = fread((uint8_t *)data + r, 1, BLOCK_SIZE, fd);
-       // __asm__("memw");
+        __asm__("memw");
 
         r += count;
         if (count < BLOCK_SIZE) break;
     }
 
 }
-/**********************
- *   STATIC FUNCTIONS
- **********************/
 
+
+bool sd_mounted(){
+    return SD_mount;
+}
 
