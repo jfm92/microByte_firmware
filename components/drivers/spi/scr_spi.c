@@ -41,7 +41,7 @@ void scr_spi_init(void){
         .clock_speed_hz = HSPI_CLK_SPEED,
         .mode = 2,                   //SPI mode 2
         .spics_io_num = -1, //CS pin
-        .queue_size = 7,
+        .queue_size = 1,
         .pre_cb = scr_spi_pre_transfer_callback,
         .post_cb = NULL,
         //.flags = SPI_DEVICE_HALFDUPLEX
