@@ -24,7 +24,6 @@
 
 #include <esp_log.h>
 
-#include "wifi_config.h"
 
 #include "sd_storage.h"
 #include "gnuboy_manager.h"
@@ -57,8 +56,6 @@ void app_main(void){
     /**************** Tasks **************/
     xTaskCreatePinnedToCore(GUI_task, "Graphical User Interface", 1024*6, NULL, 1, &gui_handler, 0);
     xTaskCreatePinnedToCore(&batteryTask, "Battery management", 2048, NULL, 5, NULL, 0);
-
-    printf("Free init %i bytes\r\n",esp_get_free_heap_size());
 
     bool game_running = false;
     bool game_executed = false;
