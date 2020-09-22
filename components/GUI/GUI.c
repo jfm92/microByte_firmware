@@ -9,13 +9,10 @@
 #include "freertos/semphr.h"
 
 #include "GUI.h"
-#include "GUI_menu.h"
+#include "st7789.h"
+#include "GUI_frontend.h"
 
 #include "lvgl/lvgl.h"
-
-#include "display_hal.h"
-#include "gamepad.h"
-#include "ext_flash.h"
 
 /*********************
  *      DEFINES
@@ -56,7 +53,7 @@ void GUI_init(void){
     // Initialize LVGL display and attach the flush function
     lv_disp_drv_t disp_drv;
     lv_disp_drv_init(&disp_drv);
-    disp_drv.flush_cb = display_flush;
+    disp_drv.flush_cb = st7789_flush;
 
     disp_drv.buffer = &disp_buf;
     lv_disp_drv_register(&disp_drv);
@@ -73,28 +70,18 @@ void GUI_init(void){
     ESP_ERROR_CHECK(esp_timer_start_periodic(periodic_timer, LV_TICK_PERIOD_MS * 1000)); // LV_TICK_PERIOD_MS expressed as microseconds
 
     // Init menu graphic user interface
-    GUI_menu();
+    GUI_frontend();
 
 }
 
 void GUI_task(void *arg){
-    // Init peripherals
-    gamepad_init();
-    display_init();
-    ext_flash_init();
-    ext_flash_mount_fs();
-    // Initialize LVGL GUI
+
     GUI_init();
 
     while (1) {
-        vTaskDelay(1);
-        //Try to lock the semaphore, if success, call lvgl stuff
-        if (xSemaphoreTake(xGuiSemaphore, (TickType_t)10) == pdTRUE) {
-            lv_task_handler();
-            xSemaphoreGive(xGuiSemaphore);
-        }
+        lv_task_handler();
     }
-
+    printf("delete\r\n");
     //A task should NEVER return
     vTaskDelete(NULL);
 }
