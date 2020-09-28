@@ -759,6 +759,7 @@ static bool user_input_task(lv_indev_drv_t * indev_drv, lv_indev_data_t * data){
     uint16_t inputs_value =  input_read();
 
     if(!((inputs_value >> 0) & 0x01)){
+        printf("Down\r\n");
         // Button Down pushed
         uint32_t actual_time= xTaskGetTickCount()/portTICK_PERIOD_MS;
 
@@ -773,17 +774,8 @@ static bool user_input_task(lv_indev_drv_t * indev_drv, lv_indev_data_t * data){
     }
 
     if(!((inputs_value >> 1) & 0x01)){
-        // Button Up pushed
-        uint32_t actual_time= xTaskGetTickCount()/portTICK_PERIOD_MS;
-        if((actual_time-btn_up_time)>2){
-            data->state = LV_INDEV_STATE_PR;
-            data->key = LV_KEY_UP;
-            btn_up_time = actual_time;
-        }
-    }
-
-    if(!((inputs_value >> 2) & 0x01)){
-        // Button left pushed
+        // Button Left pushed
+        printf("left\r\n");
         uint32_t actual_time= xTaskGetTickCount()/portTICK_PERIOD_MS;
         if((actual_time-btn_left_time)>5){
 
@@ -806,8 +798,21 @@ static bool user_input_task(lv_indev_drv_t * indev_drv, lv_indev_data_t * data){
         }
     }
 
+    if(!((inputs_value >> 2) & 0x01)){
+        // Button left pushed
+        printf("up\r\n");
+        uint32_t actual_time= xTaskGetTickCount()/portTICK_PERIOD_MS;
+        if((actual_time-btn_up_time)>2){
+            data->state = LV_INDEV_STATE_PR;
+            data->key = LV_KEY_UP;
+            btn_up_time = actual_time;
+        }
+         
+    }
+
     if(!((inputs_value >> 3) & 0x01)){
         // Button right pushed
+         printf("right\r\n");
         uint32_t actual_time= xTaskGetTickCount()/portTICK_PERIOD_MS;
 
         if((actual_time-btn_right_time)>5){
@@ -830,8 +835,9 @@ static bool user_input_task(lv_indev_drv_t * indev_drv, lv_indev_data_t * data){
         }    
     }
 
-    if(!((inputs_value >> 7) & 0x01)){
+    if(!((inputs_value >> 11) & 0x01)){
         // Button menu pushed
+        printf("Menu\r\n");
         uint32_t actual_time= xTaskGetTickCount()/portTICK_PERIOD_MS;
 
         if((actual_time-btn_menu_time)>5){
@@ -848,24 +854,26 @@ static bool user_input_task(lv_indev_drv_t * indev_drv, lv_indev_data_t * data){
     }
 
     if(!((inputs_value >> 8) & 0x01)){
-        // Button A pushed
-        uint32_t actual_time= xTaskGetTickCount()/portTICK_PERIOD_MS;
-
-        if((actual_time-btn_a_time)>5){
-            data->state = LV_INDEV_STATE_PR;
-            data->key = LV_KEY_ENTER;
-            btn_a_time = actual_time;
-        }
-    }
-
-    if(!((inputs_value >> 9) & 0x01)){
         // Button B pushed
+        printf("B\r\n");
         uint32_t actual_time= xTaskGetTickCount()/portTICK_PERIOD_MS;
 
         if((actual_time-btn_b_time)>5){
             data->state = LV_INDEV_STATE_PR;
             data->key = LV_KEY_ESC;
             btn_b_time = actual_time;
+        }
+    }
+
+    if(!((inputs_value >> 9) & 0x01)){
+        // Button A pushed
+        printf("A\r\n");
+        uint32_t actual_time= xTaskGetTickCount()/portTICK_PERIOD_MS;
+
+        if((actual_time-btn_a_time)>5){
+            data->state = LV_INDEV_STATE_PR;
+            data->key = LV_KEY_ENTER;
+            btn_a_time = actual_time;
         }
     }
 

@@ -44,6 +44,18 @@ void input_init(void){
 }
 
 uint16_t input_read(void){
+/**
+ * Bit position of each button
+ * - 0 -> Down     - 2 -> Up
+ * - 1 -> Left     - 3 -> Right
+ * 
+ * - 12 -> Select  - 11 -> Menu
+ * - 10 -> Start
+ * 
+ * - 9 -> A    - 8 -> B    - 7 -> Y
+ * - 6 -> X    - 5 -> R    - 13 -> L
+ * */
+
     return TCA9555_readInputs();
 }
 
