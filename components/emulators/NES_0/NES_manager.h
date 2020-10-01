@@ -1,0 +1,1 @@
+void NES_init();
