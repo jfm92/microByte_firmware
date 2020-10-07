@@ -51,13 +51,13 @@ uint8_t sd_init(){
 
     sdmmc_host_t host = SDSPI_HOST_DEFAULT();
     sdspi_slot_config_t slot_config = SDSPI_SLOT_CONFIG_DEFAULT();
-    slot_config.gpio_miso = VSPI_MISO;
-    slot_config.gpio_mosi = VSPI_MOSI;
-    slot_config.gpio_sck  = VSPI_CLK;
-    slot_config.gpio_cs   = VSPI_CS0;
-    slot_config.dma_channel = SPI_DMA_CHAN;
-    host.slot             = VSPI_HOST;
-    host.max_freq_khz     = VSPI_CLK_SPEED;
+    slot_config.gpio_miso   =     VSPI_MISO;
+    slot_config.gpio_mosi   =     VSPI_MOSI;
+    slot_config.gpio_sck    =     VSPI_CLK;
+    slot_config.gpio_cs     =     VSPI_CS0;
+    slot_config.dma_channel =     SPI_DMA_CHAN;
+    host.slot               =     VSPI_HOST;
+    host.max_freq_khz       =     SDMMC_FREQ_DEFAULT;
 
     // Mount Fat filesystem, it only can open one file at the same time
     esp_vfs_fat_sdmmc_mount_config_t mount_config = {
@@ -142,17 +142,17 @@ uint8_t sd_game_list(char game_name[30][100],uint8_t console){
 }
 
 
-void IRAM_ATTR sd_get_file (const char *path, void * data){
+void  IRAM_ATTR  sd_get_file (const char *path, void * data){
     const size_t BLOCK_SIZE = 512;// We're going to read file in chunk of 512 Bytes
     size_t r = 0;
 
     FILE *fd = fopen(path, "rb"); //Open the file in binary read mode
-    
+
     if(fd==NULL){
        ESP_LOGE(TAG, "Error opening: %s ",path);
     }
     while (true){
-        __asm__("memw"); // Protect the write into the RAM memory.
+        __asm__("memw"); // Protect the write into the RAM memory
         size_t count = fread((uint8_t *)data + r, 1, BLOCK_SIZE, fd);
         __asm__("memw");
 
