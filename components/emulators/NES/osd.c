@@ -33,9 +33,10 @@ char configfilename[]="na";
 /* This is os-specific part of main() */
 int osd_main(int argc, char *argv[])
 {
-   config.filename = configfilename;
+  // config.filename = configfilename;
 
-   return main_loop("rom", system_autodetect);
+  // return main_loop("rom", system_autodetect);
+  return 0;
 }
 
 
@@ -57,3 +58,9 @@ int osd_makesnapname(char *filename, int len)
 {
    return -1;
 }
+
+//int osd_init(){
+//  return 0; 
+//}
+
+
