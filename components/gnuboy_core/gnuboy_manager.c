@@ -55,7 +55,6 @@ TaskHandle_t gnuBoyTask_handler;
  *  QUEUE HANDLERS
  **********************/
 QueueHandle_t vidQueue;
-QueueHandle_t fpsQueue;
 QueueHandle_t audioQueue;
 
 /**********************
@@ -86,7 +85,7 @@ volatile uint8_t currentAudioBuffer = 0;
 volatile uint16_t currentAudioSampleCount;
 volatile unsigned char *currentAudioBufferPtr;
 
-#define AUDIO_SAMPLE_RATE (32000)
+#define AUDIO_SAMPLE_RATE (16000)
 
 /**********************
  *   GLOBAL FUNCTIONS
@@ -100,7 +99,7 @@ void gnuboy_start(const char *game_name){
     audioQueue = xQueueCreate(1, sizeof(uint16_t *));
 
     // Load game from the SD card and save on RAM.
-    rom_load(game_name);
+    gbc_rom_load(game_name);
    
     //Execute emulator tasks.
     xTaskCreatePinnedToCore(&videoTask, "videoTask", 1024*2, NULL, 1, &videoTask_handler, 1);
