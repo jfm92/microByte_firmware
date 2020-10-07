@@ -52,7 +52,7 @@ uint16_t input_read(void){
  * - 12 -> Select  - 11 -> Menu
  * - 10 -> Start
  * 
- * - 9 -> A    - 8 -> B    - 7 -> Y
+ * - 9 -> B    - 8 -> A    - 7 -> Y
  * - 6 -> X    - 5 -> R    - 13 -> L
  * */
 
