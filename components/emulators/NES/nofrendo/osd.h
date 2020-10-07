@@ -81,8 +81,7 @@ extern int osd_init(void);
 extern void osd_shutdown(void);
 extern int osd_main(int argc, char *argv[]);
 
-extern int osd_installtimer(int frequency, void *func, int funcsize,
-                            void *counter, int countersize);
+extern int osd_installtimer(int frequency, void *func);
 
 /* filename manipulation */
 extern void osd_fullname(char *fullname, const char *shortname);
@@ -90,7 +89,6 @@ extern char *osd_newextension(char *string, char *ext);
 
 /* input */
 extern void osd_getinput(void);
-extern void osd_getmouse(int *x, int *y, int *button);
 
 /* build a filename for a snapshot, return -ve for error */
 extern int osd_makesnapname(char *filename, int len);
