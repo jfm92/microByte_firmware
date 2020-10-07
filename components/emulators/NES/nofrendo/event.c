@@ -45,8 +45,8 @@ static nesinput_t kb_alt_input = { INP_JOYPAD1, 0 };
 
 static void func_event_quit(int code)
 {
-   UNUSED(code);
-   main_quit();
+  // UNUSED(code);
+  // main_quit();
 }
 
 static void func_event_insert(int code)
@@ -57,8 +57,8 @@ static void func_event_insert(int code)
 
 static void func_event_eject(int code)
 {
-   if (INP_STATE_MAKE == code)
-      main_eject();
+  // if (INP_STATE_MAKE == code)
+   //   main_eject();
 }
 
 static void func_event_togglepause(int code)
