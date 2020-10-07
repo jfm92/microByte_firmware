@@ -14,12 +14,12 @@ typedef struct loader_s
 
 extern loader_t loader;
 
-void loader_unload();
-int rom_load(const char *game_name);
-int sram_load();
-int sram_save();
-void state_load(int n);
-void state_save(int n);
+void gbc_loader_unload();
+int gbc_rom_load(const char *game_name);
+int gbc_sram_load();
+int gbc_sram_save();
+void gbc_state_load(int n);
+void gbc_state_save(int n);
 
 
 

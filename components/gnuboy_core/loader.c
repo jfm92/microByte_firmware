@@ -109,7 +109,7 @@ static void initmem(void *mem, int size)
 
 
 
-int rom_load(const char *game_name)
+int gbc_rom_load(const char *game_name)
 {
 	
 	byte c;
@@ -122,7 +122,10 @@ int rom_load(const char *game_name)
 	sprintf(&rom_name,"/sdcard/GameBoy_Color/%s",game_name);
 
 
-	char * data = heap_caps_malloc(1024*1024, MALLOC_CAP_SPIRAM);
+	char * data = heap_caps_malloc(1024*1024, MALLOC_CAP_8BIT | MALLOC_CAP_SPIRAM);
+	if(data == NULL){
+		printf("gnuboy data= NULL\r\n");
+	}
 	data = (void*)0x3f800000;
 	sd_get_file(rom_name,data);
 
@@ -198,7 +201,8 @@ int rom_load(const char *game_name)
 
 	// SRAM
 	ram.sram_dirty = 1;
-	ram.sbank = heap_caps_malloc(sram_length, MALLOC_CAP_SPIRAM);
+//	ram.sbank = heap_caps_malloc(sram_length, MALLOC_CAP_SPIRAM);
+//	ram.sbank = malloc(sram_length);
 	if (!ram.sbank)
 	{
 		printf("RAM error\r\n");
@@ -212,8 +216,9 @@ int rom_load(const char *game_name)
 		}
 		else
 		{
-			printf("No free spece for SRAM.\n");
-			abort();
+			printf("No free space for SRAM.\n");
+			ram.sbank = malloc(sram_length);
+			//abort();
 		}
 	}
 
@@ -233,7 +238,7 @@ int rom_load(const char *game_name)
 
 }
 
-int sram_load()
+int gbc_sram_load()
 {
 	if (!mbc.batt) return -1;
 
@@ -269,7 +274,7 @@ int sram_load()
 }
 
 
-int sram_save()
+int gbc_sram_save()
 {
 	/* If we crash before we ever loaded sram, DO NOT SAVE! */
 	if (!mbc.batt || !ram.loaded || !mbc.ramsize)
@@ -309,7 +314,7 @@ int sram_save()
 }
 
 
-void state_save(int n)
+void gbc_state_save(int n)
 {
 	FILE *f;
 	char *name;
@@ -328,7 +333,7 @@ void state_save(int n)
 }
 
 
-void state_load(int n)
+void gbc_state_load(int n)
 {
 	FILE *f;
 	char *name;
@@ -422,7 +427,7 @@ static char *ldup(char *s)
 
 static void cleanup()
 {
-	sram_save();
+	gbc_sram_save();
 	rtc_save();
 	/* IDEA - if error, write emergency savestate..? */
 }
