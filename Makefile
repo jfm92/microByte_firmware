@@ -5,6 +5,7 @@
 
 PROJECT_NAME := micro-gnuboy
 
+
 EXTRA_COMPONENT_DIRS := components/drivers/spi \
 						components/drivers/system_configuration \
 						components/drivers/st7789 \
@@ -14,7 +15,9 @@ EXTRA_COMPONENT_DIRS := components/drivers/spi \
 						components/drivers/sound \
 						components/GUI \
 						components/drivers/sd_storage \
-						components/drivers/battery
+						components/drivers/battery \
+						components/emulators/NES \
+						components/emulators/NES/nofrendo \
 
 
 include $(IDF_PATH)/make/project.mk
