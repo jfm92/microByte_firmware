@@ -64,7 +64,7 @@ typedef struct message_s
    uint8 color;
 } message_t;
 
-extern void gui_tick(int ticks);
+void gui_tick(int ticks);
 extern void gui_setrefresh(int frequency);
 
 extern void gui_sendmsg(int color, char *format, ...);

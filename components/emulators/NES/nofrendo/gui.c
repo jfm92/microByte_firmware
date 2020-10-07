@@ -577,8 +577,8 @@ void gui_frame(bool draw)
 
    if (option_showgui)
    {
-      osd_getmouse(&mouse_x, &mouse_y, &mouse_button);
-      gui_drawmouse();
+     // osd_getmouse(&mouse_x, &mouse_y, &mouse_button);
+     // gui_drawmouse();
    }
 }
 
