@@ -10,7 +10,6 @@
 #include "freertos/queue.h"
 
 
-///////////////////////////////////////////////
 #include "system_manager.h"
 
 
@@ -20,15 +19,18 @@
 #include "sound_driver.h"
 #include "user_input.h"
 #include "GUI.h"
-/////////////////////////////////////
+
 
 #include <esp_log.h>
 
 
 #include "sd_storage.h"
+
 #include "gnuboy_manager.h"
+//#include "nofrendo.h"
+#include "NES_manager.h"
 
-
+//#include "bt_controller.h"
 
 
 TaskHandle_t gui_handler;
@@ -36,16 +38,14 @@ TaskHandle_t gui_handler;
 
 
 void app_main(void){
-
     /**************** Peripherals initialization **************/
+    audio_init(16000);
     display_init();
-    //display_bck_init();
     sd_init();
-    audio_init(32000);
+    
     input_init();
     battery_init();
-    //led_init();
-    
+   
 
     /**************** Message Queue initialization **************/
     
@@ -70,6 +70,12 @@ void app_main(void){
                         if(management.console == GAMEBOY_COLOR){
                             vTaskSuspend(gui_handler);
                             gnuboy_start(management.game_name);
+                            game_executed = true;
+                            game_running=true;
+                        }
+                        else if(management.console == NES){
+                            vTaskSuspend(gui_handler);
+                            NES_start(management.game_name);
                             game_executed = true;
                             game_running=true;
                         }
@@ -111,6 +117,7 @@ void app_main(void){
                     if(management.status == 1){
                         printf("Wi-Fi Ap\r\n");
                         //wifi_AP_init();
+                         // bt_controller_init();
                     }
                     else{
                         //wifi_AP_deinit();
@@ -121,6 +128,10 @@ void app_main(void){
                 case MODE_BT_CONTROLLER:
                     if(management.status == 1){
                         printf("bt controller\r\n");
+                        vTaskSuspend(gui_handler);
+                        NES_start("goo");
+                        //nofrendo_main(0, NULL);
+                        printf("nofrendo -------------------------------------------\r\n");
                     }
                     else{
                         // Deinit bluetooth
@@ -142,6 +153,5 @@ void app_main(void){
     }
 
     //led_error();
-   
-
+  
 }
