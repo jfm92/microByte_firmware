@@ -34,6 +34,7 @@
 #include "nes6502.h"
 #include <bitmap.h>
 
+
 /* Visible (NTSC) screen height */
 #ifndef NES_VISIBLE_HEIGHT
 #define  NES_VISIBLE_HEIGHT   224
@@ -42,7 +43,7 @@
 #define  NES_SCREEN_HEIGHT    240  //240
 
 /* NTSC = 60Hz, PAL = 50Hz */
-#define PAL 0
+
 #ifdef PAL
 #define  NES_REFRESH_RATE     50
 #else /* !PAL */
@@ -115,6 +116,9 @@ extern void nes_reset(int reset_type);
 
 extern void nes_poweroff(void);
 extern void nes_togglepause(void);
+
+void nes_renderframe(uint8_t draw_flag);
+void system_video(uint8_t draw);
 
 #endif /* _NES_H_ */
 

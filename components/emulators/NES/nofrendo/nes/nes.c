@@ -38,6 +38,8 @@
 #include <nes_mmc.h>
 #include <vid_drv.h>
 #include <nofrendo.h>
+#include <freertos/FreeRTOS.h>
+#include "esp_system.h"
 
 
 #define  NES_CLOCK_DIVIDER    12
@@ -293,7 +295,7 @@ void nes_nmi(void)
    nes6502_nmi();
 }
 
-static void nes_renderframe(bool draw_flag)
+void nes_renderframe(uint8_t draw_flag)
 {
 
    int elapsed_cycles;
@@ -334,14 +336,14 @@ static void nes_renderframe(bool draw_flag)
    nes.scanline = 0;
 }
 
-static void system_video(bool draw)
+void system_video(uint8_t draw)
 {
    /* TODO: hack */
-   if (false == draw)
-   {
-      gui_frame(false);
-      return;
-   }
+   //if (false == draw)
+   //{
+   //   gui_frame(false);
+   //   return;
+   //}
 
    /* blit the NES screen to our video surface */
    //vid_blit(vid_getbuffer(), 0, (NES_SCREEN_HEIGHT - NES_VISIBLE_HEIGHT) / 2,
@@ -357,49 +359,76 @@ static void system_video(bool draw)
    osd_getinput();
 }
 
+extern  void do_audio_frame();
+
 /* main emulation loop */
 void nes_emulate(void)
 {
-   int last_ticks, frames_to_render;
+    int last_ticks, frames_to_render;
 
-   osd_setsound(nes.apu->process);
+    osd_setsound(nes.apu->process);
 
-   last_ticks = nofrendo_ticks;
-   frames_to_render = 0;
-   nes.scanline_cycles = 0;
-   nes.fiq_cycles = (int) NES_FIQ_PERIOD;
+    last_ticks = nofrendo_ticks;
+    frames_to_render = 0;
+    nes.scanline_cycles = 0;
+    nes.fiq_cycles = (int) NES_FIQ_PERIOD;
 
-   while (false == nes.poweroff)
-   {
-      if (nofrendo_ticks != last_ticks)
-      {
-         int tick_diff = nofrendo_ticks - last_ticks;
+    uint startTime;
+    uint stopTime;
+    uint totalElapsedTime = 0;
+    int frame = 0;
+    int skipFrame = 0;
 
-         frames_to_render += tick_diff;
-         gui_tick(tick_diff);
-         last_ticks = nofrendo_ticks;
-      }
 
-      if (true == nes.pause)
-      {
-         /* TODO: dim the screen, and pause/silence the apu */
-         system_video(true);
-         frames_to_render = 0;
-      }
-      else if (frames_to_render > 1)
-      {
-         frames_to_render--;
-         nes_renderframe(false);
-         system_video(false);
-      }
-      else if ((1 == frames_to_render && true == nes.autoframeskip)
-               || false == nes.autoframeskip)
-      {
-         frames_to_render = 0;
-         nes_renderframe(true);
-         system_video(true);
-      }
-   }
+    for (int i = 0; i < 4; ++i)
+    {
+        nes_renderframe(1);
+        system_video(1);
+    }
+
+    //load_sram();
+
+    //if (forceConsoleReset)
+   // {
+     //   nes_reset(SOFT_RESET);
+    //}
+
+    while (false == nes.poweroff)
+    {
+        startTime = xthal_get_ccount();
+
+        bool renderFrame = ((skipFrame % 2) == 0);
+
+        nes_renderframe(renderFrame);
+        system_video(renderFrame);
+
+        if (skipFrame % 7 == 0) ++skipFrame;
+        ++skipFrame;
+
+        //do_audio_frame();
+
+        stopTime = xthal_get_ccount();
+
+        int elapsedTime;
+        if (stopTime > startTime)
+            elapsedTime = (stopTime - startTime);
+        else
+            elapsedTime = ((uint64_t)stopTime + (uint64_t)0xffffffff) - (startTime);
+
+        totalElapsedTime += elapsedTime;
+        ++frame;
+
+        if (frame == 60)
+        {
+            float seconds = totalElapsedTime / (CONFIG_ESP32_DEFAULT_CPU_FREQ_MHZ * 1000000.0f);
+            float fps = frame / seconds;
+
+            printf("HEAP:0x%x, FPS:%f\n", esp_get_free_heap_size(), fps);
+
+            frame = 0;
+            totalElapsedTime = 0;
+        }
+    }
 }
 
 static void mem_trash(uint8 *buffer, int length)
@@ -433,7 +462,6 @@ void nes_reset(int reset_type)
 
 void nes_destroy(nes_t **machine)
 {
-   printf("Destroy!!!!\r\n");
    if (*machine)
    {
       rom_free(&(*machine)->rominfo);
@@ -469,8 +497,10 @@ int nes_insertcart(const char *filename, nes_t *machine)
    nes6502_setcontext(machine->cpu);
 
    /* rom file */
+   printf("rom load \r\n");
    machine->rominfo = rom_load(filename);
    if (NULL == machine->rominfo){
+      printf("rom info null\r\n");
        goto _fail;
    }
      

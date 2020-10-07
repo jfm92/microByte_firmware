@@ -444,11 +444,8 @@ rominfo_t *rom_load(const char *filename)
    memset(rominfo, 0, sizeof(rominfo_t));
 
    // Get the header and stick it into rominfo struct 
-   if (rom_getheader(&rom, rominfo)){
-      printf("Get header eeror\r\n");
+   if (rom_getheader(&rom, rominfo))
       goto _fail;
-   }
-      
 
    // Make sure we really support the mapper 
    if (false == mmc_peek(rominfo->mapper_number))
@@ -457,26 +454,24 @@ rominfo_t *rom_load(const char *filename)
       goto _fail;
    }
 
-   // iNES format doesn't tell us if we need SRAM, so
-   // we have to always allocate it -- bleh!
-   // UNIF, TAKE ME AWAY!  AAAAAAAAAA!!!
-   //
+   /* iNES format doesn't tell us if we need SRAM, so
+   ** we have to always allocate it -- bleh!
+   ** UNIF, TAKE ME AWAY!  AAAAAAAAAA!!!
+   */
    if (rom_allocsram(rominfo))
    {
-      printf("Allocate sram fail\r\n");
       goto _fail;
    }
    rom_loadtrainer(&rom, rominfo);
 
    if (rom_loadrom(&rom, rominfo))
    {
-      printf("rom loader fail\r\n");
       goto _fail;
    }
 
    rom_loadsram(rominfo);
 
-   // See if there's a palette we can load up 
+   /* See if there's a palette we can load up */
    //   rom_checkforpal(rominfo);
 
    gui_sendmsg(GUI_GREEN, "ROM loaded: %s", rom_getinfo(rominfo));
