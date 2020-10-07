@@ -44,7 +44,6 @@ void scr_spi_init(void){
         .queue_size = 1,
         .pre_cb = scr_spi_pre_transfer_callback,
         .post_cb = NULL,
-        //.flags = SPI_DEVICE_HALFDUPLEX
     };
 
     // SPI bus initialization
