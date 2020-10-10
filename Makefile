@@ -16,8 +16,11 @@ EXTRA_COMPONENT_DIRS := components/drivers/spi \
 						components/GUI \
 						components/drivers/sd_storage \
 						components/drivers/battery \
+						components/emulators/SMS \
+						components/emulators/SMS/smsplus \
 						components/emulators/NES \
 						components/emulators/NES/nofrendo \
+						
 
 
 include $(IDF_PATH)/make/project.mk
