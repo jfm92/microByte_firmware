@@ -42,7 +42,7 @@ void GUI_init(void){
     lv_init();
 
     //Screen Buffer initialization
-    static lv_color_t buf1[DISP_BUF_SIZE];
+    static EXT_RAM_ATTR lv_color_t * buf1[DISP_BUF_SIZE];
     //static lv_color_t buf2[DISP_BUF_SIZE];
 
     static lv_disp_buf_t disp_buf;
