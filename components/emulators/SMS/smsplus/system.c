@@ -143,6 +143,7 @@ void system_shutdown(void)
 
 void system_reset(void)
 {
+  printf("system reset\r\n");
   sms_reset();
   pio_reset();
   vdp_reset();

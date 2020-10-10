@@ -10,5 +10,4 @@
 COMPONENT_ADD_INCLUDEDIRS := . ./cpu ./sound
 COMPONENT_SRCDIRS := . cpu sound
 
-#CFLAGS += -DLSB_FIRST=1 -Wno-error=unused-const-variable
-CFLAGS += -Wno-error=unused-const-variable
+CFLAGS += -DLSB_FIRST=1 -Wno-error=unused-const-variable

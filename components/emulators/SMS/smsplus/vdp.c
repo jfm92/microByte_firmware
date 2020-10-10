@@ -26,6 +26,8 @@
 #include "shared.h"
 #include "hvc.h"
 
+#include "freertos/FreeRTOS.h"
+
 #if 0
 /* Mark a pattern as dirty */
 #define MARK_BG_DIRTY(addr)                          \
@@ -43,7 +45,7 @@
 #endif
 
 /* VDP context */
-vdp_t vdp;
+EXT_RAM_ATTR vdp_t vdp;
 
 /* Initialize VDP emulation */
 void vdp_init(void)
