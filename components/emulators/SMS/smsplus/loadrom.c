@@ -326,8 +326,11 @@ void set_config()
 
 #if 1
     /* force settings if AUTO is not set*/
-    if (option.console == 1)
+    if (option.console == 1){
         sms.console = CONSOLE_SMS;
+        printf("console sms\r\n");
+    }
+        
     else if (option.console == 2)
         sms.console = CONSOLE_SMS2;
     else if (option.console == 3)
@@ -352,6 +355,7 @@ void set_config()
     }
     else if (option.country == 2) /* EUROPE */
     {
+        printf("Terrytorio europa\r\n");
         sms.display = DISPLAY_PAL;
         sms.territory = TERRITORY_EXPORT;
     }
@@ -360,6 +364,7 @@ void set_config()
         sms.display = DISPLAY_NTSC;
         sms.territory = TERRITORY_DOMESTIC;
     }
+    printf("country %i , console %i\r\n",option.country,option.console);
 #endif
 }
 
@@ -397,7 +402,7 @@ int load_rom(char *filename)
         printf("Colecovision BIOS loaded.\n");
     }
 
-    fd = fopen(filename, "rb");
+    fd = fopen("/sdcard/Master_System/sonic.sms", "rb");
     if (!fd)
         abort();
 
@@ -411,7 +416,8 @@ int load_rom(char *filename)
     if (cart.size < 0x4000)
         cart.size = 0x4000;
 
-    cart.rom = ESP32_PSRAM;
+    //cart.rom = ESP32_PSRAM;
+    cart.rom = malloc(cart.size);
     size_t cnt = fread(cart.rom, cart.size, 1, fd);
     //if (cnt != 1) abort();
     __asm__("nop");
