@@ -27,8 +27,8 @@
 #include "sd_storage.h"
 
 #include "gnuboy_manager.h"
-//#include "nofrendo.h"
 #include "NES_manager.h"
+#include "SMS_manager.h"
 
 //#include "bt_controller.h"
 
@@ -38,6 +38,7 @@ TaskHandle_t gui_handler;
 
 
 void app_main(void){
+    printf("Free init %i bytes\r\n",esp_get_free_heap_size());
     /**************** Peripherals initialization **************/
     audio_init(16000);
     display_init();
@@ -48,12 +49,13 @@ void app_main(void){
    
 
     /**************** Message Queue initialization **************/
-    
+    printf("Free init %i bytes\r\n",esp_get_free_heap_size());
     batteryQueue = xQueueCreate(1, sizeof(struct BATTERY_STATUS));
     input_queue = xQueueCreate(10, sizeof(uint8_t));
     modeQueue = xQueueCreate(1, sizeof(struct SYSTEM_MODE));
 
     /**************** Tasks **************/
+    printf("Free init %i bytes\r\n",esp_get_free_heap_size());
     xTaskCreatePinnedToCore(GUI_task, "Graphical User Interface", 1024*6, NULL, 1, &gui_handler, 0);
     xTaskCreatePinnedToCore(&batteryTask, "Battery management", 2048, NULL, 5, NULL, 0);
 
@@ -76,6 +78,12 @@ void app_main(void){
                         else if(management.console == NES){
                             vTaskSuspend(gui_handler);
                             NES_start(management.game_name);
+                            game_executed = true;
+                            game_running=true;
+                        }
+                        else if(management.console == SMS){
+                            vTaskSuspend(gui_handler);
+                            SMS_start(management.game_name);
                             game_executed = true;
                             game_running=true;
                         }
@@ -128,10 +136,7 @@ void app_main(void){
                 case MODE_BT_CONTROLLER:
                     if(management.status == 1){
                         printf("bt controller\r\n");
-                        vTaskSuspend(gui_handler);
-                        NES_start("goo");
-                        //nofrendo_main(0, NULL);
-                        printf("nofrendo -------------------------------------------\r\n");
+
                     }
                     else{
                         // Deinit bluetooth
