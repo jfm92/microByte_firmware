@@ -18,16 +18,16 @@ struct snd
 {
 	int rate;
 	struct sndchan ch[4];
-	byte wave[16];
+	uint8_t wave[16];
 };
 
 
 extern struct snd snd;
 
-void sound_write(byte r, byte b);
-byte sound_read(byte r);
+void sound_write(uint8_t r, uint8_t b);
+uint8_t sound_read(uint8_t r);
 void sound_dirty();
-void sound_reset();
+void gbc_sound_reset();
 void sound_mix();
 
 #endif

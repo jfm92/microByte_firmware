@@ -32,7 +32,7 @@ void emu_reset()
 	lcd_reset();
 	cpu_reset();
 	mbc_reset();
-	sound_reset();
+	gbc_sound_reset();
 }
 
 

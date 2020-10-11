@@ -149,7 +149,7 @@ void sound_off()
 	sound_dirty();
 }
 
-void sound_reset()
+void gbc_sound_reset()
 {
 	memset(&snd, 0, sizeof snd);
 	if (pcm.hz) snd.rate = (1<<21) / pcm.hz;//(1<<21) / pcm.hz;
