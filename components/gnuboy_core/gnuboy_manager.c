@@ -156,7 +156,7 @@ static void audioTask(void *arg){
 
     while(1){
         xQueuePeek(audioQueue, &param, portMAX_DELAY);
-        audio_submit(currentAudioBufferPtr, currentAudioSampleCount >> 1);
+        //audio_submit(currentAudioBufferPtr, currentAudioSampleCount >> 1);
         xQueueReceive(audioQueue, &param, portMAX_DELAY);
     }
 
@@ -168,8 +168,14 @@ static void gnuBoyTask(void *arg){
 
     // Allocate the memory for the display buffer
     printf("Free init %i bytes\r\n",esp_get_free_heap_size());
-    displayBuffer[0] = heap_caps_malloc(160 * 144 * 2, MALLOC_CAP_8BIT | MALLOC_CAP_DMA );
-    displayBuffer[1] = heap_caps_malloc(160 * 144 * 2, MALLOC_CAP_8BIT | MALLOC_CAP_DMA );
+    displayBuffer[0] = heap_caps_malloc(160 * 144 * 2, MALLOC_CAP_8BIT | MALLOC_CAP_DMA | MALLOC_CAP_INTERNAL);
+    if(displayBuffer[0] == NULL){
+        displayBuffer[0] = malloc(160 * 144 * 2);
+    }
+    displayBuffer[1] = heap_caps_malloc(160 * 144 * 2, MALLOC_CAP_8BIT | MALLOC_CAP_DMA | MALLOC_CAP_INTERNAL);
+    if(displayBuffer[1] == NULL){
+        displayBuffer[1] = malloc(160 * 144 * 2);
+    }
 
     if(displayBuffer[0] == 0 || displayBuffer[1] == 0){
         printf("Free init %i bytes\r\n",esp_get_free_heap_size());
@@ -213,11 +219,11 @@ static void gnuBoyTask(void *arg){
     pcm.hz = AUDIO_SAMPLE_RATE;
     pcm.stereo = 1;
     pcm.len =  audioBufferLength;
-    pcm.buf = heap_caps_malloc(AUDIO_BUFFER_SIZE, MALLOC_CAP_8BIT | MALLOC_CAP_DMA);
+    pcm.buf = malloc(AUDIO_BUFFER_SIZE);
     pcm.pos = 0;
 
     audioBuffer[0] = pcm.buf;
-    audioBuffer[1] = heap_caps_malloc(AUDIO_BUFFER_SIZE, MALLOC_CAP_8BIT | MALLOC_CAP_DMA);
+    audioBuffer[1] = malloc(AUDIO_BUFFER_SIZE);
 
     if (audioBuffer[0] == 0 || audioBuffer[1] == 0){
         ESP_LOGE(TAG, "Audio Buffer allocation fail: audioBuffer[0]=%p, [1]=%p",audioBuffer[0], audioBuffer[1]);
@@ -225,7 +231,7 @@ static void gnuBoyTask(void *arg){
     }
         
 
-    sound_reset();
+    gbc_sound_reset();
 
     lcd_begin();
 

@@ -120,13 +120,15 @@ int gbc_rom_load(const char *game_name)
 
 	char rom_name[300];
 	sprintf(&rom_name,"/sdcard/GameBoy_Color/%s",game_name);
-
-
-	char * data = heap_caps_malloc(1024*1024, MALLOC_CAP_8BIT | MALLOC_CAP_SPIRAM);
+	printf("malloc foo\r\n");
+	size_t game_size = sd_file_size(rom_name);
+	char * data = malloc(game_size);
 	if(data == NULL){
 		printf("gnuboy data= NULL\r\n");
+		data = (void*)0x3f800000;
 	}
-	data = (void*)0x3f800000;
+	printf("malloc foo\r\n");
+	//data = (void*)0x3f800000;
 	sd_get_file(rom_name,data);
 
 	printf("Initialized. ROM@%p\n", data);
@@ -193,6 +195,7 @@ int gbc_rom_load(const char *game_name)
 	rlen = 16384 * mbc.romsize;
 	int sram_length = 8192 * mbc.ramsize;
 	printf("loader: mbc.type=%s, mbc.romsize=%d (%dK), mbc.ramsize=%d (%dK)\n", mbcName, mbc.romsize, rlen / 1024, mbc.ramsize, sram_length / 1024);
+	printf("SRAM %i\r\n",sram_length);
 
 	// ROM
 	//rom.bank[0] = data;
@@ -201,7 +204,7 @@ int gbc_rom_load(const char *game_name)
 
 	// SRAM
 	ram.sram_dirty = 1;
-//	ram.sbank = heap_caps_malloc(sram_length, MALLOC_CAP_SPIRAM);
+//	ram.sbank = heap_caps_malloc(sram_length, MALLOC_CAP_8BIT | MALLOC_CAP_INTERNAL);
 //	ram.sbank = malloc(sram_length);
 	if (!ram.sbank)
 	{
