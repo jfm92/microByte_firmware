@@ -43,12 +43,12 @@ void GUI_init(void){
 
     //Screen Buffer initialization
     static EXT_RAM_ATTR lv_color_t * buf1[DISP_BUF_SIZE];
-    //static lv_color_t buf2[DISP_BUF_SIZE];
+    static EXT_RAM_ATTR lv_color_t * buf2[DISP_BUF_SIZE];
 
     static lv_disp_buf_t disp_buf;
     uint32_t size_in_px = DISP_BUF_SIZE; 
 
-    lv_disp_buf_init(&disp_buf, buf1, NULL, size_in_px);
+    lv_disp_buf_init(&disp_buf, buf1, buf2, size_in_px);
 
     // Initialize LVGL display and attach the flush function
     lv_disp_drv_t disp_drv;
