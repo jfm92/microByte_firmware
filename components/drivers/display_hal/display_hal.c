@@ -25,7 +25,7 @@ void display_init(void){
     const size_t lineSize = SCR_WIDTH * LINE_COUNT * sizeof(uint16_t);
     for (int x = 0; x < LINE_BUFFERS; x++){
        // line[x] = heap_caps_malloc(lineSize,  MALLOC_CAP_8BIT | MALLOC_CAP_DMA);
-        line[x] = heap_caps_malloc(lineSize,  MALLOC_CAP_8BIT );
+        line[x] = heap_caps_malloc(lineSize,  MALLOC_CAP_8BIT | MALLOC_CAP_DMA );
         if (!line[x]) abort();
     }
 
@@ -77,55 +77,30 @@ void display_gb_frame(const uint16_t *data){
         }
     }
     else{
-        uint16_t outHeight = SCR_HEIGHT;
-        uint16_t outWidth = SCR_WIDTH;
+        short outputHeight = SCR_HEIGHT;
+        short outputWidth = 240;
+        short xpos = (SCR_WIDTH - outputWidth) / 2;
 
-        for(uint16_t y = 0; y < outHeight; y += LINE_COUNT){
-            for(uint16_t i = 0; i < LINE_COUNT; i++){
+        for (int y = 0; y < outputHeight; y += LINE_COUNT)
+        {
+            for (int i = 0; i < LINE_COUNT; ++i)
+            {
+                if ((y + i) >= outputHeight)
+                    break;
 
-                if((y + i) >= outHeight) break;
+                int index = (i)*outputWidth;
 
-                uint16_t index = (i)*outWidth;
-
-                for(uint16_t x = 0; x < outWidth; x++){
-                    uint16_t sample = getPixelGBC(data, x, (y + i), outWidth, outHeight);
-                    
-                    // Save the calculate pixel to the line buffer
-                    index ++;
-                    line[calc_line][index] = ((sample >> 8) | ((sample) << 8));
+                for (int x = 0; x < outputWidth; ++x)
+                {
+                    uint16_t sample = getPixelGBC(data, x, (y + i), outputWidth, outputHeight);
+                    line[calc_line][index++] = ((sample >> 8) | ((sample) << 8));
                 }
             }
-
-            //Print the calculated line
+            
             sending_line = calc_line;
             calc_line = (calc_line == 1) ? 0 : 1;
-            scr_spi_send_lines(y, 0, outWidth, line[sending_line], LINE_COUNT);
-        }
-      /*  short outputHeight = SCR_HEIGHT;
-        short   outputWidth = GB_FRAME_WIDTH + (SCR_HEIGHT - GB_FRAME_HEIGHT);
-        short   xpos = (SCR_WIDTH - outputWidth) / 2;
-
-            for (int y = 0; y < outputHeight; y += LINE_COUNT)
-            {
-                for (int i = 0; i < LINE_COUNT; ++i)
-                {
-                    if ((y + i) >= outputHeight)
-                        break;
-
-                    int index = (i)*outputWidth;
-
-                    for (int x = 0; x < outputWidth; ++x)
-                    {
-                        uint16_t sample = getPixel(data, x, (y + i), outputWidth, outputHeight);
-                        line[calc_line][index++] = ((sample >> 8) | ((sample) << 8));
-                    }
-                }
-               
-                sending_line = calc_line;
-                calc_line = (calc_line == 1) ? 0 : 1;
-                scr_spi_send_lines(y, xpos, outputWidth, line[sending_line], LINE_COUNT);
-            }*/
-            
+            scr_spi_send_lines(y, xpos, outputWidth, line[sending_line], LINE_COUNT);
+        }    
     }
 }
 
@@ -146,9 +121,9 @@ void display_NES_frame(const uint8_t *data){
         }
     }
     else{
-        int outputHeight = 240;
-        int outputWidth = 240 + (240 - 240);
-        int xpos = (240 - outputWidth) / 2;
+        short outputHeight = 240;
+        short outputWidth = 240 + (240 - 240);
+        short xpos = (240 - outputWidth) / 2;
 
         for (int y = 0; y < outputHeight; y += LINE_COUNT){
             for (int i = 0; i < LINE_COUNT; ++i){
@@ -188,9 +163,9 @@ void display_SMS_frame(const uint8_t *data, uint16_t color[]){
         }
     }
     else{
-        int outputHeight = SCR_HEIGHT;
-        int outputWidth = SCR_WIDTH;
-        int xpos = (SCR_WIDTH - outputWidth) / 2;
+        short outputHeight = SCR_HEIGHT;
+        short outputWidth = SCR_WIDTH;
+        short xpos = (SCR_WIDTH - outputWidth) / 2;
 
         for (int y = 0; y < outputHeight; y += LINE_COUNT){
             for (int i = 0; i < LINE_COUNT; ++i){
