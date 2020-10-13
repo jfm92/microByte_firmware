@@ -1,4 +1,7 @@
 #include "stdbool.h"
+#include "stdint.h"
+#include "freertos/FreeRTOS.h"
+#include "freertos/queue.h"
 
 /************ Queue *************/
 QueueHandle_t modeQueue;
@@ -17,7 +20,12 @@ QueueHandle_t batteryQueue;
 #define GAMEBOY_COLOR 0x01
 #define NES 0x02
 #define SNES 0x03
-#define SMS 0x03
+#define SMS 0x04
+
+#define MEMORY_DMA 0x00
+#define MEMORY_INTERNAL 0x01
+#define MEMORY_SPIRAM 0X02
+#define MEMORY_ALL 0x03
 
 struct SYSTEM_MODE{
     uint8_t mode;
@@ -33,3 +41,11 @@ struct BATTERY_STATUS{
     uint32_t voltage;
 };
 
+char app_version[32];
+char idf_version[32];
+char cpu_version[32];
+uint32_t RAM_size;
+uint32_t FLASH_size;
+
+int system_memory(uint8_t memory);
+void system_info();
