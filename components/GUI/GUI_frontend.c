@@ -78,7 +78,11 @@ static void bluetooth_controller_cb(lv_obj_t * parent, lv_event_t e);
 
 // Configuration menu
 void config_menu(lv_obj_t * parent);
-
+static void configuration_cb(lv_obj_t * parent, lv_event_t e);
+static void config_option_cb(lv_obj_t * parent, lv_event_t e);
+static void mbox_about_cb(lv_obj_t * parent, lv_event_t e);
+static void color_picker_cb(lv_obj_t * parent, lv_event_t e);
+static void mbox_battery_cb(lv_obj_t * parent, lv_event_t e);
 
 /**********************
  *  GLOBAL VARIABLES
@@ -96,6 +100,13 @@ uint32_t btn_menu_time = 0;
 uint8_t emulator_selected = 0x00;
 
 bool sub_menu = false;
+
+// TODO: Get this configuration from the ROM
+uint32_t GUI_THEME = LV_THEME_MATERIAL_FLAG_LIGHT;
+lv_color_t color;
+
+struct BATTERY_STATUS management;
+
 
 /**********************
  *  LVGL groups and objects
@@ -126,6 +137,7 @@ static lv_obj_t * tab_config;
 static lv_obj_t * list_emulators_main;
 static lv_obj_t * btn_emulator_lib;
 static lv_obj_t * container_header_game_icon;
+static lv_obj_t *  list_game_emulator;
 
 // On-game menu objects
 
@@ -144,6 +156,9 @@ static lv_obj_t * bt_controller_btn;
 // Configuration menu objects
 
 static lv_obj_t * config_btn;
+static lv_obj_t * list_config;
+static lv_obj_t * mbox_about;
+static lv_obj_t * mbox_color;
 
 
 static const char *TAG = "GUI_frontend";
@@ -192,7 +207,7 @@ void GUI_frontend(void){
     lv_label_set_text(SD_label, LV_SYMBOL_SD_CARD);
     lv_obj_align_origo(SD_label, NULL, LV_ALIGN_IN_LEFT_MID, 25, 0);
     // Check if is connected
-    /* if(! sd_connected) lv_obj_set_hidden(SD_label,true); */
+    if(!sd_mounted()) lv_obj_set_hidden(SD_label,true); 
 
     //Wi-Fi Status Icon
     WIFI_label = lv_label_create(notification_cont, NULL);
@@ -220,6 +235,8 @@ void GUI_frontend(void){
     tab_lib_manager = lv_tabview_add_tab(tab_main_menu,"Wifi-Library-Manager");
     tab_bt_controller = lv_tabview_add_tab(tab_main_menu,"Bluetooth controller");
     tab_config = lv_tabview_add_tab(tab_main_menu,"Configuration");
+
+    color = lv_theme_get_color_primary();
 
     emulators_menu(tab_emulators);
     library_manager_menu(tab_lib_manager);
@@ -343,7 +360,7 @@ void config_menu(lv_obj_t * parent){
     lv_obj_t * label = lv_label_create(config_btn, NULL);
     lv_label_set_text(label, "Configuration");
 
-   // lv_obj_set_event_cb(config_btn, game_menu_event_cb); 
+    lv_obj_set_event_cb(config_btn, configuration_cb); 
     lv_group_add_obj(group_interact, config_btn);
 }
 
@@ -358,7 +375,7 @@ static void game_list_cb(lv_obj_t * parent, lv_event_t e){
 
     // Get the list of available games for each console and show a header with the icon of the console
     if(e == LV_EVENT_CLICKED){
-        
+
         container_header_game_icon = lv_cont_create(lv_layer_top(), NULL);
         lv_obj_align(container_header_game_icon, NULL, LV_ALIGN_IN_TOP_LEFT, 0, 0);
         lv_obj_set_size(container_header_game_icon,240,40);
@@ -439,10 +456,10 @@ static void game_list_cb(lv_obj_t * parent, lv_event_t e){
 
         // Print the list of games or show a message is any game is available
         if(games_num>0){
-            lv_obj_t *  list_game_emulator = lv_list_create(lv_layer_top(), NULL);
+            list_game_emulator = lv_list_create(lv_layer_top(), NULL);
             lv_obj_set_size(list_game_emulator, 210, 200);
             lv_obj_align(list_game_emulator, NULL, LV_ALIGN_CENTER, 0, 23);
-            lv_obj_set_event_cb(list_game_emulator, emulator_list_event);
+            //lv_obj_set_event_cb(list_game_emulator, emulator_list_event);
             lv_page_glue_obj(list_game_emulator,true);
             // Add a button for each game
             for(int i=0;i<games_num;i++){
@@ -478,6 +495,11 @@ static void game_list_cb(lv_obj_t * parent, lv_event_t e){
         }
         
     }
+    else if(e == LV_EVENT_CANCEL ){
+        sub_menu = false;
+        lv_group_focus_obj(btn_emulator_lib);
+        lv_obj_del(list_emulators_main);
+    }
 }
 
 static void msgbox_no_game_cb(lv_obj_t * msgbox, lv_event_t e){
@@ -492,11 +514,11 @@ static void msgbox_no_game_cb(lv_obj_t * msgbox, lv_event_t e){
 static void emulators_list_cb(lv_obj_t * parent, lv_event_t e){
     // Create a list with the available emulators
     if(e == LV_EVENT_CLICKED){
-
+        sub_menu = true;
         list_emulators_main = lv_list_create(lv_layer_top(), NULL);
         lv_obj_set_size(list_emulators_main, 210, 200);
         lv_obj_align(list_emulators_main, NULL, LV_ALIGN_CENTER, 0, 10);
-        lv_obj_set_event_cb(list_emulators_main, emulator_list_event);
+        //lv_obj_set_event_cb(list_emulators_main, emulator_list_event);
 
         lv_obj_t * emulator_NES_btn = lv_list_add_btn(list_emulators_main,  &nes_icon, "NES");
         lv_obj_set_size(emulator_NES_btn, 200, 10);
@@ -520,16 +542,6 @@ static void emulators_list_cb(lv_obj_t * parent, lv_event_t e){
         
         lv_group_add_obj(group_interact, list_emulators_main);
         lv_group_focus_obj(list_emulators_main);
-
-
-
-    }
-}
-
-static void emulator_list_event(lv_obj_t * parent, lv_event_t e){
-    // Delete the list of emulators
-    if(e == LV_EVENT_CANCEL  ){
-        lv_obj_del(parent);
     }
 }
 
@@ -553,7 +565,9 @@ static void game_execute_cb(lv_obj_t * parent, lv_event_t e){
     else if(e == LV_EVENT_CANCEL  ){
         // Delete the list of games and the header icon
         lv_obj_del(container_header_game_icon);
+        lv_obj_del(list_game_emulator);
         lv_obj_set_hidden(list_emulators_main,false);
+        lv_group_focus_obj(list_emulators_main);
     }
 }
 
@@ -616,11 +630,6 @@ static void list_game_menu_cb(lv_obj_t * parent, lv_event_t e){
             lv_obj_set_style_local_bg_color(lv_layer_top(), LV_OBJ_PART_MAIN, LV_STATE_DEFAULT, LV_COLOR_GRAY);
             lv_obj_set_click(lv_layer_top(), true);
             
-
-            lv_obj_set_style_local_bg_opa(lv_layer_top(), LV_OBJ_PART_MAIN, LV_STATE_DEFAULT, LV_OPA_70);
-            lv_obj_set_style_local_bg_color(lv_layer_top(), LV_OBJ_PART_MAIN, LV_STATE_DEFAULT, LV_COLOR_GRAY);
-            lv_obj_set_click(lv_layer_top(), true);
-
             lv_obj_t * slider = lv_slider_create(mbox_volume, NULL);
             lv_obj_align(slider, NULL, LV_ALIGN_CENTER, 0, 0);
             lv_obj_set_width(slider, 180);
@@ -641,11 +650,6 @@ static void list_game_menu_cb(lv_obj_t * parent, lv_event_t e){
             
             lv_group_add_obj(group_interact, mbox_brightness);
             lv_group_focus_obj(mbox_brightness);
-
-            lv_obj_set_style_local_bg_opa(lv_layer_top(), LV_OBJ_PART_MAIN, LV_STATE_DEFAULT, LV_OPA_70);
-            lv_obj_set_style_local_bg_color(lv_layer_top(), LV_OBJ_PART_MAIN, LV_STATE_DEFAULT, LV_COLOR_GRAY);
-            lv_obj_set_click(lv_layer_top(), true);
-            
 
             lv_obj_set_style_local_bg_opa(lv_layer_top(), LV_OBJ_PART_MAIN, LV_STATE_DEFAULT, LV_OPA_70);
             lv_obj_set_style_local_bg_color(lv_layer_top(), LV_OBJ_PART_MAIN, LV_STATE_DEFAULT, LV_COLOR_GRAY);
@@ -704,7 +708,7 @@ static void library_manager_cb(lv_obj_t * parent, lv_event_t e){
     }
 }
 
-/* Bluetooth ctonrller call-back functions */
+/* Bluetooth controller call-back functions */
 
 static void bluetooth_controller_cb(lv_obj_t * parent, lv_event_t e){
 
@@ -719,8 +723,242 @@ static void bluetooth_controller_cb(lv_obj_t * parent, lv_event_t e){
         }
     }
 
+}
+
+/* Configuration menu cb function */
+
+static void configuration_cb(lv_obj_t * parent, lv_event_t e){
+    if(e == LV_EVENT_CLICKED){
+
+        sub_menu = true;
+
+        list_config = lv_list_create(lv_layer_top(), NULL);
+        lv_obj_set_size(list_config, 225, 200);
+        lv_obj_align(list_config, NULL, LV_ALIGN_CENTER, 0, 15);
+
+        
+        lv_obj_t * list_btn;
+
+        list_btn = lv_list_add_btn(list_config, LV_SYMBOL_SETTINGS, "About this device");
+        lv_obj_set_event_cb(list_btn, config_option_cb);
+        list_btn = lv_list_add_btn(list_config, LV_SYMBOL_DOWNLOAD, "Update firmware");
+        lv_obj_set_event_cb(list_btn, config_option_cb);
+
+        list_btn = lv_list_add_btn(list_config, LV_SYMBOL_IMAGE, "Brightness");
+        lv_obj_set_event_cb(list_btn, config_option_cb);
+        list_btn = lv_list_add_btn(list_config, LV_SYMBOL_SD_CARD, "Dark Mode");
+        lv_obj_set_event_cb(list_btn, config_option_cb);
+        list_btn = lv_list_add_btn(list_config, LV_SYMBOL_SD_CARD, "Color");
+        lv_obj_set_event_cb(list_btn, config_option_cb);
+
+        list_btn = lv_list_add_btn(list_config, LV_SYMBOL_VOLUME_MAX, "Volume");
+        lv_obj_set_event_cb(list_btn, config_option_cb);
+
+        list_btn = lv_list_add_btn(list_config, LV_SYMBOL_BATTERY_FULL, "Battery Status");
+        lv_obj_set_event_cb(list_btn, config_option_cb);
+        list_btn = lv_list_add_btn(list_config, LV_SYMBOL_SD_CARD, "SD card Status");
+        lv_obj_set_event_cb(list_btn, config_option_cb);
+
+        lv_group_add_obj(group_interact, list_config);
+        lv_group_focus_obj(list_config);
+    }
+}
+
+//TODO: Save the configuration change on the ROM memory to avoid reset lost.
+
+static void config_option_cb(lv_obj_t * parent, lv_event_t e){
+    if(e == LV_EVENT_CLICKED){
+
+        if(strcmp(lv_list_get_btn_text(parent),"About this device")==0){
+
+            mbox_about = lv_msgbox_create(lv_layer_top(), NULL);
+            lv_msgbox_set_text(mbox_about, "microByte");
+
+            lv_obj_align(mbox_about, NULL, LV_ALIGN_CENTER, 0, -50);
+
+            lv_obj_t * label1 = lv_label_create(mbox_about, NULL);
+            char spec_text[256];
+            sprintf(spec_text,"\u2022 CPU: %s\n\u2022 RAM: %i MB \n\u2022 Flash: %i MB\n\u2022 FW Version: %s",cpu_version,RAM_size,FLASH_size,app_version);
+            lv_label_set_text(label1,spec_text);
+
+            lv_group_add_obj(group_interact, mbox_about);
+            lv_obj_set_event_cb(mbox_about, mbox_about_cb);
+            lv_group_focus_obj(mbox_about);
+        }
+        else if(strcmp(lv_list_get_btn_text(parent),"Update firmware")==0){
+        }
+        else if(strcmp(lv_list_get_btn_text(parent),"Brightness")==0){
+            mbox_brightness = lv_msgbox_create(lv_layer_top(), NULL);
+            lv_msgbox_set_text(mbox_brightness, "Brightness");
+            
+            lv_group_add_obj(group_interact, mbox_brightness);
+            lv_group_focus_obj(mbox_brightness);
+
+            lv_obj_t * slider = lv_slider_create(mbox_brightness, NULL);
+            lv_obj_align(slider, NULL, LV_ALIGN_CENTER, 0, 0);
+            lv_obj_set_width(slider, 180);
+            lv_slider_set_range(slider, 0, 100);
+            
+            uint8_t brightness_level = st7789_backlight_get();
+            lv_slider_set_value(slider,brightness_level,LV_ANIM_ON);
+
+            lv_obj_set_event_cb(slider, slider_brightness_cb);
+
+            lv_group_add_obj(group_interact, slider);
+            lv_group_focus_obj(slider);
+        }
+        else if(strcmp(lv_list_get_btn_text(parent),"Dark Mode")==0){
+
+            if(GUI_THEME == LV_THEME_MATERIAL_FLAG_LIGHT) GUI_THEME = LV_THEME_MATERIAL_FLAG_DARK;
+            else GUI_THEME = LV_THEME_MATERIAL_FLAG_LIGHT;
+
+            LV_THEME_DEFAULT_INIT(lv_theme_get_color_primary(), lv_theme_get_color_secondary(),
+            GUI_THEME,
+            lv_theme_get_font_small(), lv_theme_get_font_normal(), lv_theme_get_font_subtitle(), lv_theme_get_font_title());
+        }
+        else if(strcmp(lv_list_get_btn_text(parent),"Color")==0){
+
+            mbox_color = lv_msgbox_create(lv_layer_top(), NULL);
+            lv_msgbox_set_text(mbox_color, "GUI Color Selector");
+
+            lv_obj_align(mbox_color, NULL, LV_ALIGN_CENTER, 0, -80);
+
+            lv_obj_t * cpicker;
+
+            cpicker = lv_cpicker_create(mbox_color, NULL);
+            lv_obj_set_size(cpicker, 120, 120);
+            lv_obj_align(cpicker, NULL, LV_ALIGN_CENTER, 0, 0);
+
+            lv_color_t color_main = lv_theme_get_color_primary();
+
+            // TODO: Rework color selector.
+            if(color.full != color_main.full){
+                lv_cpicker_set_color(cpicker,color);
+            }
+            
+
+            lv_obj_set_event_cb(cpicker, color_picker_cb);
+
+            lv_group_add_obj(group_interact, cpicker);
+            lv_group_focus_obj(cpicker);
+        }
+        else if(strcmp(lv_list_get_btn_text(parent),"Volume")==0){
+            mbox_volume = lv_msgbox_create(lv_layer_top(), NULL);
+            lv_msgbox_set_text(mbox_volume, "Volume");
+            
+            lv_group_add_obj(group_interact, mbox_volume);
+            lv_group_focus_obj(mbox_volume);
+
+            lv_obj_t * slider = lv_slider_create(mbox_volume, NULL);
+            lv_obj_align(slider, NULL, LV_ALIGN_CENTER, 0, 0);
+            lv_obj_set_width(slider, 180);
+            lv_slider_set_range(slider, 0, 100);
+            // Get volumen
+            uint8_t volume = audio_volume_get();
+            lv_slider_set_value(slider,volume,LV_ANIM_OFF);
+
+            lv_obj_set_event_cb(slider, slider_volume_cb);
+
+            lv_group_add_obj(group_interact, slider);
+            lv_group_focus_obj(slider);
+        }
+        else if(strcmp(lv_list_get_btn_text(parent),"Battery Status")==0){
+            //Create message box
+            lv_obj_t * mbox_battery = lv_msgbox_create(lv_layer_top(), NULL);
+            lv_msgbox_set_text(mbox_battery, "Battery Information");
+            lv_obj_align(mbox_battery, NULL, LV_ALIGN_CENTER, 0, -50);
+
+            // Get the battery data and print with bullet points
+            char spec_text[256];
+            sprintf(spec_text,"\u2022 Total Capacity: %imAh\n\u2022 Voltage: %imV",\
+            500,management.voltage);
+            lv_obj_t * lable_battery_info = lv_label_create(mbox_battery, NULL);
+            lv_label_set_text(lable_battery_info,spec_text);
+
+            // Bar which show the actual capacity of the batter
+            lv_obj_t * bar_battery = lv_bar_create(mbox_battery, NULL);
+            lv_obj_set_size(bar_battery, 200, 20);
+            lv_obj_align(bar_battery, NULL, LV_ALIGN_CENTER, 0, 0);
+            lv_bar_set_anim_time(bar_battery, 2000);
+            lv_bar_set_value(bar_battery, management.percentage, LV_ANIM_ON);
+
+            // TODO: Change the possition of the text or if it's possible create an animation with the numbers
+            lv_obj_t * label_battery_bar = lv_label_create(bar_battery, NULL);
+            char battery_level[4];
+            sprintf(battery_level,"%i",management.percentage);
+            lv_label_set_text(label_battery_bar,battery_level);
+
+            lv_obj_set_event_cb(mbox_battery, mbox_battery_cb);
+            lv_group_add_obj(group_interact, mbox_battery);
+            lv_group_focus_obj(mbox_battery);
+
+        }
+        else if(strcmp(lv_list_get_btn_text(parent),"SD card Status")==0){
+            lv_obj_t * mbox_SD = lv_msgbox_create(lv_layer_top(), NULL);
+            lv_msgbox_set_text(mbox_SD, "SD Card Information");
+            lv_obj_align(mbox_SD, NULL, LV_ALIGN_CENTER, 0, -50);
+
+            if(sd_mounted()){
+                lv_obj_t * label1 = lv_label_create(mbox_SD, NULL);
+                char spec_text[256];
+                // TODO: The SD card type is wrong, it can't show all the types
+                sprintf(spec_text,"\u2022 SD Name: %s\n\u2022 Size: %i MB \n\u2022 Speed: %i Khz\n\u2022 Type: %s" \
+                ,sd_card_info.card_name, sd_card_info.card_size, sd_card_info.card_speed,\
+                (sd_card_info.card_type & SDIO) ? "SDIO" : "SDHC/SDXC");
+                lv_label_set_text(label1,spec_text);
+                static const char * btns[] = {"Ok", "Unmount", ""};
+                lv_msgbox_add_btns(mbox_SD, btns);
+
+                // TODO: Implement Unmount card
+                // TODO: Implement safe close of the ad
+            }
+            else{
+                lv_obj_t * label1 = lv_label_create(mbox_SD, NULL);
+                lv_label_set_text(label1,"SD card not available");
+                static const char * btns[] = {"Ok", "Mount", ""};
+                lv_msgbox_add_btns(mbox_SD, btns);
+
+                // TODO: Implement Mount card
+            }
+
+            lv_group_add_obj(group_interact, mbox_SD);
+            lv_group_focus_obj(mbox_SD);
+            
+        }
+    }
+    else if(e == LV_EVENT_CANCEL){
+        sub_menu = false;
+        lv_obj_del(list_config);
+        lv_group_focus_obj(config_btn);
+    }
 
 }
+
+static void mbox_about_cb(lv_obj_t * parent, lv_event_t e){
+    if(e == LV_EVENT_CANCEL){
+        lv_obj_del(parent);
+    }  
+}
+
+static void mbox_battery_cb(lv_obj_t * parent, lv_event_t e){
+    if(e == LV_EVENT_CANCEL ){
+        lv_obj_del(parent);
+    }  
+}
+
+static void color_picker_cb(lv_obj_t * parent, lv_event_t e){
+    if(e == LV_EVENT_CANCEL){
+        lv_obj_del(parent);
+        lv_obj_del(mbox_color);
+    }
+    else if(e == LV_EVENT_VALUE_CHANGED){
+        color = lv_cpicker_get_color(parent);
+        LV_THEME_DEFAULT_INIT(color, lv_theme_get_color_secondary(),
+            GUI_THEME,
+            lv_theme_get_font_small(), lv_theme_get_font_normal(), lv_theme_get_font_subtitle(), lv_theme_get_font_title());
+    }
+}
+
 
 
 /**********************
@@ -730,8 +968,6 @@ static void bluetooth_controller_cb(lv_obj_t * parent, lv_event_t e){
 static void battery_status_task(lv_task_t * task){
     // This task check every minute if the battery level has change. If it receive a message from the 
     // queue, it change the text value and the size of the battery bar.
-
-    struct BATTERY_STATUS management;
 
     if(xQueueReceive(batteryQueue, &management,( TickType_t ) 0)){
 
@@ -759,7 +995,6 @@ static bool user_input_task(lv_indev_drv_t * indev_drv, lv_indev_data_t * data){
     uint16_t inputs_value =  input_read();
 
     if(!((inputs_value >> 0) & 0x01)){
-        printf("Down\r\n");
         // Button Down pushed
         uint32_t actual_time= xTaskGetTickCount()/portTICK_PERIOD_MS;
 
@@ -775,32 +1010,27 @@ static bool user_input_task(lv_indev_drv_t * indev_drv, lv_indev_data_t * data){
 
     if(!((inputs_value >> 1) & 0x01)){
         // Button Left pushed
-        printf("left\r\n");
         uint32_t actual_time= xTaskGetTickCount()/portTICK_PERIOD_MS;
-        if((actual_time-btn_left_time)>5){
-
-            if(sub_menu){
-                data->state = LV_INDEV_STATE_PR;
-                data->key = LV_KEY_LEFT;
-                btn_left_time = actual_time;
-            }
-            else{
-                tab_num--;
-                if(tab_num <= 0) tab_num = 0;
-                else{
-                    printf("prev %i\r\n",tab_num);
+        if(sub_menu){
+            data->state = LV_INDEV_STATE_PR;
+            data->key = LV_KEY_LEFT;
+            btn_right_time = actual_time;
+        }
+        else{
+            if((actual_time-btn_right_time)>2){
+                if(tab_num > 0 ){
+                    tab_num--;
                     data->state = LV_INDEV_STATE_PR;
                     data->key = LV_KEY_PREV;
                     lv_tabview_set_tab_act(tab_main_menu, tab_num, LV_ANIM_ON);
                 }
-                btn_left_time = actual_time;
+                btn_right_time = actual_time;
             }
-        }
+        } 
     }
 
     if(!((inputs_value >> 2) & 0x01)){
-        // Button left pushed
-        printf("up\r\n");
+        // Button up pushed
         uint32_t actual_time= xTaskGetTickCount()/portTICK_PERIOD_MS;
         if((actual_time-btn_up_time)>2){
             data->state = LV_INDEV_STATE_PR;
@@ -812,32 +1042,28 @@ static bool user_input_task(lv_indev_drv_t * indev_drv, lv_indev_data_t * data){
 
     if(!((inputs_value >> 3) & 0x01)){
         // Button right pushed
-         printf("right\r\n");
         uint32_t actual_time= xTaskGetTickCount()/portTICK_PERIOD_MS;
 
-        if((actual_time-btn_right_time)>5){
-
-            if(sub_menu){
-                data->state = LV_INDEV_STATE_PR;
-                data->key = LV_KEY_RIGHT;
-                btn_right_time = actual_time;
-            }
-            else{
-                tab_num++;
-                if(tab_num >= 4) tab_num = 4;
-                else{
+        if(sub_menu){
+            data->state = LV_INDEV_STATE_PR;
+            data->key = LV_KEY_RIGHT;
+            btn_right_time = actual_time;
+        }
+        else{
+            if((actual_time-btn_right_time)>2){
+                if(tab_num < 3){
+                    tab_num++;
                     data->state = LV_INDEV_STATE_PR;
                     data->key = LV_KEY_NEXT;
                     lv_tabview_set_tab_act(tab_main_menu, tab_num, LV_ANIM_ON);
                 }
                 btn_right_time = actual_time;
             }
-        }    
+        } 
     }
 
     if(!((inputs_value >> 11) & 0x01)){
         // Button menu pushed
-        printf("Menu\r\n");
         uint32_t actual_time= xTaskGetTickCount()/portTICK_PERIOD_MS;
 
         if((actual_time-btn_menu_time)>5){
@@ -855,10 +1081,9 @@ static bool user_input_task(lv_indev_drv_t * indev_drv, lv_indev_data_t * data){
 
     if(!((inputs_value >> 8) & 0x01)){
         // Button B pushed
-        printf("B\r\n");
         uint32_t actual_time= xTaskGetTickCount()/portTICK_PERIOD_MS;
 
-        if((actual_time-btn_b_time)>5){
+        if((actual_time-btn_b_time)>2){
             data->state = LV_INDEV_STATE_PR;
             data->key = LV_KEY_ESC;
             btn_b_time = actual_time;
@@ -867,10 +1092,9 @@ static bool user_input_task(lv_indev_drv_t * indev_drv, lv_indev_data_t * data){
 
     if(!((inputs_value >> 9) & 0x01)){
         // Button A pushed
-        printf("A\r\n");
         uint32_t actual_time= xTaskGetTickCount()/portTICK_PERIOD_MS;
 
-        if((actual_time-btn_a_time)>5){
+        if((actual_time-btn_a_time)>2){
             data->state = LV_INDEV_STATE_PR;
             data->key = LV_KEY_ENTER;
             btn_a_time = actual_time;
