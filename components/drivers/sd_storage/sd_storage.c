@@ -20,6 +20,7 @@
 
 #include "system_configuration.h"
 #include "system_manager.h"
+#include "sd_storage.h"
 
 /*********************
  *      DEFINES
@@ -32,6 +33,7 @@
 *      VARIABLES
 **********************/
 bool SD_mount = false;
+struct sd_card_info sd_card_info;
 
 /**********************
 *  STATIC VARIABLES
@@ -107,6 +109,23 @@ uint8_t sd_init(){
     }
 
     SD_mount = true;
+
+    // Get data from the SD card
+    sd_card_info.card_size = ((uint64_t) card->csd.capacity) * card->csd.sector_size / (1024 * 1024);
+    strcpy(sd_card_info.card_name,card->cid.name);
+    sd_card_info.card_speed = card->max_freq_khz;
+
+    if(card->is_sdio) sd_card_info.card_type        = SDIO;
+    else if(card->is_mmc) sd_card_info.card_type    = MMC;
+    else
+    {
+        sd_card_info.card_type = SDHC;
+    }
+    
+
+    ESP_LOGI(TAG,"SD Card detected:\n -Name: %s\n -Capacity: %i MB\n -Speed: %i Khz\n -Type: %i\n" \
+    ,sd_card_info.card_name,sd_card_info.card_size,sd_card_info.card_speed,sd_card_info.card_type);
+
     return 1;
 }
 
@@ -122,6 +141,7 @@ uint8_t sd_game_list(char game_name[30][100],uint8_t console){
     else if(console == SNES) dir =  opendir("/sdcard/SNES");
     else if(console == SMS) dir =  opendir("/sdcard/Master_System");
 
+
     if (!dir) {
         ESP_LOGE(TAG, "Failed to stat dir : 0x%02x", console);
         return 0;
@@ -129,20 +149,51 @@ uint8_t sd_game_list(char game_name[30][100],uint8_t console){
     // Save the name of all the files available on the external flash
     uint8_t i =0;
     while((entry = readdir(dir)) != NULL){
-        // List everyfile except the save folder
-        if(strcmp(entry->d_name,"Save_Data")!=0){
+ 
+        size_t nameLength = strlen(entry->d_name);
+        // TODO: Rework game list maker.
+        // Only adds a game with the console termination.
+        if ((strcmp(entry->d_name + (nameLength - 4), ".nes") == 0) && console == NES) {
             sprintf(game_name[i],"%s",entry->d_name);
             ESP_LOGI(TAG, "Found %s ",game_name[i]);
             i++;
         }
-
+        else if ((strcmp(entry->d_name + (nameLength - 3), ".gb") == 0) && console == GAMEBOY){
+            sprintf(game_name[i],"%s",entry->d_name);
+            ESP_LOGI(TAG, "Found %s ",game_name[i]);
+            i++;
+        }
+        else if ((strcmp(entry->d_name + (nameLength - 4), ".gbc") == 0) && console == GAMEBOY_COLOR){
+            sprintf(game_name[i],"%s",entry->d_name);
+            ESP_LOGI(TAG, "Found %s ",game_name[i]);
+            i++;
+        }
+        else if ((strcmp(entry->d_name + (nameLength - 4), ".sms") == 0) && console == SMS){
+            sprintf(game_name[i],"%s",entry->d_name);
+            ESP_LOGI(TAG, "Found %s ",game_name[i]);
+            i++;
+        }
     }
     // Return the number of files
     return i;
 }
 
+size_t sd_file_size(const char *path){
+    
+    FILE *fd = fopen(path, "rb");
 
-void  IRAM_ATTR  sd_get_file (const char *path, void * data){
+    fseek(fd, 0, SEEK_END);
+    size_t actual_size = ftell(fd);
+    fseek(fd, 0, SEEK_SET);
+
+    ESP_LOGI(TAG,"Game size: %i bytes",actual_size);
+    fclose(fd);
+
+    return actual_size;
+}
+
+
+void sd_get_file (const char *path, void * data){
     const size_t BLOCK_SIZE = 512;// We're going to read file in chunk of 512 Bytes
     size_t r = 0;
 
@@ -152,9 +203,9 @@ void  IRAM_ATTR  sd_get_file (const char *path, void * data){
        ESP_LOGE(TAG, "Error opening: %s ",path);
     }
     while (true){
-        __asm__("memw"); // Protect the write into the RAM memory
+        //__asm__("memw"); // Protect the write into the RAM memory
         size_t count = fread((uint8_t *)data + r, 1, BLOCK_SIZE, fd);
-        __asm__("memw");
+       // __asm__("memw");
 
         r += count;
         if (count < BLOCK_SIZE) break;
