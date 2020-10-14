@@ -13,13 +13,17 @@ EXTRA_COMPONENT_DIRS := components/drivers/spi \
 						components/drivers/user_input \
 						components/gnuboy_core \
 						components/drivers/sound \
+						components/OTA \
 						components/GUI \
 						components/drivers/sd_storage \
 						components/drivers/battery \
+						components/emulators/GBC \
+						components/emulators/GBC/gnuboy \
 						components/emulators/SMS \
 						components/emulators/SMS/smsplus \
 						components/emulators/NES \
 						components/emulators/NES/nofrendo \
+						components/emulators/SNES/snes9x \
 						
 
 

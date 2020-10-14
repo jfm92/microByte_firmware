@@ -68,13 +68,10 @@ static void slider_volume_cb(lv_obj_t * slider, lv_event_t e);
 static void slider_brightness_cb(lv_obj_t * slider, lv_event_t e);
 static void list_game_menu_cb(lv_obj_t * parent, lv_event_t e);
 
-// Wifi Library Manager menu
-static void library_manager_menu(lv_obj_t * parent);
-static void library_manager_cb(lv_obj_t * parent, lv_event_t e);
-
-// Bluetooth Controller menu
-void bt_controller_menu(lv_obj_t * parent);
-static void bluetooth_controller_cb(lv_obj_t * parent, lv_event_t e);
+// External app menu
+static void external_app_menu(lv_obj_t * parent);
+static void external_app_cb(lv_obj_t * parent, lv_event_t e);
+static void app_execute_cb(lv_obj_t * parent, lv_event_t e);
 
 // Configuration menu
 void config_menu(lv_obj_t * parent);
@@ -128,7 +125,7 @@ static lv_obj_t * SD_label;
 
 static lv_obj_t * tab_main_menu;
 static lv_obj_t * tab_emulators;
-static lv_obj_t * tab_lib_manager;
+static lv_obj_t * tab_ext_app_manager;
 static lv_obj_t * tab_bt_controller;
 static lv_obj_t * tab_config;
 
@@ -137,7 +134,7 @@ static lv_obj_t * tab_config;
 static lv_obj_t * list_emulators_main;
 static lv_obj_t * btn_emulator_lib;
 static lv_obj_t * container_header_game_icon;
-static lv_obj_t *  list_game_emulator;
+static lv_obj_t * list_game_emulator;
 
 // On-game menu objects
 
@@ -145,13 +142,11 @@ static lv_obj_t * list_on_game;
 static lv_obj_t * mbox_volume;
 static lv_obj_t * mbox_brightness;
 
-// Wifi-Library manager objects
+// External app menu objects
 
-static lv_obj_t * btn_wifi_manager;
+static lv_obj_t * btn_ext_app;
+static lv_obj_t * list_external_app;
 
-// Bluetooth controller objects
-
-static lv_obj_t * bt_controller_btn;
 
 // Configuration menu objects
 
@@ -232,15 +227,13 @@ void GUI_frontend(void){
     lv_tabview_set_btns_pos(tab_main_menu,LV_TABVIEW_TAB_POS_NONE);
 
     tab_emulators = lv_tabview_add_tab(tab_main_menu,"Emulators");
-    tab_lib_manager = lv_tabview_add_tab(tab_main_menu,"Wifi-Library-Manager");
-    tab_bt_controller = lv_tabview_add_tab(tab_main_menu,"Bluetooth controller");
+    tab_ext_app_manager = lv_tabview_add_tab(tab_main_menu,"External Application");
     tab_config = lv_tabview_add_tab(tab_main_menu,"Configuration");
 
     color = lv_theme_get_color_primary();
 
     emulators_menu(tab_emulators);
-    library_manager_menu(tab_lib_manager);
-    bt_controller_menu(tab_bt_controller);
+    external_app_menu(tab_ext_app_manager);
     config_menu(tab_config);
 
 
@@ -307,46 +300,24 @@ static void on_game_menu(){
 
 /* Wi-Fi library manager function */
 
-static void library_manager_menu(lv_obj_t * parent){
+static void external_app_menu(lv_obj_t * parent){
 
-    btn_wifi_manager = lv_btn_create(parent, NULL);
-    lv_obj_align(btn_wifi_manager, NULL, LV_ALIGN_CENTER, -15, -40);
-    lv_obj_set_size(btn_wifi_manager,150,150);
+    btn_ext_app = lv_btn_create(parent, NULL);
+    lv_obj_align(btn_ext_app, NULL, LV_ALIGN_CENTER, -15, -40);
+    lv_obj_set_size(btn_ext_app,150,150);
 
-    lv_obj_t * wifi_lib_image = lv_img_create(btn_wifi_manager, NULL);
+    lv_obj_t * wifi_lib_image = lv_img_create(btn_ext_app, NULL);
     lv_img_set_src(wifi_lib_image, &wifi_lib_icon);
 
-    lv_obj_t * label = lv_label_create(btn_wifi_manager, NULL);
-    lv_label_set_text(label, "Wi-Fi Library Manager");
+    lv_obj_t * label = lv_label_create(btn_ext_app, NULL);
+    lv_label_set_text(label, "External Aplications");
     lv_label_set_long_mode(label, LV_LABEL_LONG_SROLL_CIRC);
     lv_obj_set_width(label, 100);
     lv_obj_align(label, NULL, LV_ALIGN_CENTER, 25, 0);
 
-    lv_obj_set_event_cb(btn_wifi_manager, library_manager_cb); 
-    lv_group_add_obj(group_interact, btn_wifi_manager);
+    lv_obj_set_event_cb(btn_ext_app, external_app_cb); 
+    lv_group_add_obj(group_interact, btn_ext_app);
 
-}
-
-/* Bluetooth controller main function */
-
-void bt_controller_menu(lv_obj_t * parent){
-
-    bt_controller_btn = lv_btn_create(parent, NULL);
-
-    lv_obj_align(bt_controller_btn, NULL, LV_ALIGN_CENTER, -15, -40);
-    lv_obj_set_size(bt_controller_btn,150,150);
-
-    lv_obj_t * bt_cotroller_image = lv_img_create(bt_controller_btn, NULL);
-    lv_img_set_src(bt_cotroller_image, &bt_controller_icon);
-
-    lv_obj_t * label = lv_label_create(bt_controller_btn, NULL);
-    lv_label_set_text(label, "Bluetooth controller");
-    lv_label_set_long_mode(label, LV_LABEL_LONG_SROLL_CIRC);
-    lv_obj_set_width(label, 100);
-    lv_obj_align(label, NULL, LV_ALIGN_CENTER, 25, 0);
-
-    lv_obj_set_event_cb(bt_controller_btn, bluetooth_controller_cb); 
-    lv_group_add_obj(group_interact, bt_controller_btn);
 }
 
 /* System Configuration main function */
@@ -691,38 +662,102 @@ static void list_game_menu_cb(lv_obj_t * parent, lv_event_t e){
 }
 
 
-/* Wifi library manager call-back functions */
+/* External app call-back functions */
 
-static void library_manager_cb(lv_obj_t * parent, lv_event_t e){
+static void external_app_cb(lv_obj_t * parent, lv_event_t e){
 
-    // TODO: Add menu information
     if(e == LV_EVENT_CLICKED){
-        struct SYSTEM_MODE emulator;
-        emulator.mode = MODE_WIFI_LIB;
-        emulator.status = 1;
-        emulator.console = NULL;
 
-        if( xQueueSend( modeQueue,&emulator, ( TickType_t ) 10) != pdPASS ){
-            ESP_LOGE(TAG," Wifi Lib manager queue send fail");
+        char app_name[30][100];
+        uint8_t app_num = sd_app_list(app_name);
+
+        ESP_LOGI(TAG,"Found %i applications",app_num);
+
+        if(app_num > 0){
+            //Create a list of applications
+            sub_menu = true;
+            list_external_app = lv_list_create(lv_layer_top(), NULL);
+            lv_obj_set_size(list_external_app, 210, 200);
+            lv_obj_align(list_external_app, NULL, LV_ALIGN_CENTER, 0, 10);
+
+             lv_page_glue_obj(list_external_app,true);
+            // Add a button for each game
+            for(int i=0;i<app_num;i++){
+                lv_obj_t * app_btn = lv_list_add_btn(list_external_app, NULL, app_name[i]);
+                lv_group_add_obj(group_interact, app_btn);
+                lv_obj_set_event_cb(app_btn, app_execute_cb);
+            }
+            lv_group_add_obj(group_interact, list_external_app);
+
+            lv_group_focus_obj(list_external_app);
+
+        }
+        else{
+            //TODO: Repair where it focus this message once is close
+            //Show a message
+            lv_obj_t * mbox = lv_msgbox_create(lv_layer_top(), NULL);
+            lv_msgbox_set_text(mbox, "Any app available.");
+            lv_obj_set_event_cb(mbox, msgbox_no_game_cb);
+            lv_group_add_obj(group_interact, mbox);
+            lv_group_focus_obj(mbox);
+            lv_group_focus_freeze(group_interact, true);
+
+            lv_obj_t * nogame_image = lv_img_create(mbox, NULL);
+            lv_img_set_src(nogame_image, &nogame_icon);
+            lv_obj_align(nogame_image, mbox, LV_ALIGN_CENTER, 0, 0);
+
+            static const char * btns[] = {"Ok", "", ""};
+            lv_msgbox_add_btns(mbox, btns);
+            lv_obj_align(mbox, NULL, LV_ALIGN_CENTER, 0, 0);
+
+            lv_obj_set_style_local_bg_opa(lv_layer_top(), LV_OBJ_PART_MAIN, LV_STATE_DEFAULT, LV_OPA_70);
+            lv_obj_set_style_local_bg_color(lv_layer_top(), LV_OBJ_PART_MAIN, LV_STATE_DEFAULT, LV_COLOR_GRAY);
+            lv_obj_set_click(lv_layer_top(), true);
+
+            lv_group_focus_obj(btn_ext_app);
         }
     }
 }
 
-/* Bluetooth controller call-back functions */
-
-static void bluetooth_controller_cb(lv_obj_t * parent, lv_event_t e){
-
+static void app_execute_cb(lv_obj_t * parent, lv_event_t e){
     if(e == LV_EVENT_CLICKED){
-        struct SYSTEM_MODE emulator;
-        emulator.mode = MODE_BT_CONTROLLER;
-        emulator.status = 1;
-        emulator.console = NULL;
+        
+        ESP_LOGI(TAG, "Loading: %s",(char *)lv_list_get_btn_text(parent));
+        
+        lv_obj_t * mbox = lv_msgbox_create(lv_layer_top(), NULL);
+        lv_msgbox_set_text(mbox, "Loading:");
+        lv_obj_align(mbox, NULL, LV_ALIGN_CENTER, 0, -60);
 
-        if( xQueueSend( modeQueue,&emulator, ( TickType_t ) 10) != pdPASS ){
-            ESP_LOGE(TAG," Bluetooth controller queue send fail");
+        lv_obj_t * label1 = lv_label_create(mbox, NULL);
+        lv_label_set_text(label1,lv_list_get_btn_text(parent));
+
+        lv_obj_set_style_local_bg_opa(lv_layer_top(), LV_OBJ_PART_MAIN, LV_STATE_DEFAULT, LV_OPA_70);
+        lv_obj_set_style_local_bg_color(lv_layer_top(), LV_OBJ_PART_MAIN, LV_STATE_DEFAULT, LV_COLOR_GRAY);
+        lv_obj_set_click(lv_layer_top(), true);
+
+        lv_group_focus_obj(mbox);
+        lv_group_focus_freeze(group_interact, false);
+
+        lv_obj_t * preload = lv_spinner_create(mbox, NULL);
+        lv_obj_set_size(preload, 100, 100);
+        lv_obj_align(preload, NULL, LV_ALIGN_CENTER, 0, 0);
+
+        struct SYSTEM_MODE ext_app;
+        ext_app.mode = MODE_EXT_APP;
+        strcpy(ext_app.game_name,lv_list_get_btn_text(parent));
+
+        if( xQueueSend( modeQueue,&ext_app, ( TickType_t ) 10) != pdPASS ){
+            ESP_LOGE(TAG," External app queue send fail");
         }
-    }
 
+        lv_obj_del(list_external_app);
+        
+    }
+    else if(e == LV_EVENT_CANCEL){
+        sub_menu = false;
+        lv_obj_del(list_external_app);
+        lv_group_focus_obj(btn_ext_app);
+    }
 }
 
 /* Configuration menu cb function */
@@ -1051,7 +1086,7 @@ static bool user_input_task(lv_indev_drv_t * indev_drv, lv_indev_data_t * data){
         }
         else{
             if((actual_time-btn_right_time)>2){
-                if(tab_num < 3){
+                if(tab_num < 2){
                     tab_num++;
                     data->state = LV_INDEV_STATE_PR;
                     data->key = LV_KEY_NEXT;

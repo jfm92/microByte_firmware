@@ -30,15 +30,24 @@
 #include "NES_manager.h"
 #include "SMS_manager.h"
 
+#include "external_app.h"
+
 //#include "bt_controller.h"
 
 
 TaskHandle_t gui_handler;
 
 
+static const char *TAG = "microByte_main";
+
 
 void app_main(void){
-    printf("Free init %i bytes\r\n",esp_get_free_heap_size());
+
+    system_info();
+    
+    ESP_LOGI(TAG, "Memory Status:\r\n -SPI_RAM: %i Bytes\r\n -INTERNAL_RAM: %i Bytes\r\n -DMA_RAM: %i Bytes\r\n", \
+    system_memory(MEMORY_SPIRAM),system_memory(MEMORY_INTERNAL),system_memory(MEMORY_DMA));
+
     /**************** Peripherals initialization **************/
     audio_init(16000);
     display_init();
@@ -49,13 +58,12 @@ void app_main(void){
    
 
     /**************** Message Queue initialization **************/
-    printf("Free init %i bytes\r\n",esp_get_free_heap_size());
+   
     batteryQueue = xQueueCreate(1, sizeof(struct BATTERY_STATUS));
     input_queue = xQueueCreate(10, sizeof(uint8_t));
     modeQueue = xQueueCreate(1, sizeof(struct SYSTEM_MODE));
 
     /**************** Tasks **************/
-    printf("Free init %i bytes\r\n",esp_get_free_heap_size());
     xTaskCreatePinnedToCore(GUI_task, "Graphical User Interface", 1024*6, NULL, 1, &gui_handler, 0);
     xTaskCreatePinnedToCore(&batteryTask, "Battery management", 2048, NULL, 5, NULL, 0);
 
@@ -121,26 +129,10 @@ void app_main(void){
                     //TODO: Implement load system
                 break;
 
-                case MODE_WIFI_LIB:
-                    if(management.status == 1){
-                        printf("Wi-Fi Ap\r\n");
-                        //wifi_AP_init();
-                         // bt_controller_init();
-                    }
-                    else{
-                        //wifi_AP_deinit();
-                    }
-
-                break;
-
-                case MODE_BT_CONTROLLER:
-                    if(management.status == 1){
-                        printf("bt controller\r\n");
-
-                    }
-                    else{
-                        // Deinit bluetooth
-                    }
+                case MODE_EXT_APP:
+                    ESP_LOGI(TAG, "Loading external App");
+                    external_app_init(management.game_name);
+                    esp_restart();
                 break;
 
                 case MODE_BATTERY_ALERT:
