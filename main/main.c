@@ -31,6 +31,7 @@
 #include "SMS_manager.h"
 
 #include "external_app.h"
+#include "update_firmware.h"
 
 //#include "bt_controller.h"
 
@@ -42,19 +43,22 @@ static const char *TAG = "microByte_main";
 
 
 void app_main(void){
-
     system_info();
-    
     ESP_LOGI(TAG, "Memory Status:\r\n -SPI_RAM: %i Bytes\r\n -INTERNAL_RAM: %i Bytes\r\n -DMA_RAM: %i Bytes\r\n", \
     system_memory(MEMORY_SPIRAM),system_memory(MEMORY_INTERNAL),system_memory(MEMORY_DMA));
 
     /**************** Peripherals initialization **************/
+
     audio_init(16000);
     display_init();
     sd_init();
-    
     input_init();
     battery_init();
+
+    // After peripheral initialization we check if a new update was installed 
+    // and if any hardware issue happend
+    update_check();
+
    
 
     /**************** Message Queue initialization **************/
@@ -131,14 +135,23 @@ void app_main(void){
 
                 case MODE_EXT_APP:
                     ESP_LOGI(TAG, "Loading external App");
-                    external_app_init(management.game_name);
-                    esp_restart();
+                   // external_app_init(management.game_name);
+                   update_init(management.game_name);
+                   esp_restart();
+                   
                 break;
 
                 case MODE_BATTERY_ALERT:
                 break;
 
-            
+                case MODE_UPDATE:
+                    ESP_LOGI(TAG,"Update firmware");
+                    //TODO: Check battery level. If less than 70% doesn't allow to update
+                    update_init(management.game_name);
+                    //TODO: Show on the GUI a message to don't turn on the device
+                    esp_restart();
+                break;
+
                 case MODE_OUT:
                     //If we close a game, the wifi manager or the bluetooth controller is required to restart
                     esp_restart();
