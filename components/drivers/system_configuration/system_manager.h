@@ -7,13 +7,13 @@
 QueueHandle_t modeQueue;
 QueueHandle_t batteryQueue;
 
-#define MODE_GAME 0x01
-#define MODE_SAVE_GAME 0x02
-#define MODE_LOAD_GAME 0x03
-#define MODE_WIFI_LIB 0x04
-#define MODE_BT_CONTROLLER 0x05
-#define MODE_OUT 0x06
-#define MODE_BATTERY_ALERT 0x07
+#define MODE_GAME           0x01
+#define MODE_SAVE_GAME      0x02
+#define MODE_LOAD_GAME      0x03
+#define MODE_EXT_APP        0x04
+#define MODE_UPDATE         0x05
+#define MODE_OUT            0x06
+#define MODE_BATTERY_ALERT  0x07
 
 
 #define GAMEBOY 0x00
