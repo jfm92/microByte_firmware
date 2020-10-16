@@ -22,7 +22,7 @@ void battery_init(void){
     adc1_config_channel_atten(channel,atten);
 
     adc_chars = calloc(1, sizeof(esp_adc_cal_characteristics_t));
-    esp_adc_cal_value_t val_type = esp_adc_cal_characterize(unit, atten, ADC_WIDTH_BIT_12, 1100, adc_chars);
+    esp_adc_cal_value_t val_type = esp_adc_cal_characterize(unit, atten, ADC_WIDTH_BIT_12, 1040, adc_chars);
     
 }
 
@@ -39,11 +39,11 @@ void batteryTask(void *arg){
         }
 
         adc_reading /= 128;
-
         uint32_t voltage = esp_adc_cal_raw_to_voltage(adc_reading, adc_chars);
 
+        voltage += 1300; 
         battery_status.voltage = voltage;
-        battery_status.percentage = (voltage-2283)/((3200-2283)/100); //TODO: Modify calculus
+        battery_status.percentage = (voltage*100-280000)/((416400-280000)/100);
 
 
         if( xQueueSend( batteryQueue,&battery_status, ( TickType_t ) 10) != pdPASS ){
@@ -61,6 +61,6 @@ void batteryTask(void *arg){
             }
         }
 
-        vTaskDelay(10000 / portTICK_RATE_MS);
+        vTaskDelay(1000 / portTICK_RATE_MS);
     }
 }

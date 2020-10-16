@@ -80,6 +80,7 @@ static void config_option_cb(lv_obj_t * parent, lv_event_t e);
 static void mbox_about_cb(lv_obj_t * parent, lv_event_t e);
 static void color_picker_cb(lv_obj_t * parent, lv_event_t e);
 static void mbox_battery_cb(lv_obj_t * parent, lv_event_t e);
+static void fw_update_cb(lv_obj_t * parent, lv_event_t e);
 
 /**********************
  *  GLOBAL VARIABLES
@@ -120,6 +121,7 @@ static lv_obj_t * battery_label;
 static lv_obj_t * WIFI_label;
 static lv_obj_t * BT_label;
 static lv_obj_t * SD_label;
+static lv_obj_t * Charging_label;
 
 // Main menu objects
 
@@ -152,6 +154,7 @@ static lv_obj_t * list_external_app;
 
 static lv_obj_t * config_btn;
 static lv_obj_t * list_config;
+static lv_obj_t * list_fw_update;
 static lv_obj_t * mbox_about;
 static lv_obj_t * mbox_color;
 
@@ -215,6 +218,13 @@ void GUI_frontend(void){
     lv_label_set_text(BT_label, LV_SYMBOL_BLUETOOTH);
     lv_obj_align_origo(BT_label, NULL, LV_ALIGN_IN_LEFT_MID, 75, 0);
     lv_obj_set_hidden(BT_label,true);
+
+    //Bluetooth Status Icon
+    Charging_label = lv_label_create(notification_cont, NULL);
+    lv_label_set_text(Charging_label, LV_SYMBOL_CHARGE);
+    lv_obj_align_origo(Charging_label, NULL, LV_ALIGN_IN_LEFT_MID, 190, 0);
+    lv_obj_set_hidden(Charging_label,true);
+
 
     /* Tab menu shows the different sub menu:
         - Emulator library.
@@ -669,7 +679,7 @@ static void external_app_cb(lv_obj_t * parent, lv_event_t e){
     if(e == LV_EVENT_CLICKED){
 
         char app_name[30][100];
-        uint8_t app_num = sd_app_list(app_name);
+        uint8_t app_num = sd_app_list(app_name,false);
 
         ESP_LOGI(TAG,"Found %i applications",app_num);
 
@@ -821,6 +831,52 @@ static void config_option_cb(lv_obj_t * parent, lv_event_t e){
             lv_group_focus_obj(mbox_about);
         }
         else if(strcmp(lv_list_get_btn_text(parent),"Update firmware")==0){
+
+                // Get the game list of each console.
+            char fw_update_name[30][100];
+            uint8_t fw_update_num = sd_app_list(fw_update_name,true);
+
+            ESP_LOGI(TAG,"Found %i updates",fw_update_num);
+
+            // Print the list of games or show a message is any game is available
+            if(fw_update_num>0){
+                list_fw_update = lv_list_create(lv_layer_top(), NULL);
+                lv_obj_set_size(list_fw_update, 210, 210);
+                lv_obj_align(list_fw_update, NULL, LV_ALIGN_CENTER, 0, 23);
+                //lv_obj_set_event_cb(list_game_emulator, emulator_list_event);
+                lv_page_glue_obj(list_fw_update,true);
+                // Add a button for each game
+                for(int i=0;i<fw_update_num;i++){
+                    lv_obj_t * update_btn = lv_list_add_btn(list_fw_update, NULL, fw_update_name[i]);
+                    lv_group_add_obj(group_interact, update_btn);
+                    lv_obj_set_event_cb(update_btn, fw_update_cb);
+                }
+                lv_group_add_obj(group_interact, list_fw_update);
+
+                lv_group_focus_obj(list_fw_update);
+            }
+            else{
+            /* lv_obj_del(container_header_game_icon);
+
+                lv_obj_t * mbox = lv_msgbox_create(lv_layer_top(), NULL);
+                lv_msgbox_set_text(mbox, "Oops! Any game available.");
+                lv_obj_set_event_cb(mbox, msgbox_no_game_cb);
+                lv_group_add_obj(group_interact, mbox);
+                lv_group_focus_obj(mbox);
+                lv_group_focus_freeze(group_interact, true);
+
+                lv_obj_t * nogame_image = lv_img_create(mbox, NULL);
+                lv_img_set_src(nogame_image, &nogame_icon);
+                lv_obj_align(nogame_image, mbox, LV_ALIGN_CENTER, 0, 0);
+
+                static const char * btns[] = {"Ok", "", ""};
+                lv_msgbox_add_btns(mbox, btns);
+                lv_obj_align(mbox, NULL, LV_ALIGN_CENTER, 0, 0);
+
+                lv_obj_set_style_local_bg_opa(lv_layer_top(), LV_OBJ_PART_MAIN, LV_STATE_DEFAULT, LV_OPA_70);
+                lv_obj_set_style_local_bg_color(lv_layer_top(), LV_OBJ_PART_MAIN, LV_STATE_DEFAULT, LV_COLOR_GRAY);
+                lv_obj_set_click(lv_layer_top(), true);*/
+            }
         }
         else if(strcmp(lv_list_get_btn_text(parent),"Brightness")==0){
             mbox_brightness = lv_msgbox_create(lv_layer_top(), NULL);
@@ -910,23 +966,28 @@ static void config_option_cb(lv_obj_t * parent, lv_event_t e){
             lv_obj_t * lable_battery_info = lv_label_create(mbox_battery, NULL);
             lv_label_set_text(lable_battery_info,spec_text);
 
-            // Bar which show the actual capacity of the batter
-            lv_obj_t * bar_battery = lv_bar_create(mbox_battery, NULL);
-            lv_obj_set_size(bar_battery, 200, 20);
-            lv_obj_align(bar_battery, NULL, LV_ALIGN_CENTER, 0, 0);
-            lv_bar_set_anim_time(bar_battery, 2000);
-            lv_bar_set_value(bar_battery, management.percentage, LV_ANIM_ON);
+            // Bar which show the actual capacity of the battery
+            if(management.voltage >= 4190){
+                // Connected to the USB
+            }
+            else{
+                lv_obj_t * bar_battery = lv_bar_create(mbox_battery, NULL);
+                lv_obj_set_size(bar_battery, 200, 20);
+                lv_obj_align(bar_battery, NULL, LV_ALIGN_CENTER, 0, 0);
+                lv_bar_set_anim_time(bar_battery, 2000);
+                lv_bar_set_value(bar_battery, management.percentage, LV_ANIM_ON);
 
-            // TODO: Change the possition of the text or if it's possible create an animation with the numbers
-            lv_obj_t * label_battery_bar = lv_label_create(bar_battery, NULL);
-            char battery_level[4];
-            sprintf(battery_level,"%i",management.percentage);
-            lv_label_set_text(label_battery_bar,battery_level);
+                // TODO: Change the possition of the text or if it's possible create an animation with the numbers
+                lv_obj_t * label_battery_bar = lv_label_create(bar_battery, NULL);
+                char battery_level[4];
+                sprintf(battery_level,"%i",management.percentage);
+                lv_label_set_text(label_battery_bar,battery_level);
 
-            lv_obj_set_event_cb(mbox_battery, mbox_battery_cb);
-            lv_group_add_obj(group_interact, mbox_battery);
-            lv_group_focus_obj(mbox_battery);
+                lv_obj_set_event_cb(mbox_battery, mbox_battery_cb);
+                lv_group_add_obj(group_interact, mbox_battery);
+                lv_group_focus_obj(mbox_battery);
 
+            }
         }
         else if(strcmp(lv_list_get_btn_text(parent),"SD card Status")==0){
             lv_obj_t * mbox_SD = lv_msgbox_create(lv_layer_top(), NULL);
@@ -969,6 +1030,44 @@ static void config_option_cb(lv_obj_t * parent, lv_event_t e){
 
 }
 
+static void fw_update_cb(lv_obj_t * parent, lv_event_t e){
+
+    if(e == LV_EVENT_CLICKED){
+
+        ESP_LOGI(TAG, "FW update: %s",(char *)lv_list_get_btn_text(parent));
+        
+        lv_obj_t * mbox = lv_msgbox_create(lv_layer_top(), NULL);
+        lv_msgbox_set_text(mbox, "Firmware update:");
+        lv_obj_align(mbox, NULL, LV_ALIGN_CENTER, 0, -60);
+
+        lv_obj_t * label1 = lv_label_create(mbox, NULL);
+        lv_label_set_text(label1,lv_list_get_btn_text(parent));
+
+        lv_obj_set_style_local_bg_opa(lv_layer_top(), LV_OBJ_PART_MAIN, LV_STATE_DEFAULT, LV_OPA_70);
+        lv_obj_set_style_local_bg_color(lv_layer_top(), LV_OBJ_PART_MAIN, LV_STATE_DEFAULT, LV_COLOR_GRAY);
+        lv_obj_set_click(lv_layer_top(), true);
+
+        lv_group_focus_obj(mbox);
+        lv_group_focus_freeze(group_interact, false);
+
+        lv_obj_t * preload = lv_spinner_create(mbox, NULL);
+        lv_obj_set_size(preload, 100, 100);
+        lv_obj_align(preload, NULL, LV_ALIGN_CENTER, 0, 0);
+
+        struct SYSTEM_MODE fw_update;
+        fw_update.mode = MODE_UPDATE;
+        strcpy(fw_update.game_name, (char *)lv_list_get_btn_text(parent));
+
+        if( xQueueSend(modeQueue,&fw_update, ( TickType_t ) 10) != pdPASS ){
+            ESP_LOGE(TAG, "Error sending update execution queue");
+        }
+        
+    }
+    else if(e == LV_EVENT_CANCEL){
+        lv_obj_del(list_fw_update);
+    } 
+}
+
 static void mbox_about_cb(lv_obj_t * parent, lv_event_t e){
     if(e == LV_EVENT_CANCEL){
         lv_obj_del(parent);
@@ -1006,19 +1105,33 @@ static void battery_status_task(lv_task_t * task){
 
     if(xQueueReceive(batteryQueue, &management,( TickType_t ) 0)){
 
-        char battery_level[4];
-        sprintf(battery_level,"%i",management.percentage);
+        if(management.voltage >= 4190){
 
-        lv_label_set_text(battery_label, battery_level);
-        lv_bar_set_value(battery_bar, management.percentage, NULL);
+            lv_obj_set_hidden(Charging_label,false); //Show the icon
+            lv_obj_set_style_local_bg_color(battery_bar, LV_BAR_PART_INDIC, LV_STATE_DEFAULT, lv_color_hex(0x25CDF6)); // Change the color to blue
 
-        // If the battery is equal or less than the 25% the bar change to red, otherwise the bar is green.
-        if(management.percentage <= 25){
-            lv_obj_set_style_local_bg_color(battery_bar, LV_BAR_PART_INDIC, LV_STATE_DEFAULT, lv_color_hex(0xC61D0C));
+            lv_bar_set_value(battery_bar, 100, NULL);
+            
+            //TODO: Improve USB text positition
+            lv_label_set_text(battery_label,"USB");
+
         }
         else{
-            lv_obj_set_style_local_bg_color(battery_bar, LV_BAR_PART_INDIC, LV_STATE_DEFAULT, lv_color_hex(0x0CC62D));
-        }
+            lv_obj_set_hidden(Charging_label,true);
+            char battery_level[4];
+            sprintf(battery_level,"%i",management.percentage);
+
+            lv_label_set_text(battery_label, battery_level);
+            lv_bar_set_value(battery_bar, management.percentage, NULL);
+
+            // If the battery is equal or less than the 25% the bar change to red, otherwise the bar is green.
+            if(management.percentage <= 25){
+                lv_obj_set_style_local_bg_color(battery_bar, LV_BAR_PART_INDIC, LV_STATE_DEFAULT, lv_color_hex(0xC61D0C));
+            }
+            else{
+                lv_obj_set_style_local_bg_color(battery_bar, LV_BAR_PART_INDIC, LV_STATE_DEFAULT, lv_color_hex(0x0CC62D));
+            }
+        }  
     }
 }
 
