@@ -89,7 +89,7 @@ void set_option_defaults()
   /* version TAG */
   strncpy(option.version, CONFIG_VERSION, 15);
 
-  option.sndrate = 48000;
+  option.sndrate = 16000;
   option.country = 0;
   option.console = 0;
   option.fm = SND_NONE;
