@@ -21,7 +21,7 @@ void audio_init(int sample_rate)
         .communication_format = I2S_COMM_FORMAT_I2S | I2S_COMM_FORMAT_I2S_MSB,
         .dma_buf_count = 6,
         .dma_buf_len = 512,                       // (416samples * 2ch * 2(short)) = 1664
-        .intr_alloc_flags = ESP_INTR_FLAG_LEVEL1, //Interrupt level 1
+        .intr_alloc_flags = 0, //Interrupt level 1
         .use_apll = false};
 
     i2s_driver_install(I2S_NUM, &i2s_config, 0, NULL);
