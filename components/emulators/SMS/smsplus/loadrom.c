@@ -401,8 +401,9 @@ int load_rom(char *filename)
         option.console = 6;
         printf("Colecovision BIOS loaded.\n");
     }
-
-    fd = fopen("/sdcard/Master_System/sonic.sms", "rb");
+    char dir_aux[256];
+    sprintf(dir_aux,"/sdcard/Master_System/%s",filename);
+    fd = fopen(dir_aux, "rb");
     if (!fd)
         abort();
 
