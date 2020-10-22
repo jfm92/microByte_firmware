@@ -10,6 +10,10 @@
 #include "battery.h"
 #include "system_manager.h"
 
+struct BATTERY_STATUS battery_status;
+
+bool game_mode_active = false;
+
 static esp_adc_cal_characteristics_t *adc_chars;
 static const adc_channel_t channel = ADC_CHANNEL_0;   
 static const adc_atten_t atten = ADC_ATTEN_11db; //1dB of attenuation to obtain the full voltage range of the GPIO (Up to 3.9V)
@@ -26,8 +30,16 @@ void battery_init(void){
     
 }
 
+void battery_game_mode(bool game_mode){
+    game_mode_active = game_mode;
+}
+
+uint8_t battery_get_percentage(){
+    return battery_status.percentage;
+}
+
 void batteryTask(void *arg){
-    struct BATTERY_STATUS battery_status;
+    
 
     while(1){
 
@@ -45,10 +57,13 @@ void batteryTask(void *arg){
         battery_status.voltage = voltage;
         battery_status.percentage = (voltage*100-280000)/((416400-280000)/100);
 
-
-        if( xQueueSend( batteryQueue,&battery_status, ( TickType_t ) 10) != pdPASS ){
-            ESP_LOGE(TAG,"Battery queue send fail");
+        if(!game_mode_active){
+            // If we're playing, we don't need the battery info. We only need the an alert if we're on very low percentage
+            if( xQueueSend( batteryQueue,&battery_status, ( TickType_t ) 10) != pdPASS ){
+                ESP_LOGE(TAG,"Battery queue send fail");
+            }
         }
+        
 
         if(battery_status.percentage>=5){
             //Send battery alert if the level is below 5%
