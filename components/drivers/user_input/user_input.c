@@ -7,14 +7,18 @@
 #include <stdlib.h>
 
 #include "esp_log.h"
+#include "freertos/FreeRTOS.h"
+#include "freertos/task.h"
+#include "freertos/queue.h"
 
 #include "driver/gpio.h"
 
 #include "TCA9555.h"
 #include "st7789.h"
-#include "user_input.h"
-#include "system_configuration.h"
 #include "sound_driver.h"
+#include "user_input.h"
+
+#include "system_configuration.h"
 #include "system_manager.h"
 
 /**********************
