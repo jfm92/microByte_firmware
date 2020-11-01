@@ -1,3 +1,6 @@
+/*********************
+*      INCLUDES
+*********************/
 
 #include "freertos/FreeRTOS.h"
 #include "freertos/task.h"
@@ -10,9 +13,18 @@
 #include "battery.h"
 #include "system_manager.h"
 
+/**********************
+ *      VARIABLES
+ **********************/
+
 struct BATTERY_STATUS battery_status;
 
-bool game_mode_active = false;
+bool game_mode_active = false; // Variable to know if we're playing to avoid queue overflow
+bool battery_alert = false; // To avoid system block when the low battery raise we need a control if the alert was done.
+
+/**********************
+ *      STATIC 
+ **********************/
 
 static esp_adc_cal_characteristics_t *adc_chars;
 static const adc_channel_t channel = ADC_CHANNEL_0;   
@@ -21,7 +33,13 @@ static const adc_unit_t unit = ADC_UNIT_1;
 
 static const char *TAG = "Battery";
 
+/**********************
+ *   GLOBAL FUNCTIONS
+ **********************/
+
 void battery_init(void){
+    // Initialization of ADC0_1 to measure battery level
+
     adc1_config_width(ADC_WIDTH_BIT_12);
     adc1_config_channel_atten(channel,atten);
 
@@ -40,7 +58,6 @@ uint8_t battery_get_percentage(){
 
 void batteryTask(void *arg){
     
-
     while(1){
 
         uint32_t adc_reading = 0;
@@ -53,9 +70,9 @@ void batteryTask(void *arg){
         adc_reading /= 128;
         uint32_t voltage = esp_adc_cal_raw_to_voltage(adc_reading, adc_chars);
 
-        voltage += 1300; 
+        voltage += 1000; //Add 1000 mV to offset the value obtained from the voltage divider
         battery_status.voltage = voltage;
-        battery_status.percentage = (voltage*100-280000)/((416400-280000)/100);
+        battery_status.percentage = (voltage*100-300000)/((416400-300000)/100);
 
         if(!game_mode_active){
             // If we're playing, we don't need the battery info. We only need the an alert if we're on very low percentage
@@ -65,15 +82,16 @@ void batteryTask(void *arg){
         }
         
 
-        if(battery_status.percentage>=5){
-            //Send battery alert if the level is below 5%
+        if(battery_status.percentage<=10 && battery_alert != true){
+            //Send battery alert if the level is below 10%
             struct SYSTEM_MODE management;
-
             management.mode = MODE_BATTERY_ALERT;
 
             if( xQueueSend( modeQueue,&management, ( TickType_t ) 10) != pdPASS ){
                 ESP_LOGE(TAG,"Mode queue send fail, battery alert!");
             }
+
+            battery_alert = true; //The alert was done, it's not necessay to do it again 
         }
 
         vTaskDelay(1000 / portTICK_RATE_MS);
