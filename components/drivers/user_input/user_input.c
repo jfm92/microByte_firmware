@@ -22,23 +22,16 @@
  **********************/
 
 uint32_t menu_btn_time =0;
+
+
+/**********************
+ *      STATIC 
+ **********************/
 static const char *TAG = "user_input";
 
-
-
-
- /**********************
+/**********************
  *   GLOBAL FUNCTIONS
  **********************/
-
-/*
- * Function:  input_init 
- * --------------------
- * 
- * Initialize the mux driver and set the right configuration.
- * 
- *  Returns: Nothing
- */
 
 void input_init(void){
     // Initalize mux driver
