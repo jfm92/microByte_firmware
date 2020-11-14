@@ -12,7 +12,7 @@
 #include "esp_log.h"
 
 #include "user_input.h"
-#include "display_hal.h"
+#include "display_HAL.h"
 #include "system_configuration.h"
 #include "system_manager.h"
 #include "sound_driver.h"
@@ -85,21 +85,29 @@ volatile uint8_t currentAudioBuffer = 0;
 volatile uint16_t currentAudioSampleCount;
 volatile unsigned char *currentAudioBufferPtr;
 
+char * game_name;
+
 #define AUDIO_SAMPLE_RATE (16000)
 
 /**********************
  *   GLOBAL FUNCTIONS
  **********************/
 
-void gnuboy_start(const char *game_name){
+void gnuboy_start(const char *name, uint8_t console){
     
-    ESP_LOGI(TAG,"Executing GameBoy Color game: %s",game_name);
+    ESP_LOGI(TAG,"Executing GameBoy Color game: %s",name);
+
+    //Save game name to use by save and load functions
+    game_name = malloc(strlen(name));
+    strcpy(game_name,name);
+
     // Queue creation
-    vidQueue = xQueueCreate(1, sizeof(uint16_t *));
+    vidQueue = xQueueCreate(7, sizeof(uint16_t *));
     audioQueue = xQueueCreate(1, sizeof(uint16_t *));
 
     // Load game from the SD card and save on RAM.
-    gbc_rom_load(game_name);
+    gbc_rom_load(game_name,console);
+   // gbc_state_load(0);
    
     //Execute emulator tasks.
     xTaskCreatePinnedToCore(&videoTask, "videoTask", 1024*2, NULL, 1, &videoTask_handler, 1);
@@ -124,7 +132,17 @@ void gnuboy_suspend(){
     vTaskSuspend(videoTask_handler);
     vTaskSuspend(audioTask_handler);
     
+}
 
+void gnuboy_save(){
+    // Create save file name
+    gbc_state_save(0);
+
+}
+
+void gnuboy_load(){
+    gbc_state_load(0);
+   // gnuboy_start("mario.gbc");
 }
 
 /**********************
@@ -135,11 +153,11 @@ static void videoTask(void *arg){
 
     ESP_LOGI(TAG, "GNUBoy Video Task Initialize");
     uint16_t *param;
-    display_gb_frame(NULL);
+    display_HAL_gb_frame(NULL);
     
     while(1){
         xQueuePeek(vidQueue, &param, portMAX_DELAY);
-        display_gb_frame(param);
+        display_HAL_gb_frame(param);
         xQueueReceive(vidQueue, &param, portMAX_DELAY);
 
         vTaskDelay(2 / portTICK_RATE_MS);
@@ -156,7 +174,7 @@ static void audioTask(void *arg){
 
     while(1){
         xQueuePeek(audioQueue, &param, portMAX_DELAY);
-        //audio_submit(currentAudioBufferPtr, currentAudioSampleCount >> 1);
+        audio_submit(currentAudioBufferPtr, currentAudioSampleCount >> 1);
         xQueueReceive(audioQueue, &param, portMAX_DELAY);
     }
 
@@ -167,15 +185,23 @@ static void gnuBoyTask(void *arg){
     ESP_LOGI(TAG, "Initialize GNUBoy task");
 
     // Allocate the memory for the display buffer
-    printf("Free init %i bytes\r\n",esp_get_free_heap_size());
-    displayBuffer[0] = heap_caps_malloc(160 * 144 * 2, MALLOC_CAP_8BIT | MALLOC_CAP_DMA | MALLOC_CAP_INTERNAL);
+    
+   // printf("Memory Internal %i\r\n",system_memory(MEMORY_INTERNAL));
+   // printf("Memory DMA %i\r\n",system_memory(MEMORY_DMA));
+    displayBuffer[0] = heap_caps_malloc(160 * 144 * 2,MALLOC_CAP_8BIT | MALLOC_CAP_DMA );
     if(displayBuffer[0] == NULL){
+        printf("Buffer 0 malloc erro\r\n");
         displayBuffer[0] = malloc(160 * 144 * 2);
     }
-    displayBuffer[1] = heap_caps_malloc(160 * 144 * 2, MALLOC_CAP_8BIT | MALLOC_CAP_DMA | MALLOC_CAP_INTERNAL);
+  //  printf("Memory Internal %i\r\n",system_memory(MEMORY_INTERNAL));
+  //  printf("Memory DMA %i\r\n",system_memory(MEMORY_DMA));
+    displayBuffer[1] = heap_caps_malloc(160 * 144 * 2,MALLOC_CAP_8BIT | MALLOC_CAP_INTERNAL );
     if(displayBuffer[1] == NULL){
+        printf("Buffer 1 malloc erro\r\n");
         displayBuffer[1] = malloc(160 * 144 * 2);
     }
+   // printf("Memory Internal %i\r\n",system_memory(MEMORY_INTERNAL));
+   // printf("Memory DMA %i\r\n",system_memory(MEMORY_DMA));
 
     if(displayBuffer[0] == 0 || displayBuffer[1] == 0){
         printf("Free init %i bytes\r\n",esp_get_free_heap_size());
@@ -294,7 +320,7 @@ static void run_to_vblank()
     //vid_end();
     if ((frame % 2) == 0)
     {
-        xQueueSend(vidQueue, &framebuffer, portMAX_DELAY);
+        xQueueSend(vidQueue, &framebuffer, 0);
 
         // swap buffers
         currentBuffer = currentBuffer ? 0 : 1;
@@ -341,73 +367,14 @@ static void input_set(){
 
     uint16_t inputs_value =  input_read();
 
-    if(!((inputs_value >> 0) & 0x01)){
-    pad_set(PAD_DOWN, 1);
-    }
-    else{
-    pad_set(PAD_DOWN, 0);
-    }
+    pad_set(PAD_DOWN,!((inputs_value >> 0) & 0x01));
+    pad_set(PAD_LEFT,!((inputs_value >> 1) & 0x01));
+    pad_set(PAD_UP,!((inputs_value >> 2) & 0x01));
+    pad_set(PAD_RIGHT,!((inputs_value >> 3) & 0x01));
+    pad_set(PAD_B,!((inputs_value >> 8) & 0x01));
+    pad_set(PAD_A,!((inputs_value >> 9) & 0x01));
+    pad_set(PAD_START,!((inputs_value >> 10) & 0x01));
+    pad_set(PAD_SELECT,!((inputs_value >> 12) & 0x01));
 
-    if(!((inputs_value >> 1) & 0x01)){
-    pad_set(PAD_LEFT, 1);
-    }
-    else{
-    pad_set(PAD_LEFT, 0);
-    }
-
-    if(!((inputs_value >> 2) & 0x01)){
-    pad_set(PAD_UP, 1);
-    }
-    else{
-    pad_set(PAD_UP, 0);
-    }
-
-    if(!((inputs_value >> 3) & 0x01)){
-    pad_set(PAD_RIGHT, 1);
-    }
-    else{
-    pad_set(PAD_RIGHT, 0);
-    }
-
-    if(!((inputs_value >> 8) & 0x01)){
-    pad_set(PAD_B, 1);
-    }
-    else{
-    pad_set(PAD_B, 0);
-    }
-
-    if(!((inputs_value >> 9) & 0x01)){
-    pad_set(PAD_A, 1);
-    }
-    else{
-    pad_set(PAD_A, 0);
-    }
-
-    if(!((inputs_value >> 10) & 0x01)){
-    pad_set(PAD_START, 1);
-    }
-    else{
-    pad_set(PAD_START, 0);
-    }
-
-    if(!((inputs_value >> 12) & 0x01)){
-    pad_set(PAD_SELECT, 1);
-    }
-    else{
-    pad_set(PAD_SELECT, 0);
-    }
-
-    if(!((inputs_value >>11) & 0x01)){
-        struct SYSTEM_MODE emulator;
-            emulator.mode = MODE_GAME;
-            emulator.status = 0;
-            //emulator.console = 0x01;
-            //strcpy(emulator.game_name, (char *)lv_list_get_btn_text(parent));
-
-            if( xQueueSend( modeQueue,&emulator, ( TickType_t ) 10) != pdPASS ){
-                printf("Queue send failed\r\n");
-                // Print fail message
-            }
-    }
 }
 

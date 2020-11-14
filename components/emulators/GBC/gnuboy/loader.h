@@ -15,7 +15,7 @@ typedef struct loader_s
 extern loader_t loader;
 
 void gbc_loader_unload();
-int gbc_rom_load(const char *game_name);
+int gbc_rom_load(const char *game_name, uint8_t console);
 int gbc_sram_load();
 int gbc_sram_save();
 void gbc_state_load(int n);

@@ -11,6 +11,7 @@
 #include "esp_timer.h"
 
 #include "sd_storage.h"
+#include "system_manager.h"
 
 #include "gnuboy.h"
 #include "defs.h"
@@ -21,6 +22,7 @@
 #include "rtc.h"
 #include "rc.h"
 #include "sound.h"
+
 
 
 static int mbc_table[256] =
@@ -109,7 +111,7 @@ static void initmem(void *mem, int size)
 
 
 
-int gbc_rom_load(const char *game_name)
+int gbc_rom_load(const char *game_name, uint8_t console)
 {
 	
 	byte c;
@@ -119,7 +121,11 @@ int gbc_rom_load(const char *game_name)
 	
 
 	char rom_name[300];
-	sprintf(&rom_name,"/sdcard/GameBoy_Color/%s",game_name);
+	if(console == GAMEBOY) sprintf(&rom_name,"/sdcard/GameBoy/%s",game_name);
+	else{
+		sprintf(&rom_name,"/sdcard/GameBoy_Color/%s",game_name);
+	}
+	
 	printf("malloc foo\r\n");
 	size_t game_size = sd_file_size(rom_name);
 	char * data = malloc(game_size);
@@ -205,7 +211,7 @@ int gbc_rom_load(const char *game_name)
 	// SRAM
 	ram.sram_dirty = 1;
 //	ram.sbank = heap_caps_malloc(sram_length, MALLOC_CAP_8BIT | MALLOC_CAP_INTERNAL);
-//	ram.sbank = malloc(sram_length);
+	ram.sbank = malloc(sram_length);
 	if (!ram.sbank)
 	{
 		printf("RAM error\r\n");
@@ -319,34 +325,27 @@ int gbc_sram_save()
 
 void gbc_state_save(int n)
 {
-	FILE *f;
-	char *name;
+	FILE *f = fopen("/sdcard/GameBoy_Color/Save_Data/mario.sav", "w");
 
-	if (n < 0) n = saveslot;
-	if (n < 0) n = 0;
-	name = malloc(strlen(saveprefix) + 5);
-	sprintf(name, "%s.%03d", saveprefix, n);
-
-	if ((f = fopen(name, "wb")))
+	if (f != NULL)
 	{
 		savestate(f);
 		fclose(f);
 	}
-	free(name);
+	else{
+		printf("file create fail\r\n");
+	}
+	printf("Save data finish\r\n");
+
 }
 
 
 void gbc_state_load(int n)
 {
 	FILE *f;
-	char *name;
+	
 
-	if (n < 0) n = saveslot;
-	if (n < 0) n = 0;
-	name = malloc(strlen(saveprefix) + 5);
-	sprintf(name, "%s.%03d", saveprefix, n);
-
-	if ((f = fopen(name, "rb")))
+	if ((f = fopen("/sdcard/GameBoy_Color/Save_Data/mario.sav", "r")))
 	{
 		loadstate(f);
 		fclose(f);
@@ -354,8 +353,9 @@ void gbc_state_load(int n)
 		pal_dirty();
 		sound_dirty();
 		mem_updatemap();
+		printf("LoadState: loadstate OK.\n");
 	}
-	free(name);
+
 }
 
 void rtc_save()
