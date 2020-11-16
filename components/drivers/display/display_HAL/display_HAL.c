@@ -43,10 +43,10 @@ extern uint16_t myPalette[];
 *      VARIABLES
 **********************/
 st7789_driver_t display = {
-		.pin_reset = 33,
-		.pin_dc = 32,
-		.pin_mosi = 13,
-		.pin_sclk = 14,
+		.pin_reset = HSPI_RST,
+		.pin_dc = HSPI_DC,
+		.pin_mosi = HSPI_MOSI,
+		.pin_sclk = HSPI_CLK,
 		.spi_host = HSPI_HOST,
 		.dma_chan = 1,
 		.display_width = 240,
