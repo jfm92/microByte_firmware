@@ -86,6 +86,18 @@ size_t display_HAL_get_buffer_size(){
     return display.buffer_size;
 }
 
+void display_HAL_boot_frame(uint16_t * buffer){
+    // The boot animation to the buffer
+    display.current_buffer = buffer;
+
+    //Send to the driver layer and change the buffer
+    ST7789_swap_buffers(&display);
+}
+
+void display_HAL_change_endian(){
+    ST7789_set_endian(&display);
+}
+
 // LVGL library releated functions
 void display_HAL_flush(lv_disp_drv_t * drv, const lv_area_t * area, lv_color_t * color_map){
 
@@ -99,7 +111,8 @@ void display_HAL_flush(lv_disp_drv_t * drv, const lv_area_t * area, lv_color_t *
     display.buffer_size = size;
 
     //Send it
-    ST7789_write_pixels(&display, display.current_buffer, display.buffer_size);
+    //ST7789_write_pixels(&display, display.current_buffer, display.buffer_size);
+    ST7789_swap_buffers(&display);
 
     //Tell to LVGL that is ready to send another frame
     lv_disp_flush_ready(drv);
@@ -317,7 +330,6 @@ static uint8_t getPixelNES(const uint8_t *bufs, uint16_t x, uint16_t y, uint16_t
 
     return col;
 }
-
 
 static uint16_t getPixelGBC(const uint16_t *bufs, uint16_t x, uint16_t y, uint16_t w2, uint16_t h2){
 

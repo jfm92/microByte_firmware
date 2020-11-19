@@ -100,8 +100,55 @@ void display_HAL_NES_frame(const uint8_t *data);
  */
 void display_HAL_SMS_frame(const uint8_t *data, uint16_t color[], bool GAMEGEAR);
 
-
-// Boot Screen releated, WIP
-
+/*
+ * Function:  display_HAL_get_buffer 
+ * --------------------
+ * 
+ * This function return a pointer to use the current display buffer.
+ * 
+ * Returns: Pointer to the current buffer in use.
+ * 
+ */
 uint16_t * display_HAL_get_buffer();
+
+/*
+ * Function:  display_HAL_get_buffer_size 
+ * --------------------
+ * 
+ * Give the actual size of the buffer.
+ * 
+ * Returns: Size of the buffer
+ * 
+ */
 size_t display_HAL_get_buffer_size();
+
+/*
+ * Function:  display_HAL_boot_frame 
+ * --------------------
+ * 
+ * This function receive the pointer of a buffer with the partial boot frame to print
+ * on the screen and send it to the driver layer.
+ * 
+ * Arguments:
+ *  -buffer: Pointer rendered buffer.
+ * 
+ * Returns: Nothing
+ * 
+ */
+void display_HAL_boot_frame(uint16_t * buffer);
+
+/*
+ * Function:  display_HAL_change_endian 
+ * --------------------
+ * 
+ * This function is a workaround to solve the issue with little endian and big endian package.
+ * The boot animation library creates little endian package on the other hand the GUI and the emulators,
+ * use big endian.
+ * By default the screen is configured to use little endian, but is necessay to change the endian configuration
+ * to obtain proper image after the boot screen.
+ * 
+ * 
+ * Returns: Nothing
+ * 
+ */
+void display_HAL_change_endian();
