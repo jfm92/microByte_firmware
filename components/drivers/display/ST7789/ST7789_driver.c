@@ -185,7 +185,8 @@ void ST7789_write_lines(st7789_driver_t *driver, int ypos, int xpos, int width, 
     //ST7789_write_pixels(driver, driver->buffer_primary, size);
     driver->buffer_size = 240*20; 
     ST7789_set_window(driver,0,ypos,240,ypos +20);
-    ST7789_write_pixels(driver, driver->current_buffer, driver->buffer_size);
+   // ST7789_write_pixels(driver, driver->current_buffer, driver->buffer_size);
+   ST7789_swap_buffers(driver);
 }
 
 void ST7789_swap_buffers(st7789_driver_t *driver){
@@ -216,6 +217,13 @@ void ST7789_set_window(st7789_driver_t *driver, uint16_t start_x, uint16_t start
 	ST7789_multi_cmd(driver, sequence);
 }
 
+void ST7789_set_endian(st7789_driver_t *driver){
+	const st7789_command_t init_sequence2[] = {
+		{ST7789_CMD_RAMCTRL, 0, 2, (const uint8_t *)"\x00\xc0"},
+		{ST7789_CMDLIST_END, 0, 0, NULL}, 
+	};
+	ST7789_multi_cmd(driver, init_sequence2);
+}
 /**********************
  *   STATIC FUNCTIONS
  **********************/
@@ -240,42 +248,41 @@ static void ST7789_config(st7789_driver_t *driver){
 		(driver->display_height - 1) & 0xff
 	};
 	const st7789_command_t init_sequence[] = {
+		// Sleep
 		{ST7789_CMD_SLPIN, 10, 0, NULL},                    // Sleep
 		{ST7789_CMD_SWRESET, 200, 0, NULL},                 // Reset
 		{ST7789_CMD_SLPOUT, 120, 0, NULL},                  // Sleep out
 
-		{0xCF,0,3,(const uint8_t *)"\x00\x83\x30"},
-		{0xED,0,4,(const uint8_t *)"\x64\x03\x12\x81"},
-		{ST7789_CMD_PWCTRL2,0,3,(const uint8_t *)"\x85\x01\x79"},
-		{0xCB,0,5,(const uint8_t *)"\x39\x2C\x00\x34\x02"},
-		{0xF7,0,1,(const uint8_t *)"\x20"},
-		{0xEA,0,2,(const uint8_t *)"\x39\x00"},
-		{ST7789_CMD_LCMCTRL,0,1,(const uint8_t *)"\x26"},
-		{ST7789_CMD_IDSET,0,1,(const uint8_t *)"\x11"},
-		{ST7789_CMD_VCMOFSET,0,2,(const uint8_t *)"\x35\3E"},
-		{ST7789_CMD_CABCCTRL,0,1,(const uint8_t *)"\xBE"},
-		{ST7789_CMD_MADCTL,0,1,(const uint8_t *)"\x60"},
-		{ST7789_CMD_COLMOD,0,1,(const uint8_t *)"\x55"},
-		{ST7789_CMD_INVON, 0, 0, NULL},
-		{ST7789_CMD_TESCAN, 0, 0, NULL},
-		{ST7789_CMD_RGBCTRL,0,2,(const uint8_t *)"\x00\x1B"},
+		{ST7789_CMD_MADCTL, 0, 1, (const uint8_t *)"\x00"}, // Page / column address order
+		{ST7789_CMD_COLMOD, 0, 1, (const uint8_t *)"\x55"}, // 16 bit RGB
+		{ST7789_CMD_INVON, 0, 0, NULL},                     // Inversion on
 		{ST7789_CMD_CASET, 0, 4, (const uint8_t *)&caset},  // Set width
 		{ST7789_CMD_RASET, 0, 4, (const uint8_t *)&raset},  // Set height
-		{0xF2,0,1,(const uint8_t *)"\x08"},
-		{ST7789_CMD_GAMSET, 0, 1, (const uint8_t *)"\x01"},
-		{ST7789_CMD_PVGAMCTRL, 0, 14, (const uint8_t *)"\xd0\x00\x02\x07\x0a\x28\x32\x44\x42\x06\x0E\x12\x14\x17"},
-		{ST7789_CMD_NVGAMCTRL, 0, 14, (const uint8_t *)"\xd0\x00\x02\x07\x0a\x28\x31\x54\x47\x0e\x1c\x17\x1b\x1e"},
-		// Saturated Gama curve
-		//{ST7789_CMD_PVGAMCTRL, 0, 14, (const uint8_t *)"\xd0\x08\x11\x08\x0c\x15\x39\x33\x50\x36\x13\x14\x29\x2d"},
-		//{ST7789_CMD_NVGAMCTRL, 0, 14, (const uint8_t *)"\xd0\x08\x10\x08\x06\x06\x39\x44\x51\x0b\x16\x14\x2f\x31"},
-		{ST7789_CMD_PWCTRL1, 0, 2, (const uint8_t *)"\xa4\xa1"},
-		{ST7789_CMD_FRCTR2, 0, 1, (const uint8_t *)"\x0F"},
-		{ST7789_CMD_CASET, 0, 4, (const uint8_t *)"\x00\x00\x00\xef"},
-		{ST7789_CMD_RASET, 0, 4, (const uint8_t *)"\x00\x00\x01\x3f"},
-		{ST7789_CMD_RAMWR, 0, 0, NULL},
-		{ST7789_CMD_GCTRL, 0, 1, (const uint8_t *)"\x07"},
+
+		// Porch setting
+		{ST7789_CMD_PORCTRL, 0, 5, (const uint8_t *)"\x0c\x0c\x00\x33\x33"},
+		// Set VGH to 12.54V and VGL to -9.6V
 		{ST7789_CMD_GCTRL, 0, 1, (const uint8_t *)"\x14"},
-		{0xB6, 0, 4, (const uint8_t *)"\x0A\x82\x27\x00"},
+		// Set VCOM to 1.475V
+		{ST7789_CMD_VCOMS, 0, 1, (const uint8_t *)"\x37"},
+		// Enable VDV/VRH control
+		{ST7789_CMD_VDVVRHEN, 0, 2, (const uint8_t *)"\x01\xff"},
+		// VAP(GVDD) = 4.45+(vcom+vcom offset+vdv)
+		{ST7789_CMD_VRHSET, 0, 1, (const uint8_t *)"\x12"},
+		// VDV = 0V
+		{ST7789_CMD_VDVSET, 0, 1, (const uint8_t *)"\x20"},
+		// AVDD=6.8V, AVCL=-4.8V, VDDS=2.3V
+		{ST7789_CMD_PWCTRL1, 0, 2, (const uint8_t *)"\xa4\xa1"},
+		// 60 fps
+		{ST7789_CMD_FRCTR2, 0, 1, (const uint8_t *)"\x0f"},
+		// Gama 2.2
+		{ST7789_CMD_GAMSET, 0, 1, (const uint8_t *)"\x01"},
+		// Gama curve
+		{ST7789_CMD_PVGAMCTRL, 0, 14, (const uint8_t *)"\xd0\x08\x11\x08\x0c\x15\x39\x33\x50\x36\x13\x14\x29\x2d"},
+		{ST7789_CMD_NVGAMCTRL, 0, 14, (const uint8_t *)"\xd0\x08\x10\x08\x06\x06\x39\x44\x51\x0b\x16\x14\x2f\x31"},
+
+		// Little endian
+		{ST7789_CMD_RAMCTRL, 0, 2, (const uint8_t *)"\x00\xc8"},
 		{ST7789_CMDLIST_END, 0, 0, NULL},                   // End of commands
 	};
 	ST7789_multi_cmd(driver, init_sequence);
