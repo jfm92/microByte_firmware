@@ -245,3 +245,19 @@ void ST7789_swap_buffers(st7789_driver_t *driver);
  * 
  */
 void ST7789_set_window(st7789_driver_t *driver, uint16_t start_x, uint16_t start_y, uint16_t end_x, uint16_t end_y);
+
+/*
+ * Function:  ST7789_set_endian 
+ * --------------------
+ * 
+ * Depper explanation on the display_HAL.h file, but this function change the screen configuration from,
+ * little endian message to big endian message.
+ * 
+ * Arguments:
+ * 	-driver: Screen driver structure.
+ * 
+ * Returns: Nothing.
+ * 
+ */
+
+void ST7789_set_endian(st7789_driver_t *driver);
