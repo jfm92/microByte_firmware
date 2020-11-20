@@ -1,12 +1,19 @@
 /*********************
 *      INCLUDES
 *********************/
+#include "stdbool.h"
 
-#include "TCA9555.h"
 #include "esp_log.h"
 #include "driver/i2c.h"
 
 #include "system_configuration.h"
+
+/*********************
+*      DEFINES
+*********************/
+
+#define CONFIG_REG 0x06
+#define READ_REG 0x00 
 
 
 /**********************
@@ -22,7 +29,7 @@ static int8_t TCA955_I2C_read(uint8_t I2C_bus, uint8_t *data, size_t size);
 *   GLOBAL FUNCTIONS
 **********************/
 
-int8_t TCA955_init(void){
+bool TCA955_init(void){
     //Init I2C bus as master
     esp_err_t ret;
 
@@ -40,20 +47,18 @@ int8_t TCA955_init(void){
     
     if(ret != ESP_OK){
         ESP_LOGE(TAG, "I2C driver initialization fail");
-        return -1;
+        return false;
     }
 
     //Check if the device is connected
     if(TCA955_I2C_write(0,0x00,1) == -1){
         ESP_LOGE(TAG,"TCA9555 not detected");
-        return -1;
+        return false;
     }
 
     ESP_LOGI(TAG,"TCA9555 detected");
-    //TCA9555_pinMode(8, IN); By default all are selected as input, so is not necessary to call it.
 
-    return 1;
-
+    return true;
 }
 
 int16_t TCA9555_readInputs(void){
@@ -67,7 +72,7 @@ int16_t TCA9555_readInputs(void){
     return data_out;
 }
 
-int8_t TCA9555_pinMode(uint8_t pin, uint8_t mode){
+bool TCA9555_pinMode(uint8_t pin){
     uint16_t pinMode = 0xFFFF;
 
     if(pin > 16){
@@ -75,19 +80,7 @@ int8_t TCA9555_pinMode(uint8_t pin, uint8_t mode){
         return -1;
     }
 
-    if(mode == IN){
-        //Input
-        pinMode = pinMode | (0x01 << pin);
-
-    }
-    else if(mode == OUT){
-        //Output
-        //TODO
-    }
-    else{
-        ESP_LOGE(TAG,"Pin mode error: Must be IN or OUT");
-        return -1;
-    }
+    pinMode = pinMode | (0x01 << pin);
 
     uint8_t pinMode_h = (uint8_t) (pinMode >> 8);
     uint8_t pinMode_l = (uint8_t) (pinMode & 0X00FF);
@@ -95,11 +88,10 @@ int8_t TCA9555_pinMode(uint8_t pin, uint8_t mode){
 
     if(TCA955_I2C_write(0, data, 3) == -1 ){
         ESP_LOGE(TAG, "Error setting pinMode");
-        return -1;
+        return false;
     }
    
-    return 1;
-
+    return true;
 }
 
 /**********************
@@ -111,7 +103,7 @@ static int8_t TCA955_I2C_write(uint8_t I2C_bus, uint8_t *data, size_t size){
     i2c_cmd_handle_t cmd = i2c_cmd_link_create();
     i2c_master_start(cmd);
     i2c_master_write_byte(cmd, ( I2C_dev_address  << 1 ) | I2C_MASTER_WRITE, 0x1);
-    i2c_master_write(cmd, &data, size, 0x1);
+    i2c_master_write(cmd, &data, size, 0x1); // Using &data will give a warning a compilation time, but is necessary to avoid I2C invalid address at running time
     i2c_master_stop(cmd);
 
     esp_err_t ret = i2c_master_cmd_begin(0, cmd, 1000 / portTICK_RATE_MS);

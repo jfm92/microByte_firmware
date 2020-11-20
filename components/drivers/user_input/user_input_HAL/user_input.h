@@ -1,3 +1,7 @@
+/*********************
+ *      FUNCTIONS
+ *********************/
+
 /*
  * Function:  input_init 
  * --------------------
@@ -15,7 +19,7 @@ void input_init(void);
  * 
  *  Gets the value of the buttons attached to the mux and if the menu button is pushed,
  *  it peforms some special functions such as brightness and volumen set or open the on
- *  menu.
+ *  game menu.
  * 
  *  Returns: An unsigned interger of 16bit with the status of each button. See the next 
  *  table to know the position of each button.
