@@ -10,7 +10,8 @@ EXTRA_COMPONENT_DIRS := components/GUI \
 						components/drivers/system_configuration \
 						components/drivers/display/ST7789 \
 						components/drivers/display/display_HAL \
-						components/drivers/user_input \
+						components/drivers/user_input/TCA9555 \
+						components/drivers/user_input/user_input_HAL \
 						components/drivers/sd_storage \
 						components/drivers/battery \
 						components/drivers/sound \
