@@ -86,13 +86,13 @@ static int cmd_reset()
 
 static int cmd_savestate(int argc, char **argv)
 {
-	gbc_state_save(argc > 1 ? atoi(argv[1]) : -1);
+	//gbc_state_save(argc > 1 ? atoi(argv[1]) : -1);
 	return 0;
 }
 
 static int cmd_loadstate(int argc, char **argv)
 {
-	gbc_state_load(argc > 1 ? atoi(argv[1]) : -1);
+	//gbc_state_load(argc > 1 ? atoi(argv[1]) : -1);
 	return 0;
 }
 

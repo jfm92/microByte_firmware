@@ -1,6 +1,6 @@
 #ifndef __LOADER_H__
 #define __LOADER_H__
-
+#include <stdbool.h>
 
 typedef struct loader_s
 {
@@ -14,12 +14,11 @@ typedef struct loader_s
 
 extern loader_t loader;
 
-void gbc_loader_unload();
-int gbc_rom_load(const char *game_name, uint8_t console);
+bool gbc_rom_load(const char *game_name, uint8_t console);
 int gbc_sram_load();
 int gbc_sram_save();
-void gbc_state_load(int n);
-void gbc_state_save(int n);
+bool gbc_state_load(const char *game_name, uint8_t console);
+bool gbc_state_save(const char *game_name, uint8_t console);
 
 
 

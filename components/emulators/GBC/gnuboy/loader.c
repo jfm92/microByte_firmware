@@ -1,17 +1,19 @@
+/*********************
+*      INCLUDES
+*********************/
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 #include <time.h>
 #include <ctype.h>
 
-#include "esp_partition.h"
 #include "esp_system.h"
-#include "esp_heap_caps.h" 
 
 #include "esp_timer.h"
 
 #include "sd_storage.h"
 #include "system_manager.h"
+#include "esp_log.h"
 
 #include "gnuboy.h"
 #include "defs.h"
@@ -23,7 +25,9 @@
 #include "rc.h"
 #include "sound.h"
 
-
+/**********************
+ *  STATIC VARIABLES
+ **********************/
 
 static int mbc_table[256] =
 {
@@ -85,6 +89,7 @@ static int ramsize_table[256] =
 };
 
 
+// Weird stuff for the emulator, I think it's useless but it's ok.
 static char *romfile=NULL;
 static char *sramfile=NULL;
 static char *rtcfile=NULL;
@@ -100,53 +105,61 @@ static int forcedmg=0, gbamode=0;
 
 static int memfill = 0, memrand = -1;
 
+static const char *TAG = "GNUBoy Loader";
 
-static void initmem(void *mem, int size)
-{
-	char *p = mem;
-	//memset(p, 0xff /*memfill*/, size);
-	if (memfill >= 0)
-		memset(p, memfill, size);
-}
+/**********************
+ *  STATIC PROTOTYPES 
+ **********************/
 
+static void initmem(void *mem, int size);
 
 
-int gbc_rom_load(const char *game_name, uint8_t console)
-{
-	
-	byte c;
-	const char  *header;
-	int len = 0, rlen;
 
-	
+/**********************
+ *   GLOBAL FUNCTIONS
+ **********************/
 
+bool gbc_rom_load(const char *game_name, uint8_t console){
+
+	// Game directory in realtion with the console that we wan to use
 	char rom_name[300];
-	if(console == GAMEBOY) sprintf(&rom_name,"/sdcard/GameBoy/%s",game_name);
+	if(console == GAMEBOY) sprintf(rom_name,"/sdcard/GameBoy/%s",game_name);
 	else{
-		sprintf(&rom_name,"/sdcard/GameBoy_Color/%s",game_name);
+		sprintf(rom_name,"/sdcard/GameBoy_Color/%s",game_name);
 	}
 	
-	printf("malloc foo\r\n");
-	size_t game_size = sd_file_size(rom_name);
-	char * data = malloc(game_size);
-	if(data == NULL){
-		printf("gnuboy data= NULL\r\n");
-		data = (void*)0x3f800000;
-	}
-	printf("malloc foo\r\n");
-	//data = (void*)0x3f800000;
-	sd_get_file(rom_name,data);
 
-	printf("Initialized. ROM@%p\n", data);
-	header = data;
+	size_t game_size = sd_file_size(rom_name);
+
+	/*It's only available 3MB of RAM, so, the games with a higher size,
+	* will be save on flash memory. The disadvantage is that the load 
+	* process is way slower but it's a temporary workaround */
+
+	char * data = NULL; //Pointer to the memory region where the game will be saved.
+
+	if(game_size > 3*1024*1024){
+		ESP_LOGW(TAG,"Loading game on flash memory, this process could take several minutes.");
+		data = sd_get_file_flash(rom_name);
+	}
+	else{
+		//Allocate the size of the game.
+		ESP_LOGW(TAG,"Loading game on RAM memory");
+		data = malloc(game_size);
+		sd_get_file(rom_name,data);
+	}
+
+
+	ESP_LOGI(TAG,"Initialized. ROM@%p\n", data);
+	const char  * header = data;
 
 	memcpy(rom.name, header+0x0134, 16);
 	
 	rom.name[16] = 0;
-	printf("loader: rom.name='%s'\n", rom.name);
+	ESP_LOGI(TAG,"ROM Name = '%s'\n", rom.name);
 
+	//Get ROM data.
 	int tmp = *((int*)(header + 0x0144));
-	c = (tmp >> 24) & 0xff;
+	byte c = (tmp >> 24) & 0xff;
 	mbc.type = mbc_table[c];
 	mbc.batt = (batt_table[c] && !nobatt) || forcebatt;
 	rtc.batt = rtc_table[c];
@@ -155,8 +168,14 @@ int gbc_rom_load(const char *game_name, uint8_t console)
 	mbc.romsize = romsize_table[(tmp & 0xff)];
 	mbc.ramsize = ramsize_table[((tmp >> 8) & 0xff)];
 
-	if (!mbc.romsize) die("unknown ROM size %02X\n", header[0x0148]);
-	if (!mbc.ramsize) die("unknown SRAM size %02X\n", header[0x0149]);
+	if (!mbc.romsize){
+		ESP_LOGE(TAG,"unknown ROM size %02X\n", header[0x0148]);
+		return false;
+	}
+	if (!mbc.ramsize){
+		ESP_LOGE(TAG,"unknown SRAM size %02X\n", header[0x0149]);
+		return false;
+	}
 
 	const char* mbcName;
 	switch (mbc.type)
@@ -198,40 +217,30 @@ int gbc_rom_load(const char *game_name, uint8_t console)
 			break;
 	}
 
-	rlen = 16384 * mbc.romsize;
-	int sram_length = 8192 * mbc.ramsize;
-	printf("loader: mbc.type=%s, mbc.romsize=%d (%dK), mbc.ramsize=%d (%dK)\n", mbcName, mbc.romsize, rlen / 1024, mbc.ramsize, sram_length / 1024);
-	printf("SRAM %i\r\n",sram_length);
+	uint32_t rlen = 16384 * mbc.romsize;
+	uint32_t sram_length = 8192 * mbc.ramsize;
+
+	ESP_LOGI(TAG,"ROM DATA:\nMBC type = %s\nROM Size = %d (%dK)\nRAM size = %d (%dK)", mbcName, mbc.romsize, rlen / 1024, mbc.ramsize, sram_length / 1024);
 
 	// ROM
-	//rom.bank[0] = data;
-	rom.bank = data;
+	rom.bank = (byte *)data;
 	rom.length = rlen;
 
 	// SRAM
 	ram.sram_dirty = 1;
-//	ram.sbank = heap_caps_malloc(sram_length, MALLOC_CAP_8BIT | MALLOC_CAP_INTERNAL);
-	ram.sbank = malloc(sram_length);
-	if (!ram.sbank)
-	{
-		printf("RAM error\r\n");
-		// not enough free RAM,
-		// check if PSRAM has free space
-		if (rlen <= (0x100000 * 3) &&
-			sram_length <= 0x100000)
-		{
+	ram.sbank = malloc(sram_length); //Allocate the required SRAM
+	if (!ram.sbank){
+		if (rlen <= (0x100000 * 3) && sram_length <= 0x100000){
 			ram.sbank = data + (0x100000 * 3);
-			printf("SRAM using PSRAM.\n");
+			ESP_LOGW(TAG,"Error allocating the required SRAM, triying to force allocation on PSRAM.");
 		}
-		else
-		{
-			printf("No free space for SRAM.\n");
-			ram.sbank = malloc(sram_length);
-			//abort();
+		else{
+			ESP_LOGE(TAG,"SRAM allocation fail.");
+			return false;
 		}
 	}
 
-
+	//Initialize memory
 	initmem(ram.sbank, 8192 * mbc.ramsize);
 	initmem(ram.ibank, 4096 * 8);
 
@@ -243,10 +252,11 @@ int gbc_rom_load(const char *game_name, uint8_t console)
 	hw.cgb = ((c == 0x80) || (c == 0xc0)) && !forcedmg;
 	hw.gba = (hw.cgb && gbamode);
 	//mem_updatemap();
-	return 0;
+	return true;
 
 }
 
+// TODO: Implement SRAM save and load
 int gbc_sram_load()
 {
 	if (!mbc.batt) return -1;
@@ -323,37 +333,50 @@ int gbc_sram_save()
 }
 
 
-void gbc_state_save(int n)
-{
-	FILE *f = fopen("/sdcard/GameBoy_Color/Save_Data/mario.sav", "w");
-
-	if (f != NULL)
-	{
+bool gbc_state_save(const char *game_name, uint8_t console){
+	char rom_name[300];
+	if(console == GAMEBOY) sprintf(rom_name,"/sdcard/GameBoy/Save_Data/%s.sav",game_name);
+	else{
+		sprintf(rom_name,"/sdcard/GameBoy_Color/Save_Data/%s.sav",game_name);
+	}
+	
+	FILE *f = fopen(rom_name, "w");
+	
+	if (f != NULL){
 		savestate(f);
 		fclose(f);
+		ESP_LOGI(TAG,"%s SAVE.",game_name);
+		return true;
 	}
 	else{
-		printf("file create fail\r\n");
+		ESP_LOGE(TAG,"Fail to create game save file.");
+		return false;
 	}
-	printf("Save data finish\r\n");
-
 }
 
 
-void gbc_state_load(int n)
-{
-	FILE *f;
+bool gbc_state_load(const char *game_name, uint8_t console){
+	char rom_name[300];
+	if(console == GAMEBOY) sprintf(rom_name,"/sdcard/GameBoy/Save_Data/%s.sav",game_name);
+	else{
+		sprintf(rom_name,"/sdcard/GameBoy_Color/Save_Data/%s.sav",game_name);
+	}
 	
+	FILE *f = fopen(rom_name, "r");
 
-	if ((f = fopen("/sdcard/GameBoy_Color/Save_Data/mario.sav", "r")))
-	{
+	if (f != NULL){
 		loadstate(f);
 		fclose(f);
 		vram_dirty();
 		pal_dirty();
 		sound_dirty();
 		mem_updatemap();
-		printf("LoadState: loadstate OK.\n");
+		ESP_LOGI(TAG,"%s LOAD.",game_name);
+		return true;
+	}
+	else{
+		ESP_LOGE(TAG,"Fail to load save data.");
+		return false;
 	}
 
 }
@@ -407,6 +430,17 @@ void loader_unload()
 	rom.bank = 0;
 	ram.sbank = 0;
 	//mbc.type = mbc.romsize = mbc.ramsize = mbc.batt = 0;
+}
+
+/**********************
+ *   STATIC FUNCTIONS
+ **********************/
+
+static void initmem(void *mem, int size){
+	char *p = mem;
+	//memset(p, 0xff /*memfill*/, size);
+	if (memfill >= 0)
+		memset(p, memfill, size);
 }
 
 /* basename/dirname like function */
