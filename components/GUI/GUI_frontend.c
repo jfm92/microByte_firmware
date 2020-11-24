@@ -17,7 +17,7 @@
 #include "sd_storage.h"
 #include "user_input.h"
 #include "sound_driver.h"
-#include "st7789.h"
+//#include "st7789.h"
 
 /*********************
  *   ICONS IMAGES
@@ -27,16 +27,14 @@
 #include "icons/emulators_icon.h"
 #include "icons/gameboycolor_icon.h"
 #include "icons/gameboy_icon.h"
-#include "icons/nes_icon.h"
+#include "icons/NES_icon.h"
 #include "icons/snes_icon.h"
 #include "icons/sega_icon.h"
 #include "icons/nogame_icon.h"
+#include "icons/GG_icon.h"
 
 /* Wi-Fi lib manager icons */
-#include "icons/wifi_lib_icon.h"
-
-/* Bluetooth controller icons */
-#include "icons/bt_controller_icon.h"
+#include "icons/ext_application_icon.h"
 
 /* Configuration icons */
 #include "icons/settings_icon.h"
@@ -59,6 +57,7 @@ static void emulators_menu(lv_obj_t * parent);
 static void emulators_list_cb(lv_obj_t * parent, lv_event_t e);
 static void emulator_list_event(lv_obj_t * parent, lv_event_t e);
 static void game_execute_cb(lv_obj_t * parent, lv_event_t e);
+static void game_menu_cb(lv_obj_t * parent, lv_event_t e);
 static void msgbox_no_game_cb(lv_obj_t * msgbox, lv_event_t e);
 static void game_list_cb(lv_obj_t * parent, lv_event_t e);
 
@@ -137,6 +136,8 @@ static lv_obj_t * list_emulators_main;
 static lv_obj_t * btn_emulator_lib;
 static lv_obj_t * container_header_game_icon;
 static lv_obj_t * list_game_emulator;
+static lv_obj_t * list_game_options;
+static lv_obj_t * mbox_game_options;
 
 // On-game menu objects
 
@@ -275,6 +276,23 @@ static void emulators_menu(lv_obj_t * parent){
     lv_group_add_obj(group_interact, btn_emulator_lib);
 }
 
+static void emulators_game_menu(char * game_name){
+ /*   lv_obj_t * list_game_menu = lv_list_create(lv_layer_top(), NULL);
+    lv_obj_set_size(list_list_game_menuon_game, 180, 240);
+    lv_obj_align(list_game_menu, NULL, LV_ALIGN_CENTER, 0, 0);
+
+     lv_obj_t * list_btn;
+
+    list_btn = lv_list_add_btn(list_game_menu, LV_SYMBOL_HOME, "New Game");
+   // lv_obj_set_event_cb(list_btn, list_game_menu_cb);
+
+    list_btn = lv_list_add_btn(list_game_menu, LV_SYMBOL_SAVE, "Load Game");
+    //lv_obj_set_event_cb(list_btn, list_game_menu_cb);
+
+    list_btn = lv_list_add_btn(list_game_menu, LV_SYMBOL_CLOSE, "Exit");
+   // lv_obj_set_event_cb(list_btn, list_game_menu_cb);*/
+}
+
 /* On game menu function */
 
 static void on_game_menu(){
@@ -317,7 +335,7 @@ static void external_app_menu(lv_obj_t * parent){
     lv_obj_set_size(btn_ext_app,150,150);
 
     lv_obj_t * wifi_lib_image = lv_img_create(btn_ext_app, NULL);
-    lv_img_set_src(wifi_lib_image, &wifi_lib_icon);
+    lv_img_set_src(wifi_lib_image, &ext_application_icon);
 
     lv_obj_t * label = lv_label_create(btn_ext_app, NULL);
     lv_label_set_text(label, "External Aplications");
@@ -374,7 +392,7 @@ static void game_list_cb(lv_obj_t * parent, lv_event_t e){
 
             lv_label_set_text(console_label, "NES");
             lv_obj_align(console_label, container_header_game_icon, LV_ALIGN_CENTER, 25, 0);
-            lv_img_set_src(console_image, &nes_icon);
+            lv_img_set_src(console_image, &NES_icon);
             lv_obj_align(console_image, container_header_game_icon, LV_ALIGN_CENTER, -40, 0);
 
             lv_obj_set_hidden(list_emulators_main,true);
@@ -408,9 +426,9 @@ static void game_list_cb(lv_obj_t * parent, lv_event_t e){
             emulator_selected = GAMEBOY_COLOR;
 
             lv_label_set_text(console_label, "GameBoy Color");
-            lv_obj_align(console_label, container_header_game_icon, LV_ALIGN_CENTER, 25, 0);
+            lv_obj_align(console_label, container_header_game_icon, LV_ALIGN_CENTER, 20, 0);
             lv_img_set_src(console_image, &gameboycolor_icon);
-            lv_obj_align(console_image, container_header_game_icon, LV_ALIGN_CENTER, -40, 0);
+            lv_obj_align(console_image, container_header_game_icon, LV_ALIGN_CENTER, -75, 0);
 
             lv_obj_set_hidden(list_emulators_main,true);
 
@@ -422,11 +440,23 @@ static void game_list_cb(lv_obj_t * parent, lv_event_t e){
             lv_label_set_text(console_label, "Master System");
             lv_obj_align(console_label, container_header_game_icon, LV_ALIGN_CENTER, 25, 0);
             lv_img_set_src(console_image, &sega_icon);
-            lv_obj_align(console_image, container_header_game_icon, LV_ALIGN_CENTER, -40, 0);
+            lv_obj_align(console_image, container_header_game_icon, LV_ALIGN_CENTER, -75, 0);
 
             lv_obj_set_hidden(list_emulators_main,true);
 
             ESP_LOGI(TAG,"Selected Sega MasterSystem");
+        }
+        else if(strcmp(lv_list_get_btn_text(parent),"Game Gear")==0){
+            emulator_selected = GG;
+
+            lv_label_set_text(console_label, "Game Gear");
+            lv_obj_align(console_label, container_header_game_icon, LV_ALIGN_CENTER, 25, 0);
+            lv_img_set_src(console_image, &GG_icon);
+            lv_obj_align(console_image, container_header_game_icon, LV_ALIGN_CENTER, -75, 0);
+
+            lv_obj_set_hidden(list_emulators_main,true);
+
+            ESP_LOGI(TAG,"Selected Sega Game Gear");
         }
 
         // Get the game list of each console.
@@ -446,7 +476,7 @@ static void game_list_cb(lv_obj_t * parent, lv_event_t e){
             for(int i=0;i<games_num;i++){
                 lv_obj_t * game_btn = lv_list_add_btn(list_game_emulator, NULL, game_name[i]);
                 lv_group_add_obj(group_interact, game_btn);
-                lv_obj_set_event_cb(game_btn, game_execute_cb);
+                lv_obj_set_event_cb(game_btn, game_menu_cb);
             }
             lv_group_add_obj(group_interact, list_game_emulator);
 
@@ -501,13 +531,13 @@ static void emulators_list_cb(lv_obj_t * parent, lv_event_t e){
         lv_obj_align(list_emulators_main, NULL, LV_ALIGN_CENTER, 0, 10);
         //lv_obj_set_event_cb(list_emulators_main, emulator_list_event);
 
-        lv_obj_t * emulator_NES_btn = lv_list_add_btn(list_emulators_main,  &nes_icon, "NES");
+        lv_obj_t * emulator_NES_btn = lv_list_add_btn(list_emulators_main,  &NES_icon, "NES");
         lv_obj_set_size(emulator_NES_btn, 200, 10);
         lv_obj_set_event_cb(emulator_NES_btn, game_list_cb);
 
-        lv_obj_t * emulator_SNES_btn = lv_list_add_btn(list_emulators_main,  &snes_icon, "SNES");
-        lv_obj_set_size(emulator_SNES_btn, 200, 10);
-        lv_obj_set_event_cb(emulator_SNES_btn, game_list_cb);
+        //lv_obj_t * emulator_SNES_btn = lv_list_add_btn(list_emulators_main,  &snes_icon, "SNES");
+        //lv_obj_set_size(emulator_SNES_btn, 200, 10);
+        //lv_obj_set_event_cb(emulator_SNES_btn, game_list_cb);
 
         lv_obj_t * emulator_GB_btn = lv_list_add_btn(list_emulators_main,  &gameboy_icon, "GameBoy");
         lv_obj_set_size(emulator_GB_btn, 200, 20);
@@ -520,15 +550,19 @@ static void emulators_list_cb(lv_obj_t * parent, lv_event_t e){
         lv_obj_t * emulator_SMS_btn = lv_list_add_btn(list_emulators_main,  &sega_icon, "Master System");
         lv_obj_set_size(emulator_SMS_btn, 200, 10);
         lv_obj_set_event_cb(emulator_SMS_btn, game_list_cb);
+
+        lv_obj_t * emulator_GG_btn = lv_list_add_btn(list_emulators_main,  &GG_icon, "Game Gear");
+        lv_obj_set_size(emulator_GG_btn, 200, 10);
+        lv_obj_set_event_cb(emulator_GG_btn, game_list_cb);
         
         lv_group_add_obj(group_interact, list_emulators_main);
         lv_group_focus_obj(list_emulators_main);
     }
 }
 
-static void game_execute_cb(lv_obj_t * parent, lv_event_t e){
+static void game_menu_cb(lv_obj_t * parent, lv_event_t e){
     if(e == LV_EVENT_CLICKED) {
-        ESP_LOGI(TAG, "Loading: %s",(char *)lv_list_get_btn_text(parent));
+       /* ESP_LOGI(TAG, "Loading: %s",(char *)lv_list_get_btn_text(parent));
 
         struct SYSTEM_MODE emulator;
         emulator.mode = MODE_GAME;
@@ -540,7 +574,41 @@ static void game_execute_cb(lv_obj_t * parent, lv_event_t e){
             ESP_LOGE(TAG, "Error sending game execution queue");
         }
 
-        on_game_menu();
+        printf("on game_menu\r\n");
+
+        on_game_menu();*/
+
+        lv_obj_set_hidden(container_header_game_icon,true);
+        lv_obj_set_hidden(list_emulators_main,true);
+        lv_obj_set_hidden(list_game_emulator,true);
+        
+        mbox_game_options = lv_msgbox_create(lv_layer_top(), NULL);
+        lv_msgbox_set_text(mbox_game_options, (char *)lv_list_get_btn_text(parent));
+        lv_obj_align(mbox_game_options, NULL, LV_ALIGN_CENTER, 0, -70);
+        
+
+        lv_obj_set_click(lv_layer_top(), true);
+
+        list_game_options = lv_list_create(mbox_game_options, NULL);
+
+        lv_obj_t * list_btn;
+
+        list_btn = lv_list_add_btn(list_game_options, LV_SYMBOL_HOME, "New Game");
+        lv_obj_set_event_cb(list_btn, game_execute_cb);
+
+        //TODO: Check if exist a saved data of the game. If not, don't create the button
+        list_btn = lv_list_add_btn(list_game_options, LV_SYMBOL_SAVE, "Resume Game");
+        lv_obj_set_event_cb(list_btn, game_execute_cb);
+
+        list_btn = lv_list_add_btn(list_game_options, LV_SYMBOL_CLOSE, "Delete Save Data");
+        lv_obj_set_event_cb(list_btn, game_execute_cb);
+
+        lv_group_add_obj(group_interact, list_game_options);
+        lv_group_focus_obj(list_game_options);
+
+        //TODO: Get time played
+
+
 
     }
     else if(e == LV_EVENT_CANCEL  ){
@@ -549,6 +617,63 @@ static void game_execute_cb(lv_obj_t * parent, lv_event_t e){
         lv_obj_del(list_game_emulator);
         lv_obj_set_hidden(list_emulators_main,false);
         lv_group_focus_obj(list_emulators_main);
+        printf("foo\r\n");
+        
+    }
+}
+
+static void game_execute_cb(lv_obj_t * parent, lv_event_t e){
+    if(e == LV_EVENT_CLICKED) {
+        struct SYSTEM_MODE emulator;
+        if(strcmp(lv_list_get_btn_text(parent),"New Game")==0){
+            ESP_LOGI(TAG, "Loading: %s",(char *)lv_msgbox_get_text(mbox_game_options));
+ 
+            
+            emulator.mode = MODE_GAME;
+            emulator.status = 1;
+            emulator.console = emulator_selected;
+            strcpy(emulator.game_name, (char *)lv_msgbox_get_text(mbox_game_options));
+
+            if( xQueueSend( modeQueue,&emulator, ( TickType_t ) 10) != pdPASS ){
+                ESP_LOGE(TAG, "Error sending game execution queue");
+            }
+
+            printf("on game_menu\r\n");
+
+            on_game_menu();
+
+        }
+        else if(strcmp(lv_list_get_btn_text(parent),"Resume Game")==0){
+            ESP_LOGI(TAG, "Loading: %s",(char *)lv_msgbox_get_text(mbox_game_options));
+ 
+            emulator.mode = MODE_LOAD_GAME;
+            emulator.status = 1;
+            emulator.console = emulator_selected;
+            strcpy(emulator.game_name, (char *)lv_msgbox_get_text(mbox_game_options));
+
+            if( xQueueSend( modeQueue,&emulator, ( TickType_t ) 10) != pdPASS ){
+                ESP_LOGE(TAG, "Error sending game execution queue");
+            }
+
+            printf("on game_menu\r\n");
+
+            on_game_menu();
+
+        }
+        else if(strcmp(lv_list_get_btn_text(parent),"Delete Save Data")==0){
+            
+        }
+
+        //Get the name of the game from the text of the message box
+        
+
+    }
+    else if(e == LV_EVENT_CANCEL) {
+        lv_obj_set_hidden(container_header_game_icon,false);
+        lv_obj_set_hidden(list_emulators_main,false);
+        lv_obj_set_hidden(list_game_emulator,false);
+
+        lv_obj_del(mbox_game_options);
     }
 }
 
@@ -569,7 +694,7 @@ static void slider_volume_cb(lv_obj_t * slider, lv_event_t e){
 static void slider_brightness_cb(lv_obj_t * slider, lv_event_t e){
     if(e == LV_EVENT_VALUE_CHANGED) {
         ESP_LOGI(TAG, "Brightness set: %i",lv_slider_get_value(slider));
-        st7789_backlight_set(lv_slider_get_value(slider));
+        //st7789_backlight_set(lv_slider_get_value(slider));
     }
     else if(e == LV_EVENT_CANCEL){
         lv_obj_del(mbox_brightness);
@@ -581,7 +706,7 @@ static void list_game_menu_cb(lv_obj_t * parent, lv_event_t e){
         struct SYSTEM_MODE emulator;
 
         if(strcmp(lv_list_get_btn_text(parent),"Resume Game")==0){
-            
+            printf("Resume game\r\n");
             emulator.mode = MODE_GAME;
             emulator.status = 0;
 
@@ -593,6 +718,7 @@ static void list_game_menu_cb(lv_obj_t * parent, lv_event_t e){
         else if(strcmp(lv_list_get_btn_text(parent),"Save Game")==0){
 
             emulator.mode = MODE_SAVE_GAME;
+            emulator.console = emulator_selected;
 
             if( xQueueSend( modeQueue,&emulator, ( TickType_t ) 10) != pdPASS ){
                 ESP_LOGE(TAG,"modeQueue send error");
@@ -641,7 +767,7 @@ static void list_game_menu_cb(lv_obj_t * parent, lv_event_t e){
             lv_obj_set_width(slider, 180);
             lv_slider_set_range(slider, 0, 100);
             
-            uint8_t brightness_level = st7789_backlight_get();
+            uint8_t brightness_level = 0;//st7789_backlight_get();
             lv_slider_set_value(slider,brightness_level,LV_ANIM_ON);
 
             lv_obj_set_event_cb(slider, slider_brightness_cb);
@@ -890,7 +1016,7 @@ static void config_option_cb(lv_obj_t * parent, lv_event_t e){
             lv_obj_set_width(slider, 180);
             lv_slider_set_range(slider, 0, 100);
             
-            uint8_t brightness_level = st7789_backlight_get();
+            uint8_t brightness_level = 0;//st7789_backlight_get();
             lv_slider_set_value(slider,brightness_level,LV_ANIM_ON);
 
             lv_obj_set_event_cb(slider, slider_brightness_cb);
@@ -956,7 +1082,7 @@ static void config_option_cb(lv_obj_t * parent, lv_event_t e){
         else if(strcmp(lv_list_get_btn_text(parent),"Battery Status")==0){
             //Create message box
             lv_obj_t * mbox_battery = lv_msgbox_create(lv_layer_top(), NULL);
-            lv_msgbox_set_text(mbox_battery, "Battery Information");
+            lv_msgbox_set_text(mbox_battery, "Battery Status");
             lv_obj_align(mbox_battery, NULL, LV_ALIGN_CENTER, 0, -50);
 
             // Get the battery data and print with bullet points
@@ -967,27 +1093,35 @@ static void config_option_cb(lv_obj_t * parent, lv_event_t e){
             lv_label_set_text(lable_battery_info,spec_text);
 
             // Bar which show the actual capacity of the battery
+            lv_obj_t * bar_battery = lv_bar_create(mbox_battery, NULL);
+            lv_obj_set_size(bar_battery, 200, 20);
+            lv_obj_align(bar_battery, NULL, LV_ALIGN_CENTER, 0, 0);
+            lv_bar_set_anim_time(bar_battery, 2000);
+            
+            
             if(management.voltage >= 4190){
                 // Connected to the USB
+                // TODO: Change the possition of the text or if it's possible create an animation with the numbers
+                lv_obj_t * label_battery_bar = lv_label_create(bar_battery, NULL);
+                lv_label_set_text(label_battery_bar,"Connected to USB");
+
+                lv_obj_set_style_local_bg_color(bar_battery, LV_BAR_PART_INDIC, LV_STATE_DEFAULT, lv_color_hex(0x25CDF6));
+                lv_bar_set_value(bar_battery, 100, LV_ANIM_ON);
             }
             else{
-                lv_obj_t * bar_battery = lv_bar_create(mbox_battery, NULL);
-                lv_obj_set_size(bar_battery, 200, 20);
-                lv_obj_align(bar_battery, NULL, LV_ALIGN_CENTER, 0, 0);
-                lv_bar_set_anim_time(bar_battery, 2000);
-                lv_bar_set_value(bar_battery, management.percentage, LV_ANIM_ON);
-
                 // TODO: Change the possition of the text or if it's possible create an animation with the numbers
                 lv_obj_t * label_battery_bar = lv_label_create(bar_battery, NULL);
                 char battery_level[4];
                 sprintf(battery_level,"%i",management.percentage);
                 lv_label_set_text(label_battery_bar,battery_level);
 
-                lv_obj_set_event_cb(mbox_battery, mbox_battery_cb);
-                lv_group_add_obj(group_interact, mbox_battery);
-                lv_group_focus_obj(mbox_battery);
+                lv_obj_set_style_local_bg_color(bar_battery, LV_BAR_PART_INDIC, LV_STATE_DEFAULT, lv_color_hex(0x0CC62D));
+                lv_bar_set_value(bar_battery, management.percentage, LV_ANIM_ON);
 
             }
+            lv_obj_set_event_cb(mbox_battery, mbox_battery_cb);
+            lv_group_add_obj(group_interact, mbox_battery);
+            lv_group_focus_obj(mbox_battery);
         }
         else if(strcmp(lv_list_get_btn_text(parent),"SD card Status")==0){
             lv_obj_t * mbox_SD = lv_msgbox_create(lv_layer_top(), NULL);
@@ -1093,8 +1227,24 @@ static void color_picker_cb(lv_obj_t * parent, lv_event_t e){
     }
 }
 
+/****** External Async functions ***********/
+void async_battery_alert(bool game_mode){
+
+    lv_obj_t * mbox_battery_Alert = lv_msgbox_create(lv_layer_top(), NULL);
+    lv_msgbox_set_text(mbox_battery_Alert, "Battery Alert");
+
+    lv_obj_t * mbox_battery = lv_label_create(mbox_battery_Alert, NULL);
+    lv_label_set_text(mbox_battery,"The battery level is below 5%\n The device will turn off.");
+
+    static const char * btns[] = {"Ok", "", ""};
+    lv_msgbox_add_btns(mbox_battery_Alert, btns);
+
+    lv_group_add_obj(group_interact, mbox_battery_Alert);
+    lv_group_focus_obj(mbox_battery_Alert);
 
 
+
+}
 /**********************
  *   TASKS FUNCTIONS
  **********************/
@@ -1134,8 +1284,6 @@ static void battery_status_task(lv_task_t * task){
         }  
     }
 }
-
-
 
 static bool user_input_task(lv_indev_drv_t * indev_drv, lv_indev_data_t * data){
 
