@@ -5,6 +5,7 @@
 #define SCR_MODEL       ST7789
 #define SCR_WIDTH       240
 #define SCR_HEIGHT      240
+#define SCR_BUFFER_SIZE 20
 
 #define HSPI_MOSI        13
 #define HSPI_CLK         14
@@ -32,3 +33,12 @@
 #define MUX_INT         34
 #define I2C_CLK         400*1000 //400Khz
 #define I2C_dev_address 0x20
+
+/********************************
+ *          I2S Pin
+ * ******************************/
+
+#define I2S_BCK     27
+#define I2S_WS      26
+#define I2S_DATA_O  25
+#define I2S_NUM I2S_NUM_0
