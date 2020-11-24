@@ -9,7 +9,8 @@
 #include "freertos/semphr.h"
 
 #include "GUI.h"
-#include "st7789.h"
+//#include "st7789.h"
+#include "display_hal.h"
 #include "GUI_frontend.h"
 
 #include "lvgl/lvgl.h"
@@ -18,12 +19,13 @@
  *      DEFINES
  *********************/
 #define LV_TICK_PERIOD_MS 10
-#define DISP_BUF_SIZE   240*40 // Horizontal Res * 40 vetical pixels
+#define DISP_BUF_SIZE   240*20 // Horizontal Res * 40 vetical pixels
 
 /**********************
  *  STATIC PROTOTYPES
  **********************/
 static void lv_tick_task(void *arg);
+static lv_disp_drv_t disp_drv;
 
 /**********************
  *  STATIC VARIABLES
@@ -43,17 +45,17 @@ void GUI_init(void){
 
     //Screen Buffer initialization
     static EXT_RAM_ATTR lv_color_t * buf1[DISP_BUF_SIZE];
-    static EXT_RAM_ATTR lv_color_t * buf2[DISP_BUF_SIZE];
+   // static EXT_RAM_ATTR lv_color_t * buf2[DISP_BUF_SIZE];
 
     static lv_disp_buf_t disp_buf;
     uint32_t size_in_px = DISP_BUF_SIZE; 
 
-    lv_disp_buf_init(&disp_buf, buf1, buf2, size_in_px);
+    lv_disp_buf_init(&disp_buf, buf1, NULL, size_in_px);
 
     // Initialize LVGL display and attach the flush function
-    lv_disp_drv_t disp_drv;
+    
     lv_disp_drv_init(&disp_drv);
-    disp_drv.flush_cb = st7789_flush;
+    disp_drv.flush_cb = display_HAL_flush;
 
     disp_drv.buffer = &disp_buf;
     lv_disp_drv_register(&disp_drv);
@@ -74,10 +76,19 @@ void GUI_init(void){
 
 }
 
+
+// Async refresh
+void GUI_refresh(){
+    for(int i=0;i<3;i++) lv_disp_flush_ready(&disp_drv);
+}
+
+void GUI_async_message(){
+    async_battery_alert();
+}
+
 void GUI_task(void *arg){
 
     GUI_init();
-
     while (1) {
         lv_task_handler();
     }
