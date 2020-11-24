@@ -149,7 +149,7 @@ void system_reset(void)
   vdp_reset();
   render_reset();
   sound_reset();
-  system_manage_sram(cart.sram, SLOT_CART, SRAM_LOAD);
+  //system_manage_sram(cart.sram, SLOT_CART, SRAM_LOAD);
 }
 
 void system_poweron(void)
@@ -160,5 +160,5 @@ void system_poweron(void)
 
 void system_poweroff(void)
 {
-  system_manage_sram(cart.sram, SLOT_CART, SRAM_SAVE);
+  //system_manage_sram(cart.sram, SLOT_CART, SRAM_SAVE);
 }

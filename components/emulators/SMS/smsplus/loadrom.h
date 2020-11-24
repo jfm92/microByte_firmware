@@ -21,12 +21,11 @@
  *   ROM File loading support
  *
  ******************************************************************************/
-
 #ifndef _LOADROM_H_
 #define _LOADROM_H_
-
+#include "stdbool.h"
 /* Function prototypes */
-int load_rom(char *filename);
+bool load_rom(char *filename, uint8_t console);
 
 #ifndef NGC
 unsigned char *loadzip(char *archive, char *filename, int *filesize);

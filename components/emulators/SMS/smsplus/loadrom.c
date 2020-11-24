@@ -21,6 +21,7 @@
  ******************************************************************************/
 
 #include "shared.h"
+#include "system_manager.h"
 
 extern unsigned long crc32(crc, buf, len);
 
@@ -328,7 +329,6 @@ void set_config()
     /* force settings if AUTO is not set*/
     if (option.console == 1){
         sms.console = CONSOLE_SMS;
-        printf("console sms\r\n");
     }
         
     else if (option.console == 2)
@@ -355,7 +355,6 @@ void set_config()
     }
     else if (option.country == 2) /* EUROPE */
     {
-        printf("Terrytorio europa\r\n");
         sms.display = DISPLAY_PAL;
         sms.territory = TERRITORY_EXPORT;
     }
@@ -364,11 +363,10 @@ void set_config()
         sms.display = DISPLAY_NTSC;
         sms.territory = TERRITORY_DOMESTIC;
     }
-    printf("country %i , console %i\r\n",option.country,option.console);
 #endif
 }
 
-int load_rom(char *filename)
+bool load_rom(char *filename, uint8_t console)
 {
     FILE *fd = NULL;
 
@@ -377,14 +375,14 @@ int load_rom(char *filename)
     {
         printf("%s: file name too short. filename='%s', nameLength=%d\n",
                __func__, filename, nameLength);
-        abort();
+        return false;
     }
 
     if (strcmp(filename + (nameLength - 4), ".col") == 0)
     {
         fd = fopen("/sd/roms/col/BIOS.col", "rb");
         if (!fd)
-            abort();
+            return false;
 
         coleco.rom = ESP32_PSRAM + 0x100000;
 
@@ -402,10 +400,12 @@ int load_rom(char *filename)
         printf("Colecovision BIOS loaded.\n");
     }
     char dir_aux[256];
-    sprintf(dir_aux,"/sdcard/Master_System/%s",filename);
+    if(console == SMS ) sprintf(dir_aux,"/sdcard/Master_System/%s",filename);
+    else if(console == GG) sprintf(dir_aux,"/sdcard/Game_Gear/%s",filename);
+
     fd = fopen(dir_aux, "rb");
     if (!fd)
-        abort();
+        return false;
 
     /* Seek to end of file, and get size */
 
@@ -448,5 +448,5 @@ int load_rom(char *filename)
 
     printf("%s: OK. cart.crc=%#010lx\n", __func__, cart.crc);
 
-    return 1;
+    return true;
 }
