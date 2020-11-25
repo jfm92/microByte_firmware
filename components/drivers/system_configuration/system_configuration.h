@@ -42,3 +42,9 @@
 #define I2S_WS      26
 #define I2S_DATA_O  25
 #define I2S_NUM I2S_NUM_0
+
+/********************************
+ *          Notification LED
+ * ******************************/
+
+#define LED_PIN     2

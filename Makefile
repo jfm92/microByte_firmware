@@ -24,6 +24,7 @@ EXTRA_COMPONENT_DIRS := components/GUI \
 						components/emulators/NES/nofrendo \
 						components/boot_screen \
 						components/boot_screen/font_render \
+						components/drivers/LED \
 						#components/emulators/SNES/snes9x \
 						#components/emulators/SNES \
 
