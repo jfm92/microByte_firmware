@@ -3,3 +3,6 @@ build/
 
 # Ignore old configurations
 sdkconfig.old
+
+# Ignore VSCode configuration
+.vscode/
