@@ -294,6 +294,7 @@ char * IRAM_ATTR sd_get_file_flash (const char *path){
     }
 
     close(fd);
+    free(temp_buffer);
     // Return a pointer to the position of the saved file on the internal flash.
 
 	ESP_ERROR_CHECK(esp_partition_mmap(partition, 0, partition->size, SPI_FLASH_MMAP_DATA, &map_ptr, &map_handle));
