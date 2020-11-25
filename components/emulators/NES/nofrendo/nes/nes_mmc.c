@@ -239,9 +239,10 @@ mmc_t *mmc_create(rominfo_t *rominfo)
    }
 
    temp = malloc(sizeof(mmc_t));
-   if (NULL == temp)
+   if (NULL == temp){
       return NULL;
-
+   }
+      
    memset(temp, 0, sizeof(mmc_t));
 
    temp->intf = *map_ptr;
