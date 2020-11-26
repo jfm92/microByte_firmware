@@ -9,7 +9,7 @@
 
 #include "ST7789_driver.h"
 #include "system_configuration.h"
-#include "lvgl/lvgl.h"
+#include "LVGL/lvgl.h"
 
 #include "driver/gpio.h"
 

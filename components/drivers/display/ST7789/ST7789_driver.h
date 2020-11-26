@@ -1,6 +1,6 @@
 #pragma once
 #include "driver/spi_master.h"
-#include "lvgl/lvgl.h"
+#include "LVGL/lvgl.h"
 
 /*******************************
  *      ST7789 Commands

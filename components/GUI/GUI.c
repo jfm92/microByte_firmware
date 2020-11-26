@@ -10,10 +10,10 @@
 
 #include "GUI.h"
 //#include "st7789.h"
-#include "display_hal.h"
+#include "display_HAL.h"
 #include "GUI_frontend.h"
 
-#include "lvgl/lvgl.h"
+#include "LVGL/lvgl.h"
 
 /*********************
  *      DEFINES

@@ -1,7 +1,7 @@
 /*********************
  *      INCLUDES
  *********************/
-#include "lvgl/lvgl.h"
+#include "LVGL/lvgl.h"
 
 /*********************
  *      DEFINES

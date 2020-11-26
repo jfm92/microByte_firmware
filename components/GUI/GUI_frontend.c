@@ -27,7 +27,7 @@
 #include "icons/emulators_icon.h"
 #include "icons/gameboycolor_icon.h"
 #include "icons/gameboy_icon.h"
-#include "icons/NES_icon.h"
+#include "icons/nes_icon.h"
 #include "icons/snes_icon.h"
 #include "icons/sega_icon.h"
 #include "icons/nogame_icon.h"

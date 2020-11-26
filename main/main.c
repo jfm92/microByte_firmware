@@ -24,7 +24,7 @@
 #include "external_app.h"
 #include "update_firmware.h"
 #include "boot_screen.h"
-#include "display_hal.h"
+#include "display_HAL.h"
 #include "sd_storage.h"
 #include "battery.h"
 #include "sound_driver.h"
