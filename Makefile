@@ -8,6 +8,7 @@ PROJECT_NAME := micro-gnuboy
 
 EXTRA_COMPONENT_DIRS := components/GUI \
 						components/drivers/system_configuration \
+						components/drivers/display/backlight_ctrl \
 						components/drivers/display/ST7789 \
 						components/drivers/display/display_HAL \
 						components/drivers/user_input/TCA9555 \
