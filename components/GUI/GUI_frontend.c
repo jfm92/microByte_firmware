@@ -17,6 +17,7 @@
 #include "sd_storage.h"
 #include "user_input.h"
 #include "sound_driver.h"
+#include "backlight_ctrl.h"
 //#include "st7789.h"
 
 /*********************
@@ -694,7 +695,7 @@ static void slider_volume_cb(lv_obj_t * slider, lv_event_t e){
 static void slider_brightness_cb(lv_obj_t * slider, lv_event_t e){
     if(e == LV_EVENT_VALUE_CHANGED) {
         ESP_LOGI(TAG, "Brightness set: %i",lv_slider_get_value(slider));
-        //st7789_backlight_set(lv_slider_get_value(slider));
+        backlight_set(lv_slider_get_value(slider));
     }
     else if(e == LV_EVENT_CANCEL){
         lv_obj_del(mbox_brightness);
@@ -767,7 +768,7 @@ static void list_game_menu_cb(lv_obj_t * parent, lv_event_t e){
             lv_obj_set_width(slider, 180);
             lv_slider_set_range(slider, 0, 100);
             
-            uint8_t brightness_level = 0;//st7789_backlight_get();
+            uint8_t brightness_level = backlight_get();
             lv_slider_set_value(slider,brightness_level,LV_ANIM_ON);
 
             lv_obj_set_event_cb(slider, slider_brightness_cb);
@@ -1016,7 +1017,7 @@ static void config_option_cb(lv_obj_t * parent, lv_event_t e){
             lv_obj_set_width(slider, 180);
             lv_slider_set_range(slider, 0, 100);
             
-            uint8_t brightness_level = 0;//st7789_backlight_get();
+            uint8_t brightness_level = backlight_get();
             lv_slider_set_value(slider,brightness_level,LV_ANIM_ON);
 
             lv_obj_set_event_cb(slider, slider_brightness_cb);
