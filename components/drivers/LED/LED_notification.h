@@ -23,7 +23,7 @@ void LED_init();
  * Function:  LED_mode 
  * --------------------
  * 
- * Initialize the notification LED control
+ * Set the blink/fade mode of the LED.
  * 
 * Arguments:
  * 	-mode: Set the mode that you want to run, see defines up
