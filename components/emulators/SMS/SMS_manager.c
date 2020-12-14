@@ -220,8 +220,8 @@ static void SMSTask(void *arg){
     sms.use_fm = 0;
 
     //Set video configuration
-    bitmap.width = 256;
-    bitmap.height = 192;
+    bitmap.width = 240;
+    bitmap.height = 240;
     bitmap.pitch = bitmap.width;
     //bitmap.depth = 8;
     bitmap.data = framebuffer[0];
