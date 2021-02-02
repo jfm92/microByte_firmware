@@ -37,7 +37,7 @@
 
 /* Visible (NTSC) screen height */
 #ifndef NES_VISIBLE_HEIGHT
-#define  NES_VISIBLE_HEIGHT   224
+#define  NES_VISIBLE_HEIGHT   240
 #endif /* !NES_VISIBLE_HEIGHT */
 #define  NES_SCREEN_WIDTH     256 //256
 #define  NES_SCREEN_HEIGHT    240  //240

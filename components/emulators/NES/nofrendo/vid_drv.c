@@ -35,7 +35,7 @@
 static bitmap_t *screen = NULL;
 
 /* primary / backbuffer surfaces */
-static bitmap_t *primary_buffer = NULL; //, *back_buffer = NULL;
+static bitmap_t *primary_buffer = NULL, *back_buffer = NULL;
 
 static viddriver_t *driver = NULL;
 
@@ -282,12 +282,12 @@ static void vid_blitscreen(int num_dirties, rect_t *dirty_rects)
 
 /* TODO: this code is sickly */
 
-#define  CHUNK_WIDTH    256
-#define  CHUNK_HEIGHT   16
+#define  CHUNK_WIDTH    240
+#define  CHUNK_HEIGHT   20
 #define  MAX_DIRTIES    ((256 / CHUNK_WIDTH) * (240 / CHUNK_HEIGHT))
 #define  DIRTY_CUTOFF   ((3 * MAX_DIRTIES) / 4)
 
-#if 0
+
 INLINE int calc_dirties(rect_t *list)
 {
    bool dirty;
@@ -330,7 +330,7 @@ INLINE int calc_dirties(rect_t *list)
 
    return num_dirties;
 }
-#endif
+
 
 void vid_flush(void)
 {
@@ -347,8 +347,8 @@ void vid_flush(void)
    }
    else
    {
-      //num_dirties = calc_dirties(dirty_rects);
-      num_dirties = -1;
+      num_dirties = calc_dirties(dirty_rects);
+      //num_dirties = -1;
    }
 
    if (driver->custom_blit)
@@ -357,9 +357,9 @@ void vid_flush(void)
       vid_blitscreen(num_dirties, dirty_rects);
 
    /* Swap pointers to the main/back buffers */
-//   temp = back_buffer;
-//   back_buffer = primary_buffer;
-//   primary_buffer = temp;
+  /* temp = back_buffer;
+   back_buffer = primary_buffer;
+   primary_buffer = temp;*/
 }
 
 /* emulated machine tells us which resolution it wants */
@@ -367,15 +367,15 @@ int vid_setmode(int width, int height)
 {
    if (NULL != primary_buffer)
       bmp_destroy(&primary_buffer);
-//   if (NULL != back_buffer)
-//      bmp_destroy(&back_buffer);
+   if (NULL != back_buffer)
+      bmp_destroy(&back_buffer);
 
    primary_buffer = bmp_create(width, height, 0); /* no overdraw */
    if (NULL == primary_buffer)
       return -1;
 
    /* Create our backbuffer */
-#if 0
+
    back_buffer = bmp_create(width, height, 0); /* no overdraw */
    if (NULL == back_buffer)
    {
@@ -383,7 +383,7 @@ int vid_setmode(int width, int height)
       return -1;
    }
    bmp_clear(back_buffer, GUI_BLACK);
-#endif
+
    bmp_clear(primary_buffer, GUI_BLACK);
 
    return 0;
@@ -440,10 +440,10 @@ void vid_shutdown(void)
 
    if (NULL != primary_buffer)
       bmp_destroy(&primary_buffer);
-#if 0
+
    if (NULL != back_buffer)
       bmp_destroy(&back_buffer);
-#endif
+
 
    if (driver && driver->shutdown)
       driver->shutdown();
