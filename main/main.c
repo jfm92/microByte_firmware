@@ -30,6 +30,8 @@
 #include "sound_driver.h"
 #include "GUI.h"
 #include "user_input.h"
+#include "LED_notification.h"
+#include "backlight_ctrl.h"
 
 uint8_t console_running = NULL;
 
@@ -58,12 +60,18 @@ static void timer_isr(void){
 }
 
 void app_main(void){
+    LED_init();
+    LED_mode(LED_FADE_ON);
     system_info();
 
     ESP_LOGI(TAG, "Memory Status:\r\n -SPI_RAM: %i Bytes\r\n -INTERNAL_RAM: %i Bytes\r\n -DMA_RAM: %i Bytes\r\n", \
     system_memory(MEMORY_SPIRAM),system_memory(MEMORY_INTERNAL),system_memory(MEMORY_DMA));
     display_HAL_init();
-    xTaskCreatePinnedToCore(boot_screen_task, "intro_task", 2048, NULL, 1, &intro_handler, 1);
+    backlight_init();
+   // BackLight_set(100);
+   xTaskCreatePinnedToCore(boot_screen_task, "intro_task", 2048, NULL, 1, &intro_handler, 0);
+   
+    
     /**************** Peripherals initialization **************/
     
     audio_init(AUDIO_SAMPLE_16KHZ);
@@ -95,6 +103,7 @@ void app_main(void){
 
     bool game_running = false;
     bool game_executed = false;
+
     while(1){
         struct SYSTEM_MODE management;
 
@@ -106,13 +115,17 @@ void app_main(void){
                         battery_game_mode(true);
 
                         if(management.console == GAMEBOY_COLOR || management.console == GAMEBOY){
+                             LED_mode(LED_LOAD_ANI);
                             vTaskSuspend(gui_handler);
                             gnuboy_load_game(management.game_name,management.console);
                                 
                                 gnuboy_start();
+                                
                                 game_executed = true;
                                 game_running=true;
                                 console_running = management.console;
+                                LED_mode(LED_TURN_OFF);
+                                LED_mode(LED_FADE_ON);
                            /* timer = xTimerCreate("nes", pdMS_TO_TICKS( 30000 ), pdTRUE, NULL, timer_isr);
                             if(timer != pdPASS) xTimerStart(timer, 0);
                             else{
@@ -143,7 +156,10 @@ void app_main(void){
                     else{
                         if(game_running && game_executed){
                            if(console_running == GAMEBOY_COLOR || console_running == GAMEBOY ) gnuboy_suspend();
-                           else if(console_running == NES) NES_suspend();
+                           else if(console_running == NES){
+                               printf("NES suspend\r\n");
+                               NES_suspend();
+                           }
                            else if(console_running == SMS || console_running == GG) SMS_suspend();
 
                             // To avoid noise whe is suspend the audio task, is necesary to clean the dma from previous data.
@@ -151,7 +167,8 @@ void app_main(void){
                             // Is necessary this delay to avoid bouncing between suspend and delay state.
                             vTaskDelay(250 / portTICK_RATE_MS);
                             vTaskResume(gui_handler);
-                            GUI_refresh();
+                            printf("Gui refresh\r\n");
+                           // GUI_refresh();
                             // Refresh menu image
                             game_running=false;
                         }
@@ -179,11 +196,13 @@ void app_main(void){
 
                 case MODE_EXT_APP:
                     ESP_LOGI(TAG, "Loading external App");
+                    LED_mode(LED_LOAD_ANI);
                     vTaskDelay(1000 / portTICK_RATE_MS);
                     external_app_init(management.game_name);
-                    display_HAL_clear();
-                   //update_init(management.game_name);
-                   esp_restart();
+                    vTaskDelay(250 / portTICK_RATE_MS);
+                    esp_restart();
+                    vTaskDelay(250 / portTICK_RATE_MS);
+                    esp_restart();
                    
                 break;
 
