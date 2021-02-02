@@ -36,18 +36,19 @@ void SMS_suspend();
 
 
 /*
- * Function:  SMS_load_game 
+ * Function:  SMS_execute_game 
  * --------------------
  * 
- * Load the selected game from the SD card and if it exists the save game.
+ * Load the selected game from the SD card and load it into the RAM memory
  * 
  * Arguments:
  * -name: Name of the game.
  * -console: Console to execute SMS(Sega Master System)/GG(Game Gear)
+ * -load: If you want to load previous save game data.
  * 
- *  Returns: Nothing
+ *  Returns: True if it was loaded the selected game, otherwise false.
  */
-bool SMS_load_game(const char *game_name, uint8_t console);
+bool SMS_execute_game(const char *game_name, uint8_t console, bool load);
 
 /*
  * Function:  SMS_save_game 

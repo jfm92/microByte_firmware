@@ -80,6 +80,7 @@ int system_save_state(void *mem)
 
 void system_load_state(void *mem)
 {
+  printf("load state!!!!!!!!!!!\r\n");
   int i;
   uint8 *buf;
 
@@ -89,7 +90,7 @@ void system_load_state(void *mem)
   printf("%s: sizeof SN76489_Context=%d\n", __func__, sizeof(SN76489_Context));
 
   /* Initialize everything */
-  system_reset();
+  //system_reset();
 
   /*** Set SMS Context ***/
   sms_t sms_tmp;
@@ -106,8 +107,8 @@ void system_load_state(void *mem)
   fread(&vdp, sizeof(vdp), 1, mem);
 
   /** restore video & audio settings (needed if timing changed) ***/
-  vdp_init();
-  sound_init();
+  //vdp_init();
+  //sound_init();
 
   /*** Set cart info ***/
   for (i = 0; i < 4; i++)

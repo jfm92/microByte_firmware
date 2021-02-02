@@ -1,5 +1,3 @@
-// TODO: Acuerdate de WRAM
-
 /*********************
  *      LIBRARIES
  *********************/
@@ -51,9 +49,6 @@ QueueHandle_t audioQueue;
 /**********************
  *   GLOBAL VARIABLES
  **********************/
-
-char save_rom_dir[300];
-
 uint16 color[PALETTE_SIZE];
 uint8_t *framebuffer[2];
 volatile uint8_t currentFramebuffer = 0;
@@ -64,6 +59,8 @@ volatile unsigned char *audioBuffer_ptr;
 volatile uint16_t audioBufferCount = 0;
 
 bool GAME_GEAR = false;
+bool load_game = false; //Variable to know if we want to load the save data.
+char sms_game_name[300];
 
 static const char *TAG = "SMS_manager";
 
@@ -81,7 +78,7 @@ void SMS_start(){
     //Execute emulator tasks.
     xTaskCreatePinnedToCore(&videoTask, "videoTask", 1024 * 4, NULL, 1, &videoTask_handler, 0);
     xTaskCreatePinnedToCore(&audioTask, "audioTask", 2048, NULL, 1, &audioTask_handler, 0);
-    xTaskCreatePinnedToCore(&SMSTask, "SMSTask", 3048, NULL, 1, &SMSTask_handler, 1);
+    xTaskCreatePinnedToCore(&SMSTask, "SMSTask", 1024*12, NULL, 1, &SMSTask_handler, 1);
 }
 
 void SMS_resume(){
@@ -99,13 +96,20 @@ void SMS_suspend(){
 }
 
 void SMS_save_game(){
+    //Create a new file or open if already exists
+    char save_rom_dir[300];
     
-    //The save file direction should be added previously when you start a new game.
+    if(GAME_GEAR) sprintf(save_rom_dir,"/sdcard/Game_Gear/Save_Data/%s.sav",sms_game_name);
+    else{
+        sprintf(save_rom_dir,"/sdcard/Master_System/Save_Data/%s.sav",sms_game_name);
+    }
+    
+    //Open the file with write permissions
 	FILE *fd = fopen(save_rom_dir, "w");
 
     if(fd != NULL){
         system_save_state(fd);
-        ESP_LOGI(TAG,"Game save successded.");  
+        ESP_LOGI(TAG,"Game %s saved!", sms_game_name);  
     }
     else{
         ESP_LOGE(TAG,"Error creating save game file.");
@@ -113,45 +117,56 @@ void SMS_save_game(){
     fclose(fd);   
 }
 
-bool SMS_load_game(const char *game_name, uint8_t console){
+bool SMS_execute_game(const char *game_name, uint8_t console, bool load){
 
-    if(console == SMS) ESP_LOGI(TAG,"Loading Sega Master System ROM: %s",game_name);
+    //Check the console to execute
+    if(console == SMS) ESP_LOGI(TAG,"Loading Sega Master System ROM: %s",sms_game_name);
     else{
-        ESP_LOGI(TAG,"Loading Sega Game Gear ROM: %s",game_name);
+        ESP_LOGI(TAG,"Loading Sega Game Gear ROM: %s",sms_game_name);
         GAME_GEAR = true;
     }
-
+    
+    sprintf(sms_game_name,"%s",game_name);
     //Load game ROM from the SD card.
-    if(!load_rom(game_name, console)){
-        ESP_LOGE(TAG,"Fail loading game.");
+    if(!load_rom(sms_game_name, console)){
+        ESP_LOGE(TAG,"ROM don't found.");
         return false;
     }
 
-    //If exists a save game file for this game, open it.
-    if(!GAME_GEAR) sprintf(save_rom_dir,"/sdcard/Master_System/Save_Data/%s.sav",game_name);
-	else{
-		sprintf(save_rom_dir,"/sdcard/Game_Gear/Save_Data/%s.sav",game_name);
-	}
+    //Check if we want to load the save game.
+    if(load) load_game = true;
 
-    FILE *fd = fopen(save_rom_dir, "r");
+    return true;
+}
+
+/**********************
+ *   STATIC FUNCTIONS
+ **********************/
+
+static void load_save_data(){
+    char save_rom_dir[300];
+    
+    if(GAME_GEAR) sprintf(save_rom_dir,"/sdcard/Game_Gear/Save_Data/%s.sav",sms_game_name);
+    else{
+        sprintf(save_rom_dir,"/sdcard/Master_System/Save_Data/%s.sav",sms_game_name);
+    }
+    printf("%s\r\n",save_rom_dir);
+
+    FILE *fd = fopen(save_rom_dir, "rb");
 
     if(fd != NULL){
         //TODO: Implement properly save state
-        ESP_LOGI(TAG,"Found save game file of the ROM: %s",game_name);
-        //system_load_state(fd);
+        ESP_LOGI(TAG,"Found save game file of the ROM: %s",sms_game_name);
+        system_load_state(fd);
     }
     else{
         ESP_LOGW(TAG,"Any save game available for this ROM.");
     }
     fclose(fd);
 
-    return true;
 
 }
 
-/**********************
- *   STATIC FUNCTIONS
- **********************/
 
 static void videoTask(void *arg){
     ESP_LOGI(TAG, "SMS Video Task Initialize");
@@ -186,7 +201,7 @@ static void SMSTask(void *arg){
     ESP_LOGI(TAG, "SMS Task Init");
 
     ESP_LOGI(TAG,"Triying to allocated frame buffer on DMA memory.");
-    
+
     //Allocating frame buffer
     framebuffer[0] = heap_caps_malloc(256 * 192,MALLOC_CAP_8BIT | MALLOC_CAP_DMA );
     framebuffer[1] = heap_caps_malloc(256 * 192,MALLOC_CAP_8BIT | MALLOC_CAP_DMA );
@@ -237,6 +252,8 @@ static void SMSTask(void *arg){
     system_init2();
     system_reset();
 
+    if(load_game) load_save_data();
+
     uint32 frame = 0;
 
     size_t bufferSize = snd.sample_count * 2 * sizeof(int16_t);
@@ -272,6 +289,9 @@ static void SMSTask(void *arg){
     uint startTime;
     uint stopTime;
     uint totalElapsedTime = 0;
+
+   
+
     while(1){
         
         startTime = xthal_get_ccount();
