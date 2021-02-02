@@ -70,7 +70,7 @@ void batteryTask(void *arg){
         adc_reading /= 128;
         uint32_t voltage = esp_adc_cal_raw_to_voltage(adc_reading, adc_chars);
 
-        voltage += 1000; //Add 1000 mV to offset the value obtained from the voltage divider
+        voltage += 1310; //Add 1000 mV to offset the value obtained from the voltage divider
         battery_status.voltage = voltage;
         battery_status.percentage = (voltage*100-300000)/((416400-300000)/100);
 
