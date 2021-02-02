@@ -96,9 +96,9 @@ void gnuboy_start(){
     audioQueue = xQueueCreate(1, sizeof(uint16_t *));
 
     //Execute emulator tasks.
-    xTaskCreatePinnedToCore(&videoTask, "videoTask", 1024*2, NULL, 1, &videoTask_handler, 1);
-    xTaskCreatePinnedToCore(&audioTask, "audioTask", 2048, NULL, 1, &audioTask_handler, 1);
-    xTaskCreatePinnedToCore(&gnuBoyTask, "gnuboyTask", 3048, NULL, 5, &gnuBoyTask_handler, 0);
+    xTaskCreatePinnedToCore(&videoTask, "videoTask", 1024*2, NULL, 1, &videoTask_handler, 0);
+    xTaskCreatePinnedToCore(&audioTask, "audioTask", 2048, NULL, 1, &audioTask_handler, 0);
+    xTaskCreatePinnedToCore(&gnuBoyTask, "gnuboyTask", 3048, NULL, 5, &gnuBoyTask_handler, 1);
 
 }
 
