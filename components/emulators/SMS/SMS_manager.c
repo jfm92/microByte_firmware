@@ -79,9 +79,9 @@ void SMS_start(){
 
 
     //Execute emulator tasks.
-    xTaskCreatePinnedToCore(&videoTask, "videoTask", 1024 * 4, NULL, 1, &videoTask_handler, 1);
-    xTaskCreatePinnedToCore(&audioTask, "audioTask", 2048, NULL, 1, &audioTask_handler, 1);
-    xTaskCreatePinnedToCore(&SMSTask, "SMSTask", 3048, NULL, 1, &SMSTask_handler, 0);
+    xTaskCreatePinnedToCore(&videoTask, "videoTask", 1024 * 4, NULL, 1, &videoTask_handler, 0);
+    xTaskCreatePinnedToCore(&audioTask, "audioTask", 2048, NULL, 1, &audioTask_handler, 0);
+    xTaskCreatePinnedToCore(&SMSTask, "SMSTask", 3048, NULL, 1, &SMSTask_handler, 1);
 }
 
 void SMS_resume(){
@@ -298,7 +298,12 @@ static void SMSTask(void *arg){
             audioBuffer[audioBuffer_num][x] = sample;
         }
 
-        xQueueSend(audioQueue, &audioBuffer[audioBuffer_num], 0);
+        //Is necessary to check if it's GameGear to reduce a little bit the frame rate, if not goes too fast.
+        if(GAME_GEAR)  xQueueSend(audioQueue, &audioBuffer[audioBuffer_num], ( TickType_t ) 5);
+        else{
+             xQueueSend(audioQueue, &audioBuffer[audioBuffer_num], 0);
+        }
+       
         audioBuffer_num = audioBuffer_num ? 0 : 1;
 
         stopTime = xthal_get_ccount();
