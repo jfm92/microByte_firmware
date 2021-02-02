@@ -145,9 +145,9 @@ void NES_start(){
     audioQueue = xQueueCreate(1, sizeof(uint16_t *));
 
     //Execute emulator tasks.
-    xTaskCreatePinnedToCore(&videoTask, "videoTask", 2048, NULL, 4, &videoTask_handler, 1);
+    xTaskCreatePinnedToCore(&videoTask, "videoTask", 2048, NULL, 4, &videoTask_handler, 0);
     //xTaskCreatePinnedToCore(&audioTask, "audioTask", 2048, NULL, 1, &audioTask_handler, 1);
-    xTaskCreatePinnedToCore(&nofrendoTask, "nofrendoTask", 1024*5, NULL, 1, &nofrendoTask_handler, 0);
+    xTaskCreatePinnedToCore(&nofrendoTask, "nofrendoTask", 1024*5, NULL, 1, &nofrendoTask_handler, 1);
 
 }
 
@@ -231,7 +231,7 @@ static void nofrendoTask(void *arg){
 
     last_ticks = nofrendo_ticks;
     frames_to_render = 0;
-    nes->scanline_cycles = 0;
+    nes->scanline_cycles = 1;
     nes->fiq_cycles = (int) NES_FIQ_PERIOD;
 
     uint startTime;
@@ -250,7 +250,7 @@ static void nofrendoTask(void *arg){
         startTime = xthal_get_ccount();
 
         bool renderFrame;
-        if(skipFrame % 7 == 0){
+        if(skipFrame % 2 == 0){
             skipFrame++;
             renderFrame = false;
         }
