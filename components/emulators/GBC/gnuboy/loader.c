@@ -166,7 +166,7 @@ bool gbc_rom_load(const char *game_name, uint8_t console){
 
 	tmp = *((int*)(header + 0x0148));
 	mbc.romsize = romsize_table[(tmp & 0xff)];
-	mbc.ramsize = ramsize_table[((tmp >> 8) & 0xff)];
+	mbc.ramsize = 5;
 
 	if (!mbc.romsize){
 		ESP_LOGE(TAG,"unknown ROM size %02X\n", header[0x0148]);
@@ -228,7 +228,8 @@ bool gbc_rom_load(const char *game_name, uint8_t console){
 
 	// SRAM
 	ram.sram_dirty = 1;
-	//ram.sbank = malloc(sram_length); //Allocate the required SRAM
+	ram.sbank = malloc(sram_length); //Allocate the required SRAM
+	printf("ram direction %p\r\n",ram.sbank);
 	if (!ram.sbank){
 		if (rlen <= (0x100000 * 3) && sram_length <= 0x100000){
 			ram.sbank = data + (0x100000 * 3);
