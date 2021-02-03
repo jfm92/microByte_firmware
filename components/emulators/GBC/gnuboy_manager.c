@@ -60,7 +60,6 @@ bool game_running = false;
 static const char *TAG = "gnuBoy_manager";
 
 
-
 struct fb fb;
 struct pcm pcm;
 
@@ -72,6 +71,8 @@ int frame = 0;
 uint elapsedTime = 0;
 
 volatile bool videoTaskIsRunning = false;
+
+bool load_save_game = false;
 
 
 ////////////////////////////////////////////////
@@ -126,7 +127,7 @@ void gnuboy_save(){
     gbc_state_save(game_name, console_use);
 }
 
-bool gnuboy_load_game(const char *name, uint8_t console){
+bool gnuboy_execute_game(const char *name, uint8_t console, bool load ){
 
     ESP_LOGI(TAG,"Loading GameBoy Color game: %s",name);
 
@@ -135,12 +136,14 @@ bool gnuboy_load_game(const char *name, uint8_t console){
 
     console_use = console;
 
+    load_save_game = load;
+
     // Load game from the SD card and save on RAM.
     if(!gbc_rom_load(game_name,console)){
         ESP_LOGE(TAG,"Error loading game: %s",game_name);
         return false;
     }
-    if(!gbc_state_load(game_name,console)) ESP_LOGW(TAG,"Error loading save game, starting new save game.");
+   // if(!gbc_state_load(game_name,console)) ESP_LOGW(TAG,"Error loading save game, starting new save game.");
 
     return true;
 }
@@ -280,6 +283,11 @@ static void gnuBoyTask(void *arg){
 
     lcd_begin();
 
+    //Load SRAM save data to perform state save.
+    if(load_save_game){
+         if(!gbc_state_load(game_name,console_use)) ESP_LOGW(TAG,"Error loading save game, starting new save game.");
+    }
+   
     //Variables to get an aprox FPS count of the game
     uint startTime;
     uint stopTime;

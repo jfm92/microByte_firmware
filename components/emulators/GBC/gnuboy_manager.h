@@ -56,4 +56,4 @@ void gnuboy_save();
  * 
  *  Returns: Nothing
  */
-bool gnuboy_load_game(const char *name, uint8_t console);
+bool gnuboy_execute_game(const char *name, uint8_t console, bool load);
