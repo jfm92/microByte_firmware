@@ -228,7 +228,7 @@ bool gbc_rom_load(const char *game_name, uint8_t console){
 
 	// SRAM
 	ram.sram_dirty = 1;
-	ram.sbank = malloc(sram_length); //Allocate the required SRAM
+	//ram.sbank = malloc(sram_length); //Allocate the required SRAM
 	if (!ram.sbank){
 		if (rlen <= (0x100000 * 3) && sram_length <= 0x100000){
 			ram.sbank = data + (0x100000 * 3);
