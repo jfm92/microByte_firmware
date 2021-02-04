@@ -631,6 +631,7 @@ static void game_execute_cb(lv_obj_t * parent, lv_event_t e){
  
             
             emulator.mode = MODE_GAME;
+            emulator.load_save_game = 0;
             emulator.status = 1;
             emulator.console = emulator_selected;
             strcpy(emulator.game_name, (char *)lv_msgbox_get_text(mbox_game_options));
@@ -647,7 +648,8 @@ static void game_execute_cb(lv_obj_t * parent, lv_event_t e){
         else if(strcmp(lv_list_get_btn_text(parent),"Resume Game")==0){
             ESP_LOGI(TAG, "Loading: %s",(char *)lv_msgbox_get_text(mbox_game_options));
  
-            emulator.mode = MODE_LOAD_GAME;
+            emulator.mode = MODE_GAME;
+            emulator.load_save_game = 1;
             emulator.status = 1;
             emulator.console = emulator_selected;
             strcpy(emulator.game_name, (char *)lv_msgbox_get_text(mbox_game_options));

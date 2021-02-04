@@ -34,6 +34,7 @@ struct SYSTEM_MODE{
     uint8_t mode;
     uint8_t status;
     uint8_t console;
+    uint8_t load_save_game;
     uint8_t volume_level;
     uint8_t brightness_level;
     char game_name[200];
