@@ -110,7 +110,6 @@ void app_main(void){
     nvs_get_i32(my_handle, "status", &status);
 
     //If status is 1, it was modified before restart the system, so we don't want the boot screen animation
-    printf("status %i \r\n",status);
     if(status){
         boot_screen_ani = false;
         status = 0; //Back again to the default status
@@ -166,6 +165,8 @@ void app_main(void){
     bool game_executed = false;
     struct SYSTEM_MODE management;
 
+    //Comments in progress
+
     while(1){
         
 
@@ -179,7 +180,7 @@ void app_main(void){
                         if(management.console == GAMEBOY_COLOR || management.console == GAMEBOY){
                              LED_mode(LED_LOAD_ANI);
                             vTaskSuspend(gui_handler);
-                            gnuboy_execute_game(management.game_name,management.console, false);
+                            gnuboy_execute_game(management.game_name,management.console, management.load_save_game);
                                 
                                 gnuboy_start();
                                 
@@ -208,7 +209,7 @@ void app_main(void){
                         else if(management.console == SMS || management.console == GG){
                             vTaskSuspend(gui_handler);
 
-                            SMS_execute_game(management.game_name,management.console,true);
+                            SMS_execute_game(management.game_name,management.console,management.load_save_game);
                             SMS_start();
                             game_executed = true;
                             game_running=true;
