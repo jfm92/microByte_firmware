@@ -8,7 +8,7 @@
  * Returns: Nothing
  * 
  */
-void boot_screen_task();
+void boot_screen_task(void *arg);
 
 /*
  * Function:  boot_screen_free 

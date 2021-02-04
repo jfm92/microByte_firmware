@@ -33,19 +33,20 @@
 #include "LED_notification.h"
 #include "backlight_ctrl.h"
 
+#include "nvs_flash.h"
+#include "nvs.h"
+
 uint8_t console_running = NULL;
 
 TaskHandle_t gui_handler;
 TaskHandle_t intro_handler;
 TimerHandle_t timer;
 
+bool boot_screen_ani = true;
+
 
 static const char *TAG = "microByte_main";
 
-void intro_taks(void *arg){
-   ESP_LOGI(TAG,"Boot screen animation init.");
-   boot_screen_task();
-}
 
 static void timer_isr(void){
     printf("save\r\n");
@@ -59,53 +60,114 @@ static void timer_isr(void){
     }
 }
 
-void app_main(void){
-    LED_init();
-    LED_mode(LED_FADE_ON);
-    system_info();
+/********************************************************
+ * Greetings code explorer, welcome to the microByte
+ * firmware. If you want to understand this firmware and/or
+ * modified it, here starts your journey.
+ * 
+ * This is the main loop of the firmware initialize the system 
+ * resources and manage it. 
+ * 
+ * My plan is to create a block diagram to have a better
+ * understanding of the code, but you know, the time is 
+ * precious resource that I don't have nowadays.
+ * 
+ * On deeper layer of the code I won't give this quantity of 
+ * commentary, because I know that this is too much, but 
+ * also I think is good to have a easy start. 
+ * *****************************************************/
 
+void app_main(void){
+
+    /**************** Basic initialization **************/
+
+    //And the light was done. Initialize the LED control thread and perfom an "fade animation"
+    LED_init();
+    LED_mode(LED_FADE_ON); //There are a few animations available to choose.
+
+    //This is just for debugging pourposes. This MCU is a little weird in terms of memory management. 
+    system_info();
     ESP_LOGI(TAG, "Memory Status:\r\n -SPI_RAM: %i Bytes\r\n -INTERNAL_RAM: %i Bytes\r\n -DMA_RAM: %i Bytes\r\n", \
     system_memory(MEMORY_SPIRAM),system_memory(MEMORY_INTERNAL),system_memory(MEMORY_DMA));
+
+    //Start the display Hardware Abstraction Layer (Basically just initi the display). This layer is just to simplify the port process if you want to use 
+    // a different display. 
     display_HAL_init();
+
+    //This initialize the display's backlight control. This is a dirty backligh control module, I plan to change in a near future.
     backlight_init();
-   // BackLight_set(100);
-   xTaskCreatePinnedToCore(boot_screen_task, "intro_task", 2048, NULL, 1, &intro_handler, 0);
-   
+
+    /**************** Boot status **************/
+
+    //Initialize nvs flash , to check if the last restart was an emulator exit or a power-off
+    esp_err_t err = nvs_flash_init();
+    nvs_handle_t my_handle;
+
+    // Open
+    nvs_open("nvs", NVS_READWRITE, &my_handle);
+
+    int32_t status = 0; //Value to know is the boot screen should be done
+    nvs_get_i32(my_handle, "status", &status);
+
+    //If status is 1, it was modified before restart the system, so we don't want the boot screen animation
+    printf("status %i \r\n",status);
+    if(status){
+        boot_screen_ani = false;
+        status = 0; //Back again to the default status
+        nvs_set_i32(my_handle, "status", status);
+    }
+
+    nvs_close(&my_handle);
+
+    //The device can boot in 0.5 seconds, the magic of the micontrollers. But it think that it looks better
+    // a fancy intro, and when it's showing the intro animation, all the peripherals are starting.
+    xTaskCreatePinnedToCore(boot_screen_task, "intro_task", 2048, ( void * ) boot_screen_ani, 1, &intro_handler, 0);
     
-    /**************** Peripherals initialization **************/
-    
-    audio_init(AUDIO_SAMPLE_16KHZ);
-   // display_init();
-    sd_init();
-    input_init();
-    battery_init();
-
-    // After peripheral initialization we check if a new update was installed 
-    // and if any hardware issue happend
-    update_check();
-
-   
-
     /**************** Message Queue initialization **************/
+
+    //The firmware architecture was developed having in mind modularity, so we can now the system status by the message queue system
    
     batteryQueue = xQueueCreate(1, sizeof(struct BATTERY_STATUS));
     modeQueue = xQueueCreate(1, sizeof(struct SYSTEM_MODE));
 
-    /**************** Tasks **************/
-    xTaskCreatePinnedToCore(&batteryTask, "Battery management", 2048, NULL, 5, NULL, 0);
-    printf("Finish intro\r\n");
-    vTaskDelay(2500 / portTICK_RATE_MS);
+    
+    /**************** Peripherals initialization **************/
+    //Initialize the peripherals
+    audio_init(AUDIO_SAMPLE_16KHZ);
+    sd_init();
+
+    // The gamepad control and battery run on thread to avoid block on the code execution while it's running.
+    input_init();
+    battery_init();
+
+    //If we are executing an update, and we reach this point, congratulations, the update was a succed!
+    // Now we can disable the roll-back feature which is basically a bootloader tool which roll back to the previous
+    //firmware if the new one doesn't work properly.
+    update_check();
+
+    //The boot animation is fancy, let's wait a little to see it
+    if(boot_screen_ani) vTaskDelay(1500 / portTICK_RATE_MS);
+    
+    //Once we don't need the boot screen, we will delete the task and free the resources.
     vTaskDelete(intro_handler);
     boot_screen_free();
+
+    /**************** GUI initialization **************/
+
+    //This is embarrasing, is a temporary fix. The boot animation library use little endian logic and the rest of the firmware use big endian.
+    //So, for now I'm not able to change it on the animation library. This function basically tell to the display to use big or little endian logic.
     display_HAL_change_endian();
+
+    //Now we are ready to execute the GUI.
     xTaskCreatePinnedToCore(GUI_task, "Graphical User Interface", 1024*6, NULL, 1, &gui_handler, 0);
    
 
     bool game_running = false;
     bool game_executed = false;
+    struct SYSTEM_MODE management;
 
     while(1){
-        struct SYSTEM_MODE management;
+        
 
         if( xQueueReceive(modeQueue, &management ,portMAX_DELAY)){
             switch(management.mode){
@@ -117,7 +179,7 @@ void app_main(void){
                         if(management.console == GAMEBOY_COLOR || management.console == GAMEBOY){
                              LED_mode(LED_LOAD_ANI);
                             vTaskSuspend(gui_handler);
-                            gnuboy_load_game(management.game_name,management.console);
+                            gnuboy_execute_game(management.game_name,management.console, false);
                                 
                                 gnuboy_start();
                                 
@@ -146,7 +208,7 @@ void app_main(void){
                         else if(management.console == SMS || management.console == GG){
                             vTaskSuspend(gui_handler);
 
-                            SMS_load_game(management.game_name,management.console);
+                            SMS_execute_game(management.game_name,management.console,true);
                             SMS_start();
                             game_executed = true;
                             game_running=true;
@@ -165,10 +227,10 @@ void app_main(void){
                             // To avoid noise whe is suspend the audio task, is necesary to clean the dma from previous data.
                             audio_terminate();
                             // Is necessary this delay to avoid bouncing between suspend and delay state.
-                            vTaskDelay(250 / portTICK_RATE_MS);
+                            //vTaskDelay(100 / portTICK_RATE_MS);
                             vTaskResume(gui_handler);
                             printf("Gui refresh\r\n");
-                           // GUI_refresh();
+                            GUI_refresh();
                             // Refresh menu image
                             game_running=false;
                         }
@@ -188,14 +250,16 @@ void app_main(void){
                 case MODE_SAVE_GAME:
 
                         ESP_LOGI(TAG,"Saving data GameBoy Color");
-                      //  gnuboy_save();
-                      SMS_save_game();
-                        printf("guardado\r\n");
+                       gnuboy_save();
+                      //SMS_save_game();
+                      //NES_save_game();
+
                     
                 break;
 
                 case MODE_EXT_APP:
                     ESP_LOGI(TAG, "Loading external App");
+                    vTaskSuspend(gui_handler);
                     LED_mode(LED_LOAD_ANI);
                     vTaskDelay(1000 / portTICK_RATE_MS);
                     external_app_init(management.game_name);
@@ -242,6 +306,15 @@ void app_main(void){
                 break;
 
                 case MODE_OUT:
+                err = nvs_open("nvs", NVS_READWRITE, &my_handle);
+                    if (err != ESP_OK) return err;
+
+                    status = 1; // value will default to 0, if not set yet in NVS
+                    err = nvs_set_i32(my_handle, "status", status);
+
+
+                    nvs_close(&my_handle);
+                    printf("nvs closing\r\n");
                     esp_restart();
                 break;
             }

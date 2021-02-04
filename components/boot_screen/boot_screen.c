@@ -83,7 +83,7 @@ void boot_screen_free(){
 	font_face_destroy(&font_face);
 }
 
-void boot_screen_task(){
+void boot_screen_task(void *arg){
 
 	// Get the display buffer to save the partial render imagen
 	uint16_t * buffer = display_HAL_get_buffer();
@@ -143,7 +143,7 @@ void boot_screen_task(){
 							current_layer++;
 						}
 						// Send the rendered image to the HAL
-						display_HAL_boot_frame(buffer);
+						if(arg == 1) display_HAL_boot_frame(buffer);
 					}
 				}
 				else{
@@ -213,7 +213,7 @@ static void plasma_animation(uint16_t * buffer, uint16_t y, draw_event_param_t *
 	const int frame_2 = frame << 2;
 	const int frame_7 = frame * 7;
 	
-	for (size_t i = 0; i < 20*240; ++i){
+	for (size_t i = 0; i < (20*240); ++i){
 		cursor_x++;
 		if(cursor_x == 240){
 			cursor_x = 0;
