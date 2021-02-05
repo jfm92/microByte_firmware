@@ -10,5 +10,6 @@
 COMPONENT_DEPENDS := nofrendo
 COMPONENT_ADD_INCLUDEDIRS := .
 
-CFLAGS += -Wno-error=char-subscripts -Wno-error=attributes -DNOFRENDO_DEBUG
+CFLAGS += -Wno-error=char-subscripts -Wno-error=attributes 
 
+#-DNOFRENDO_DEBUG

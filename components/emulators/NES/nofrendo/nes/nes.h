@@ -39,7 +39,7 @@
 #ifndef NES_VISIBLE_HEIGHT
 #define  NES_VISIBLE_HEIGHT   240
 #endif /* !NES_VISIBLE_HEIGHT */
-#define  NES_SCREEN_WIDTH     256 //256
+#define  NES_SCREEN_WIDTH     240 //256
 #define  NES_SCREEN_HEIGHT    240  //240
 
 /* NTSC = 60Hz, PAL = 50Hz */

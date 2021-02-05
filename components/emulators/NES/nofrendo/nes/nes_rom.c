@@ -130,7 +130,7 @@ static void rom_loadsram(rominfo_t *rominfo)
 static int rom_allocsram(rominfo_t *rominfo)
 {
    /* Load up SRAM */
-   rominfo->sram = malloc(SRAM_BANK_LENGTH * rominfo->sram_banks);
+   rominfo->sram = malloc(SRAM_BANK_LENGTH * rominfo->sram_banks );
    if (NULL == rominfo->sram)
    {
       gui_sendmsg(GUI_RED, "Could not allocate space for battery RAM");
@@ -195,7 +195,7 @@ static int rom_loadrom(unsigned char **rom, rominfo_t *rominfo)
       rominfo->vram = malloc(VRAM_LENGTH);
       if (NULL == rominfo->vram)
       {
-         gui_sendmsg(GUI_RED, "Could not allocate space for VRAM");
+         printf("Could not allocate space for VRAM\r\n");
          return -1;
       }
       memset(rominfo->vram, 0, VRAM_LENGTH);

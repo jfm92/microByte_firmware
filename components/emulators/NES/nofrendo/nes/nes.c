@@ -48,7 +48,7 @@
 #define  NES_SCANLINE_CYCLES  (1364.0 / NES_CLOCK_DIVIDER)
 #define  NES_FIQ_PERIOD       (NES_MASTER_CLOCK / NES_CLOCK_DIVIDER / 60)
 
-#define  NES_RAMSIZE          0x800
+#define  NES_RAMSIZE          0x8000
 
 #define  NES_SKIP_LIMIT       (NES_REFRESH_RATE / 5)   /* 12 or 10, depending on PAL/NTSC */
 
