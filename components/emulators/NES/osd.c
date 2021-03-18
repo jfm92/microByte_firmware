@@ -1,66 +1,287 @@
-/* vim: set tabstop=3 expandtab:
-**
-** This file is in the public domain.
-**
-** osd.c
-**
-** $Id: osd.c,v 1.2 2001/04/27 14:37:11 neil Exp $
-**
-*/
+/* start rewrite from: https://github.com/espressif/esp32-nesemu.git */
+#include <freertos/FreeRTOS.h>
+#include <freertos/timers.h>
+#include <freertos/task.h>
+#include <freertos/queue.h>
 
-#include <errno.h>
-#include <fcntl.h>
-#include <limits.h>
-#include <signal.h>
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
-#include <sys/time.h>
-#include <sys/stat.h>
-#include <sys/types.h>
-#include <unistd.h>
-       
+#include <esp_heap_caps.h>
+
 #include <noftypes.h>
-#include <nofconfig.h>
+
+#include <event.h>
+#include <gui.h>
 #include <log.h>
+#include <nes/nes.h>
+#include <nes/nes_pal.h>
+#include <nes/nesinput.h>
+#include <nofconfig.h>
 #include <osd.h>
-#include <nofrendo.h>
+#include <stdio.h>
+#include <string.h>
 
-#include <version.h>
+#include "display_HAL.h"
+#include "sound_driver.h"
+#include "user_input.h"
+#include "NES_manager.h"
 
-char configfilename[]="na";
+TimerHandle_t timer;
 
-/* This is os-specific part of main() */
-int osd_main(int argc, char *argv[])
+/* memory allocation */
+extern void *mem_alloc(int size, bool prefer_fast_memory)
 {
-  // config.filename = configfilename;
+	if (prefer_fast_memory)
+	{
+		return heap_caps_malloc(size, MALLOC_CAP_8BIT);
+	}
+	else
+	{
+		return heap_caps_malloc_prefer(size, MALLOC_CAP_SPIRAM, MALLOC_CAP_DEFAULT);
+	}
+}
 
-  // return main_loop("rom", system_autodetect);
-  return 0;
+/* sound */
+#define DEFAULT_SAMPLERATE 16000
+#define DEFAULT_FRAGSIZE 128
+static void (*audio_callback)(void *buffer, int length) = NULL;
+static int16_t *audio_frame;
+
+int osd_init_sound(){
+    audio_frame = heap_caps_malloc(4 * DEFAULT_FRAGSIZE, MALLOC_CAP_8BIT | MALLOC_CAP_DMA);
+	audio_callback = NULL;
+    return 0;
+}
+
+void osd_stopsound(){
+    audio_callback = NULL;
 }
 
 
+void do_audio_frame(){
+    int left=DEFAULT_SAMPLERATE/NES_REFRESH_RATE;
+    while(left) {
+        int n=DEFAULT_FRAGSIZE;
+        if (n>left) n=left;
+        audio_callback(audio_frame, n);
+        //16 bit mono -> 32-bit (16 bit r+l)
+        for (int i=n-1; i>=0; i--)
+        {
+            int sample = (int)audio_frame[i];
 
-/* File system interface */
+            audio_frame[i*2]= (short)sample;
+            audio_frame[i*2+1] = (short)sample;
+        }
+        audio_submit(audio_frame, n);
+        left-=n;
+    }
+}
+void osd_getsoundinfo(sndinfo_t *info){
+    info->sample_rate = DEFAULT_SAMPLERATE;
+	info->bps = 16;
+}
+void osd_setsound(void (*playfunc)(void *buffer, int size)){
+    audio_callback = playfunc;
+}
+
+/* display */
+
+//This runs on core 0.
+QueueHandle_t vidQueue;
+static void displayTask(void *arg)
+{
+	bitmap_t *bmp = NULL;
+	while (1)
+	{
+		// xQueueReceive(vidQueue, &bmp, portMAX_DELAY); //skip one frame to drop to 30
+		xQueueReceive(vidQueue, &bmp, portMAX_DELAY);
+        display_HAL_NES_frame((const uint8_t **)bmp->line[0]);
+	}
+}
+
+/* get info */
+static char fb[1]; //dummy
+bitmap_t *myBitmap;
+
+/* initialise video */
+static int init(int width, int height)
+{
+	return 0;
+}
+
+static void shutdown(void)
+{
+}
+
+/* set a video mode */
+static int set_mode(int width, int height)
+{
+	return 0;
+}
+
+/* copy nes palette over to hardware */
+uint16 myPalette[256];
+static void set_palette(rgb_t *pal)
+{
+	uint16 c;
+
+	int i;
+
+	for (i = 0; i < 256; i++)
+	{
+		c = (pal[i].b >> 3) + ((pal[i].g >> 2) << 5) + ((pal[i].r >> 3) << 11);
+		myPalette[i]=(c>>8)|((c&0xff)<<8);
+		//myPalette[i] = c;
+	}
+}
+
+/* clear all frames to a particular color */
+static void clear(uint8 color)
+{
+	// SDL_FillRect(mySurface, 0, color);
+	//display_clear(); //TODO:Modified
+    display_HAL_clear();
+}
+
+/* acquire the directbuffer for writing */
+static bitmap_t *lock_write(void)
+{
+	// SDL_LockSurface(mySurface);
+	myBitmap = bmp_createhw((uint8 *)fb, NES_SCREEN_WIDTH, NES_SCREEN_HEIGHT, NES_SCREEN_WIDTH * 2);
+	return myBitmap;
+}
+
+/* release the resource */
+static void free_write(int num_dirties, rect_t *dirty_rects)
+{
+	bmp_destroy(&myBitmap);
+}
+
+static void custom_blit(bitmap_t *bmp, int num_dirties, rect_t *dirty_rects)
+{
+	xQueueSend(nofrendo_vidQueue, &bmp, 0);
+	//do_audio_frame();
+}
+
+viddriver_t sdlDriver =
+	{
+		"Simple DirectMedia Layer", /* name */
+		init,						/* init */
+		shutdown,					/* shutdown */
+		set_mode,					/* set_mode */
+		set_palette,				/* set_palette */
+		clear,						/* clear */
+		lock_write,					/* lock_write */
+		free_write,					/* free_write */
+		custom_blit,				/* custom_blit */
+		false						/* invalidate flag */
+};
+
+void osd_getvideoinfo(vidinfo_t *info)
+{
+	info->default_width = NES_SCREEN_WIDTH;
+	info->default_height = NES_SCREEN_HEIGHT;
+	info->driver = &sdlDriver;
+}
+
+/* input */
+
+static void osd_initinput(){}
+
+static void osd_freeinput(void){}
+
+void osd_getinput(void)
+{
+    uint16_t b = input_read();
+
+	const int ev[16] = {
+		event_joypad1_down, event_joypad1_left, event_joypad1_up, event_joypad1_right, 0, 0, event_state_save, event_state_load,
+		event_joypad1_b, event_joypad1_a, event_joypad1_start, 0, event_joypad1_select, 0, 0, 0};
+	static int oldb = 0xffff;
+	int chg = b ^ oldb;
+	int x;
+	oldb = b;
+	event_t evh;
+
+	for (x = 0; x < 16; x++)
+	{
+		if (chg & 1)
+		{
+			evh = event_get(ev[x]);
+			if (evh)
+				evh((b & 1) ? INP_STATE_BREAK : INP_STATE_MAKE);
+		}
+		chg >>= 1;
+		b >>= 1;
+	}
+}
+
+void osd_getmouse(int *x, int *y, int *button)
+{
+}
+
+/* init / shutdown */
+static int logprint(const char *string)
+{
+	return printf("%s", string);
+}
+
+int osd_init()
+{
+	nofrendo_log_chain_logfunc(logprint);
+
+	if (osd_init_sound())
+		return -1;
+
+	//display_init(); //TODO: Modified
+    printf("osd_init\r\n");
+	//vidQueue = xQueueCreate(10, sizeof(bitmap_t *));
+	// xTaskCreatePinnedToCore(&displayTask, "displayTask", 2048, NULL, 5, NULL, 1);
+	//xTaskCreatePinnedToCore(&displayTask, "displayTask", 2048, NULL, 4, NULL, 0);
+	osd_initinput();
+	return 0;
+}
+
+void osd_shutdown()
+{
+	osd_stopsound();
+	osd_freeinput();
+}
+
+char configfilename[] = "na";
+int osd_main(int argc, char *argv[])
+{
+	config.filename = configfilename;
+	return main_loop(argv[0], system_autodetect);
+}
+
+//Seemingly, this will be called only once. Should call func with a freq of frequency,
+int osd_installtimer(int frequency, void *func, int funcsize, void *counter, int countersize)
+{
+	nofrendo_log_printf("Timer install, configTICK_RATE_HZ=%d, freq=%d\n", configTICK_RATE_HZ, frequency);
+	timer = xTimerCreate("nes", configTICK_RATE_HZ / frequency, pdTRUE, NULL, func);
+	xTimerStart(timer, 0);
+	return 0;
+}
+
+/* filename manipulation */
 void osd_fullname(char *fullname, const char *shortname)
 {
-   strncpy(fullname, shortname, PATH_MAX);
+	strncpy(fullname, shortname, PATH_MAX);
 }
 
 /* This gives filenames for storage of saves */
 char *osd_newextension(char *string, char *ext)
 {
-   return string;
+	// dirty: assume both extensions is 3 characters
+	size_t l = strlen(string);
+	string[l - 3] = ext[1];
+	string[l - 2] = ext[2];
+	string[l - 1] = ext[3];
+
+	return string;
 }
 
 /* This gives filenames for storage of PCX snapshots */
 int osd_makesnapname(char *filename, int len)
 {
-   return -1;
+	return -1;
 }
-
-//int osd_init(){
-//  return 0; 
-//}
-
-

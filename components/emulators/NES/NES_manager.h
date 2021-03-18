@@ -1,3 +1,5 @@
+#include <freertos/queue.h>
+
 /*********************
  *      FUNCTIONS
  *********************/
@@ -12,7 +14,7 @@
  * 
  *  Returns: Nothing
  */
-void NES_start();
+void NES_start(const char *game_name);
 
 /*
  * Function:  NES_resume 
@@ -45,7 +47,7 @@ void NES_suspend();
  * 
  *  Returns: Nothing
  */
-void NES_load_game(const char *game_name);
+void NES_load_game();
 
 /*
  * Function:  NES_save_game 
@@ -56,3 +58,6 @@ void NES_load_game(const char *game_name);
  *  Returns: Nothing
  */
 void NES_save_game();
+
+QueueHandle_t nofrendo_vidQueue;
+QueueHandle_t nofrendo_audioQueue;

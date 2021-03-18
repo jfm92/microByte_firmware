@@ -26,38 +26,31 @@
 #ifndef _NES_H_
 #define _NES_H_
 
-#include <noftypes.h>
-#include <nes_apu.h>
-#include <nes_mmc.h>
-#include <nes_ppu.h>
-#include <nes_rom.h>
-#include "nes6502.h"
-#include <bitmap.h>
+#include "../noftypes.h"
+#include "../sndhrdw/nes_apu.h"
+#include "nes_mmc.h"
+#include "nes_ppu.h"
+#include "nes_rom.h"
+#include "../cpu/nes6502.h"
+#include "../bitmap.h"
 
-
-/* Visible (NTSC) screen height */
-#ifndef NES_VISIBLE_HEIGHT
-#define  NES_VISIBLE_HEIGHT   240
-#endif /* !NES_VISIBLE_HEIGHT */
-#define  NES_SCREEN_WIDTH     240 //256
-#define  NES_SCREEN_HEIGHT    240  //240
+#define NES_SCREEN_WIDTH 240
+#define NES_SCREEN_HEIGHT 240
 
 /* NTSC = 60Hz, PAL = 50Hz */
-
 #ifdef PAL
-#define  NES_REFRESH_RATE     50
+#define NES_REFRESH_RATE 50
 #else /* !PAL */
-#define  NES_REFRESH_RATE     60
+#define NES_REFRESH_RATE 50
 #endif /* !PAL */
 
-#define  MAX_MEM_HANDLERS     32
+#define MAX_MEM_HANDLERS 32
 
 enum
 {
    SOFT_RESET,
    HARD_RESET
 };
-
 
 typedef struct nes_s
 {
@@ -72,10 +65,9 @@ typedef struct nes_s
    rominfo_t *rominfo;
 
    /* video buffer */
-   /* For the ESP32, it costs too much memory to render to a separate buffer and blit that to the main buffer.
-      Instead, the code has been modified to directly grab the primary buffer from the video subsystem and render
-      there, saving us about 64K of memory. */
-//   bitmap_t *vidbuf; 
+#ifdef NOFRENDO_DOUBLE_FRAMEBUFFER
+   bitmap_t *vidbuf;
+#endif /* NOFRENDO_DOUBLE_FRAMEBUFFER */
 
    bool fiq_occurred;
    uint8 fiq_state;
@@ -92,7 +84,6 @@ typedef struct nes_s
    bool pause;
 
 } nes_t;
-
 
 extern int nes_isourfile(const char *filename);
 
@@ -116,9 +107,6 @@ extern void nes_reset(int reset_type);
 
 extern void nes_poweroff(void);
 extern void nes_togglepause(void);
-
-void nes_renderframe(uint8_t draw_flag);
-void system_video(uint8_t draw);
 
 #endif /* _NES_H_ */
 

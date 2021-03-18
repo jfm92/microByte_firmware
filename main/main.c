@@ -200,8 +200,11 @@ void app_main(void){
                         }
                         else if(management.console == NES){
                             vTaskSuspend(gui_handler);
-                            NES_load_game(management.game_name);
-                            NES_start();
+                            NES_start(management.game_name);
+                            if(management.load_save_game){
+                                vTaskDelay(1500 / portTICK_RATE_MS);
+                                NES_load_game();
+                            }
                             game_executed = true;
                             game_running=true;
                             console_running = NES;
@@ -251,9 +254,9 @@ void app_main(void){
                 case MODE_SAVE_GAME:
 
                         ESP_LOGI(TAG,"Saving data GameBoy Color");
-                       gnuboy_save();
+                      // gnuboy_save();
                       //SMS_save_game();
-                      //NES_save_game();
+                      NES_save_game();
 
                     
                 break;

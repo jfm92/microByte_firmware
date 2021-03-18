@@ -24,9 +24,9 @@
 */
 
 #include <string.h>
-#include <noftypes.h>
-#include <nes_mmc.h>
-#include <nes_ppu.h>
+#include "../noftypes.h"
+#include "../nes/nes_mmc.h"
+#include "../nes/nes_ppu.h"
 
 /* TODO: WRAM enable ala Mark Knibbs:
    ==================================
@@ -90,21 +90,21 @@ static void map1_write(uint32 address, uint8 value)
    switch (regnum)
    {
    case 0:
+   {
+      if (0 == (value & 2))
       {
-         if (0 == (value & 2))
-         {
-            int mirror = value & 1;
-            ppu_mirror(mirror, mirror, mirror, mirror);
-         }
-         else
-         {
-            if (value & 1)
-               ppu_mirror(0, 0, 1, 1);
-            else
-               ppu_mirror(0, 1, 0, 1);
-         }
+         int mirror = value & 1;
+         ppu_mirror(mirror, mirror, mirror, mirror);
       }
-      break;
+      else
+      {
+         if (value & 1)
+            ppu_mirror(0, 0, 1, 1);
+         else
+            ppu_mirror(0, 1, 0, 1);
+      }
+   }
+   break;
 
    case 1:
       if (regs[0] & 0x10)
@@ -134,7 +134,7 @@ static void map1_write(uint32 address, uint8 value)
       {
          bank_select = 0;
       }
-   
+
       if (0 == (regs[0] & 0x08))
          mmc_bankrom(32, 0x8000, ((regs[3] >> 1) + (bank_select >> 1)));
       else if (regs[0] & 0x04)
@@ -170,7 +170,6 @@ static void map1_getstate(SnssMapperBlock *state)
    state->extraData.mapper1.numberOfBits = bitcount;
 }
 
-
 static void map1_setstate(SnssMapperBlock *state)
 {
    regs[1] = state->extraData.mapper1.registers[0];
@@ -182,23 +181,22 @@ static void map1_setstate(SnssMapperBlock *state)
 }
 
 static map_memwrite map1_memwrite[] =
-{
-   { 0x8000, 0xFFFF, map1_write },
-   {     -1,     -1, NULL }
-};
+    {
+        {0x8000, 0xFFFF, map1_write},
+        {-1, -1, NULL}};
 
 mapintf_t map1_intf =
-{
-   1, /* mapper number */
-   "MMC1", /* mapper name */
-   map1_init, /* init routine */
-   NULL, /* vblank callback */
-   NULL, /* hblank callback */
-   map1_getstate, /* get state (snss) */
-   map1_setstate, /* set state (snss) */
-   NULL, /* memory read structure */
-   map1_memwrite, /* memory write structure */
-   NULL /* external sound device */
+    {
+        1,             /* mapper number */
+        "MMC1",        /* mapper name */
+        map1_init,     /* init routine */
+        NULL,          /* vblank callback */
+        NULL,          /* hblank callback */
+        map1_getstate, /* get state (snss) */
+        map1_setstate, /* set state (snss) */
+        NULL,          /* memory read structure */
+        map1_memwrite, /* memory write structure */
+        NULL           /* external sound device */
 };
 
 /*

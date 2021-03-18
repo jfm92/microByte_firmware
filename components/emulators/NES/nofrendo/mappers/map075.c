@@ -23,10 +23,9 @@
 ** $Id: map075.c,v 1.2 2001/04/27 14:37:11 neil Exp $
 */
 
-#include <noftypes.h>
-#include <nes_mmc.h>
-#include <nes_ppu.h>
-
+#include "../noftypes.h"
+#include "../nes/nes_mmc.h"
+#include "../nes/nes_ppu.h"
 
 static uint8 latch[2];
 static uint8 hibits;
@@ -42,7 +41,7 @@ static void map75_write(uint32 address, uint8 value)
 
    case 0x9:
       hibits = (value & 0x06);
-      
+
       mmc_bankvrom(4, 0x0000, ((hibits & 0x02) << 3) | latch[0]);
       mmc_bankvrom(4, 0x1000, ((hibits & 0x04) << 2) | latch[1]);
 
@@ -77,23 +76,22 @@ static void map75_write(uint32 address, uint8 value)
 }
 
 static map_memwrite map75_memwrite[] =
-{
-   { 0x8000, 0xFFFF, map75_write },
-   {     -1,     -1, NULL }
-};
+    {
+        {0x8000, 0xFFFF, map75_write},
+        {-1, -1, NULL}};
 
 mapintf_t map75_intf =
-{
-   75, /* mapper number */
-   "Konami VRC1", /* mapper name */
-   NULL, /* init routine */
-   NULL, /* vblank callback */
-   NULL, /* hblank callback */
-   NULL, /* get state (snss) */
-   NULL, /* set state (snss) */
-   NULL, /* memory read structure */
-   map75_memwrite, /* memory write structure */
-   NULL /* external sound device */
+    {
+        75,             /* mapper number */
+        "Konami VRC1",  /* mapper name */
+        NULL,           /* init routine */
+        NULL,           /* vblank callback */
+        NULL,           /* hblank callback */
+        NULL,           /* get state (snss) */
+        NULL,           /* set state (snss) */
+        NULL,           /* memory read structure */
+        map75_memwrite, /* memory write structure */
+        NULL            /* external sound device */
 };
 
 /*

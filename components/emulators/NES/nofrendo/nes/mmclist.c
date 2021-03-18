@@ -23,8 +23,8 @@
 ** $Id: mmclist.c,v 1.2 2001/04/27 14:37:11 neil Exp $
 */
 
-#include <noftypes.h>
-#include <nes_mmc.h>
+#include "../noftypes.h"
+#include "nes_mmc.h"
 
 /* mapper interfaces */
 extern mapintf_t map0_intf;
@@ -36,6 +36,7 @@ extern mapintf_t map5_intf;
 extern mapintf_t map7_intf;
 extern mapintf_t map8_intf;
 extern mapintf_t map9_intf;
+extern mapintf_t map10_intf;
 extern mapintf_t map11_intf;
 extern mapintf_t map15_intf;
 extern mapintf_t map16_intf;
@@ -63,44 +64,43 @@ extern mapintf_t map99_intf;
 extern mapintf_t map231_intf;
 
 /* implemented mapper interfaces */
-const mapintf_t *mappers[] =
-{
-   &map0_intf,
-   &map1_intf,
-   &map2_intf,
-   &map3_intf,
-   &map4_intf,
-   &map5_intf,
-   &map7_intf,
-   &map8_intf,
-   &map9_intf,
-   &map11_intf,
-   &map15_intf,
-   &map16_intf,
-   &map18_intf,
-   &map19_intf,
-   &map21_intf,
-   &map22_intf,
-   &map23_intf,
-   &map24_intf,
-   &map25_intf,
-   &map32_intf,
-   &map33_intf,
-   &map34_intf,
-   &map40_intf,
-   &map64_intf,
-   &map65_intf,
-   &map66_intf,
-   &map70_intf,
-   &map75_intf,
-   &map78_intf,
-   &map79_intf,
-   &map85_intf,
-   &map94_intf,
-   &map99_intf,
-   &map231_intf,
-   NULL
-};
+mapintf_t *mappers[] =
+    {
+        &map0_intf,
+        &map1_intf,
+        &map2_intf,
+        &map3_intf,
+        &map4_intf,
+        &map5_intf,
+        &map7_intf,
+        &map8_intf,
+        &map9_intf,
+        &map11_intf,
+        &map15_intf,
+        &map16_intf,
+        &map18_intf,
+        &map19_intf,
+        &map21_intf,
+        &map22_intf,
+        &map23_intf,
+        &map24_intf,
+        &map25_intf,
+        &map32_intf,
+        &map33_intf,
+        &map34_intf,
+        &map40_intf,
+        &map64_intf,
+        &map65_intf,
+        &map66_intf,
+        &map70_intf,
+        &map75_intf,
+        &map78_intf,
+        &map79_intf,
+        &map85_intf,
+        &map94_intf,
+        &map99_intf,
+        &map231_intf,
+        NULL};
 
 /*
 ** $Log: mmclist.c,v $

@@ -25,46 +25,47 @@
 **
 */
 
-#include <noftypes.h>
-#include <nes_mmc.h>
-#include <nes.h>
-#include <libsnss.h>
-#include <log.h>
+#include "../noftypes.h"
+#include "../nes/nes_mmc.h"
+#include "../nes/nes.h"
+#include "../libsnss/libsnss.h"
+#include "../log.h"
 
 /******************************************/
 /* Mapper #87 write handler ($6000-$7FFF) */
 /******************************************/
-static void map87_write (uint32 address, uint8 value)
+static void map87_write(uint32 address, uint8 value)
 {
-  /* Within range, address written to is irrelevant */
-  UNUSED (address);
+   /* Within range, address written to is irrelevant */
+   UNUSED(address);
 
-  /* Very simple: 8K CHR page is selected by D1 */
-  if (value & 0x02) mmc_bankvrom (8, 0x0000, 0x01);
-  else              mmc_bankvrom (8, 0x0000, 0x00);
+   /* Very simple: 8K CHR page is selected by D1 */
+   if (value & 0x02)
+      mmc_bankvrom(8, 0x0000, 0x01);
+   else
+      mmc_bankvrom(8, 0x0000, 0x00);
 
-  /* Done */
-  return;
+   /* Done */
+   return;
 }
 
-static map_memwrite map87_memwrite [] =
-{
-   { 0x6000, 0x7FFF, map87_write },
-   {     -1,     -1, NULL }
-};
+static map_memwrite map87_memwrite[] =
+    {
+        {0x6000, 0x7FFF, map87_write},
+        {-1, -1, NULL}};
 
 mapintf_t map87_intf =
-{
-   87,                               /* Mapper number */
-   "16K VROM switch",                /* Mapper name */
-   NULL,                             /* Initialization routine */
-   NULL,                             /* VBlank callback */
-   NULL,                             /* HBlank callback */
-   NULL,                             /* Get state (SNSS) */
-   NULL,                             /* Set state (SNSS) */
-   NULL,                             /* Memory read structure */
-   map87_memwrite,                   /* Memory write structure */
-   NULL                              /* External sound device */
+    {
+        87,                /* Mapper number */
+        "16K VROM switch", /* Mapper name */
+        NULL,              /* Initialization routine */
+        NULL,              /* VBlank callback */
+        NULL,              /* HBlank callback */
+        NULL,              /* Get state (SNSS) */
+        NULL,              /* Set state (SNSS) */
+        NULL,              /* Memory read structure */
+        map87_memwrite,    /* Memory write structure */
+        NULL               /* External sound device */
 };
 
 /*

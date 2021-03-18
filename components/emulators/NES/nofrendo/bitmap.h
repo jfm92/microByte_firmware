@@ -26,7 +26,7 @@
 #ifndef _BITMAP_H_
 #define _BITMAP_H_
 
-#include <noftypes.h>
+#include "noftypes.h"
 
 /* a bitmap rectangle */
 typedef struct rect_s
@@ -43,9 +43,9 @@ typedef struct rgb_s
 typedef struct bitmap_s
 {
    int width, height, pitch;
-   bool hardware;             /* is data a hardware region? */
-   uint8 *data;               /* protected */
-   uint8 *line[ZERO_LENGTH];  /* will hold line pointers */
+   bool hardware;            /* is data a hardware region? */
+   uint8 *data;              /* protected */
+   uint8 *line[ZERO_LENGTH]; /* will hold line pointers */
 } bitmap_t;
 
 extern void bmp_clear(const bitmap_t *bitmap, uint8 color);

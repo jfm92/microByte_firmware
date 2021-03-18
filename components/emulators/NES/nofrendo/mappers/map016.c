@@ -23,10 +23,10 @@
 ** $Id: map016.c,v 1.2 2001/04/27 14:37:11 neil Exp $
 */
 
-#include <noftypes.h>
-#include <nes_mmc.h>
-#include <nes_ppu.h>
-#include <nes.h>
+#include "../noftypes.h"
+#include "../nes/nes_mmc.h"
+#include "../nes/nes_ppu.h"
+#include "../nes/nes.h"
 
 static struct
 {
@@ -66,33 +66,33 @@ static void map16_write(uint32 address, uint8 value)
          case 0:
             ppu_mirror(0, 0, 1, 1); /* horizontal */
             break;
-      
+
          case 1:
             ppu_mirror(0, 1, 0, 1); /* vertical */
             break;
-      
+
          case 2:
             ppu_mirror(0, 0, 0, 0);
             break;
-      
+
          case 3:
             ppu_mirror(1, 1, 1, 1);
             break;
          }
          break;
-   
+
       case 0xA:
          irq.enabled = (value & 1) ? true : false;
          break;
- 
+
       case 0xB:
          irq.counter = (irq.counter & 0xFF00) | value;
          break;
-   
+
       case 0xC:
          irq.counter = (value << 8) | (irq.counter & 0xFF);
          break;
-   
+
       case 0xD:
          /* eeprom I/O port? */
          break;
@@ -123,31 +123,29 @@ static void map16_getstate(SnssMapperBlock *state)
 
 static void map16_setstate(SnssMapperBlock *state)
 {
-   irq.counter = (state->extraData.mapper16.irqCounterHighByte << 8)
-                       | state->extraData.mapper16.irqCounterLowByte;
+   irq.counter = (state->extraData.mapper16.irqCounterHighByte << 8) | state->extraData.mapper16.irqCounterLowByte;
    irq.enabled = state->extraData.mapper16.irqCounterEnabled;
 }
 
 static map_memwrite map16_memwrite[] =
-{
-   { 0x6000, 0x600D, map16_write },
-   { 0x7FF0, 0x7FFD, map16_write },
-   { 0x8000, 0x800D, map16_write },
-   {     -1,     -1, NULL }
-};
+    {
+        {0x6000, 0x600D, map16_write},
+        {0x7FF0, 0x7FFD, map16_write},
+        {0x8000, 0x800D, map16_write},
+        {-1, -1, NULL}};
 
-mapintf_t map16_intf = 
-{
-   16, /* mapper number */
-   "Bandai", /* mapper name */
-   map16_init, /* init routine */
-   NULL, /* vblank callback */
-   map16_hblank, /* hblank callback */
-   map16_getstate, /* get state (snss) */
-   map16_setstate, /* set state (snss) */
-   NULL, /* memory read structure */
-   map16_memwrite, /* memory write structure */
-   NULL /* external sound device */
+mapintf_t map16_intf =
+    {
+        16,             /* mapper number */
+        "Bandai",       /* mapper name */
+        map16_init,     /* init routine */
+        NULL,           /* vblank callback */
+        map16_hblank,   /* hblank callback */
+        map16_getstate, /* get state (snss) */
+        map16_setstate, /* set state (snss) */
+        NULL,           /* memory read structure */
+        map16_memwrite, /* memory write structure */
+        NULL            /* external sound device */
 };
 
 /*

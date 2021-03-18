@@ -23,16 +23,16 @@
 ** $Id: vrcvisnd.c,v 1.2 2001/04/27 14:37:11 neil Exp $
 */
 
-#include <noftypes.h>
-#include <vrcvisnd.h>
-#include <nes_apu.h>
+#include "../noftypes.h"
+#include "vrcvisnd.h"
+#include "nes_apu.h"
 
 typedef struct vrcvirectangle_s
 {
    bool enabled;
 
    uint8 reg[3];
-   
+
    float accum;
    uint8 adder;
 
@@ -44,9 +44,9 @@ typedef struct vrcvirectangle_s
 typedef struct vrcvisawtooth_s
 {
    bool enabled;
-   
+
    uint8 reg[3];
-   
+
    float accum;
    uint8 adder;
    uint8 output_acc;
@@ -61,7 +61,6 @@ typedef struct vrcvisnd_s
    vrcvisawtooth_t saw;
    float incsize;
 } vrcvisnd_t;
-
 
 static vrcvisnd_t vrcvi;
 
@@ -103,7 +102,7 @@ static int32 vrcvi_sawtooth(vrcvisawtooth_t *chan)
    {
       chan->accum += chan->freq;
       chan->output_acc += chan->volume;
-      
+
       chan->adder++;
       if (7 == chan->adder)
       {
@@ -199,22 +198,20 @@ static void vrcvi_reset(void)
 }
 
 static apu_memwrite vrcvi_memwrite[] =
-{
-   { 0x9000, 0x9002, vrcvi_write }, /* vrc6 */
-   { 0xA000, 0xA002, vrcvi_write },
-   { 0xB000, 0xB002, vrcvi_write },
-   {     -1,     -1, NULL }
-};
+    {
+        {0x9000, 0x9002, vrcvi_write}, /* vrc6 */
+        {0xA000, 0xA002, vrcvi_write},
+        {0xB000, 0xB002, vrcvi_write},
+        {-1, -1, NULL}};
 
 apuext_t vrcvi_ext =
-{
-   NULL, /* no init */
-   NULL, /* no shutdown */
-   vrcvi_reset,
-   vrcvi_process,
-   NULL, /* no reads */
-   vrcvi_memwrite
-};
+    {
+        NULL, /* no init */
+        NULL, /* no shutdown */
+        vrcvi_reset,
+        vrcvi_process,
+        NULL, /* no reads */
+        vrcvi_memwrite};
 
 /*
 ** $Log: vrcvisnd.c,v $

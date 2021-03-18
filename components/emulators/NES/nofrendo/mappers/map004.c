@@ -23,10 +23,10 @@
 ** $Id: map004.c,v 1.2 2001/04/27 14:37:11 neil Exp $
 */
 
-#include <noftypes.h>
-#include <nes_mmc.h>
-#include <nes.h>
-#include <libsnss.h>
+#include "../noftypes.h"
+#include "../nes/nes_mmc.h"
+#include "../nes/nes.h"
+#include "../libsnss/libsnss.h"
 
 static struct
 {
@@ -46,7 +46,7 @@ static void map4_write(uint32 address, uint8 value)
    case 0x8000:
       command = value;
       vrombase = (command & 0x80) ? 0x1000 : 0x0000;
-      
+
       if (reg != (value & 0x40))
       {
          if (value & 0x40)
@@ -116,8 +116,8 @@ static void map4_write(uint32 address, uint8 value)
 
    case 0xC000:
       irq.latch = value;
-//      if (irq.reset)
-//         irq.counter = irq.latch;
+      //      if (irq.reset)
+      //         irq.counter = irq.latch;
       break;
 
    case 0xC001:
@@ -127,17 +127,22 @@ static void map4_write(uint32 address, uint8 value)
 
    case 0xE000:
       irq.enabled = false;
-//      if (irq.reset)
-//         irq.counter = irq.latch;
+      //      if (irq.reset)
+      //         irq.counter = irq.latch;
       break;
 
    case 0xE001:
       irq.enabled = true;
-//      if (irq.reset)
-//         irq.counter = irq.latch;
+      //      if (irq.reset)
+      //         irq.counter = irq.latch;
       break;
 
    default:
+      //printf("map004: unhandled write: address=%p, value=0x%x\n", (void*)address, value);
+      __asm__("nop");
+      __asm__("nop");
+      __asm__("nop");
+      __asm__("nop");
       break;
    }
 
@@ -194,23 +199,22 @@ static void map4_init(void)
 }
 
 static map_memwrite map4_memwrite[] =
-{
-   { 0x8000, 0xFFFF, map4_write },
-   {     -1,     -1, NULL }
-};
+    {
+        {0x8000, 0xFFFF, map4_write},
+        {-1, -1, NULL}};
 
 mapintf_t map4_intf =
-{
-   4, /* mapper number */
-   "MMC3", /* mapper name */
-   map4_init, /* init routine */
-   NULL, /* vblank callback */
-   map4_hblank, /* hblank callback */
-   map4_getstate, /* get state (snss) */
-   map4_setstate, /* set state (snss) */
-   NULL, /* memory read structure */
-   map4_memwrite, /* memory write structure */
-   NULL /* external sound device */
+    {
+        4,             /* mapper number */
+        "MMC3",        /* mapper name */
+        map4_init,     /* init routine */
+        NULL,          /* vblank callback */
+        map4_hblank,   /* hblank callback */
+        map4_getstate, /* get state (snss) */
+        map4_setstate, /* set state (snss) */
+        NULL,          /* memory read structure */
+        map4_memwrite, /* memory write structure */
+        NULL           /* external sound device */
 };
 
 /*

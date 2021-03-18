@@ -27,7 +27,7 @@
 #ifndef _EVENT_H_
 #define _EVENT_H_
 
-#include <nofrendo.h>
+#include "nofrendo.h"
 
 enum
 {
@@ -82,7 +82,7 @@ enum
    event_palette_set_shady,
    /* joypad 1 */
    event_joypad1_a,
-   event_joypad1_b, 
+   event_joypad1_b,
    event_joypad1_start,
    event_joypad1_select,
    event_joypad1_up,

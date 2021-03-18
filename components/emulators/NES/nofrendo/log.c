@@ -26,49 +26,57 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <stdarg.h>
-#include <noftypes.h>
-#include <log.h>
 
+#include "noftypes.h"
+#include "log.h"
 
-//static FILE *errorlog = NULL;
+#ifdef NOFRENDO_LOG_TO_FILE
+static FILE *errorlog = NULL;
+#endif /* NOFRENDO_LOG_TO_FILE */
+
 static int (*log_func)(const char *string) = NULL;
 
 /* first up: debug versions of calls */
 #ifdef NOFRENDO_DEBUG
-int log_init(void)
+int nofrendo_log_init(void)
 {
-//   errorlog = fopen("errorlog.txt", "wt");
-//   if (NULL == errorlog)
-//      return (-1);
+#ifdef NOFRENDO_LOG_TO_FILE
+   errorlog = fopen("errorlog.txt", "wt");
+   if (NULL == errorlog)
+      return (-1);
+#endif /* NOFRENDO_LOG_TO_FILE */
 
    return 0;
 }
 
-void log_shutdown(void)
+void nofrendo_log_shutdown(void)
 {
    /* Snoop around for unallocated blocks */
    mem_checkblocks();
    mem_checkleaks();
    mem_cleanup();
 
-//   if (NULL != errorlog)
-//      fclose(errorlog);
+#ifdef NOFRENDO_LOG_TO_FILE
+   if (NULL != errorlog)
+      fclose(errorlog);
+#endif /* NOFRENDO_LOG_TO_FILE */
 }
 
-int log_print(const char *string)
+int nofrendo_log_print(const char *string)
 {
    /* if we have a custom logging function, use that */
    if (NULL != log_func)
       log_func(string);
-   
+
+#ifdef NOFRENDO_LOG_TO_FILE
    /* Log it to disk, as well */
-//   fputs(string, errorlog);
-//	printf("%s\n", string);
+   fputs(string, errorlog);
+#endif /* NOFRENDO_LOG_TO_FILE */
 
    return 0;
 }
 
-int log_printf(const char *format, ... )
+int nofrendo_log_printf(const char *format, ...)
 {
    /* don't allocate on stack every call */
    static char buffer[1024 + 1];
@@ -82,31 +90,34 @@ int log_printf(const char *format, ... )
       log_func(buffer);
    }
 
-//   vfprintf(errorlog, format, arg);
+#ifdef NOFRENDO_LOG_TO_FILE
+   vfprintf(errorlog, format, arg);
+#endif /* NOFRENDO_LOG_TO_FILE */
+
    va_end(arg);
 
    return 0; /* should be number of chars written */
 }
 
-#else /* !NOFRENDO_DEBUG */
+#else  /* !NOFRENDO_DEBUG */
 
-int log_init(void)
+int nofrendo_log_init(void)
 {
    return 0;
 }
 
-void log_shutdown(void)
+void nofrendo_log_shutdown(void)
 {
 }
 
-int log_print(const char *string)
+int nofrendo_log_print(const char *string)
 {
    UNUSED(string);
 
    return 0;
 }
 
-int log_printf(const char *format, ... )
+int nofrendo_log_printf(const char *format, ...)
 {
    UNUSED(format);
 
@@ -114,25 +125,23 @@ int log_printf(const char *format, ... )
 }
 #endif /* !NOFRENDO_DEBUG */
 
-void log_chain_logfunc(int (*func)(const char *string))
+void nofrendo_log_chain_logfunc(int (*func)(const char *string))
 {
    log_func = func;
 }
 
-void log_assert(int expr, int line, const char *file, char *msg)
+void nofrendo_log_assert(int expr, int line, const char *file, char *msg)
 {
    if (expr)
       return;
 
    if (NULL != msg)
-      log_printf("ASSERT: line %d of %s, %s\n", line, file, msg);
+      nofrendo_log_printf("ASSERT: line %d of %s, %s\n", line, file, msg);
    else
-      log_printf("ASSERT: line %d of %s\n", line, file);
+      nofrendo_log_printf("ASSERT: line %d of %s\n", line, file);
 
-   asm("break.n 1");
-//   exit(-1);
+   exit(-1);
 }
-
 
 /*
 ** $Log: log.c,v $

@@ -12,7 +12,8 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include <libsnss.h>
+
+#include "libsnss.h"
 
 /**************************************************************************/
 /* This section deals with endian-specific code. */
@@ -203,7 +204,11 @@ SNSS_WriteFileHeader(SNSS_FILE *snssFile)
 SNSS_RETURN_CODE
 SNSS_OpenFile(SNSS_FILE **snssFile, const char *filename, SNSS_OPEN_MODE mode)
 {
-   *snssFile = malloc(sizeof(SNSS_FILE));
+   if (!snssFileBlock)
+   {
+      snssFileBlock = NOFRENDO_MALLOC(sizeof(SNSS_FILE));
+   }
+   *snssFile = snssFileBlock;
    if (NULL == *snssFile)
    {
       return SNSS_OUT_OF_MEMORY;
@@ -226,8 +231,6 @@ SNSS_OpenFile(SNSS_FILE **snssFile, const char *filename, SNSS_OPEN_MODE mode)
 
    if (NULL == (*snssFile)->fp)
    {
-      free(*snssFile);
-      *snssFile = NULL;
       return SNSS_OPEN_FAILED;
    }
 
@@ -273,9 +276,6 @@ SNSS_CloseFile(SNSS_FILE **snssFile)
    {
       return SNSS_CLOSE_FAILED;
    }
-
-   free(*snssFile);
-   *snssFile = NULL;
 
    return SNSS_OK;
 }
@@ -368,7 +368,10 @@ SNSS_SkipNextBlock(SNSS_FILE *snssFile)
 static SNSS_RETURN_CODE
 SNSS_ReadBaseBlock(SNSS_FILE *snssFile)
 {
-   char blockBytes[BASE_BLOCK_LENGTH];
+   if (!blockBytes)
+   {
+      blockBytes = NOFRENDO_MALLOC(BASE_BLOCK_LENGTH);
+   }
    SnssBlockHeader header;
 
    if (SNSS_ReadBlockHeader(&header, snssFile) != SNSS_OK)
@@ -410,7 +413,10 @@ SNSS_WriteBaseBlock(SNSS_FILE *snssFile)
 {
    SnssBlockHeader header;
    SNSS_RETURN_CODE returnCode;
-   char blockBytes[BASE_BLOCK_LENGTH];
+   if (!blockBytes)
+   {
+      blockBytes = NOFRENDO_MALLOC(BASE_BLOCK_LENGTH);
+   }
    unsigned short tempShort;
 
    strcpy(header.tag, "BASR");
@@ -574,23 +580,26 @@ SNSS_WriteSramBlock(SNSS_FILE *snssFile)
 static SNSS_RETURN_CODE
 SNSS_ReadMapperBlock(SNSS_FILE *snssFile)
 {
-   char *blockBytes;
    int i;
    SnssBlockHeader header;
+
+   if (!blockBytes)
+   {
+      blockBytes = NOFRENDO_MALLOC(BASE_BLOCK_LENGTH);
+   }
 
    if (SNSS_ReadBlockHeader(&header, snssFile) != SNSS_OK)
    {
       return SNSS_READ_FAILED;
    }
 
-   if ((blockBytes = (char *)malloc(0x8 + 0x10 + 0x80)) == NULL)
+   if (!blockBytes)
    {
       return SNSS_OUT_OF_MEMORY;
    }
 
    if (fread(blockBytes, MIN(0x8 + 0x10 + 0x80, header.blockLength), 1, snssFile->fp) != 1)
    {
-      free(blockBytes);
       return SNSS_READ_FAILED;
    }
 
@@ -607,8 +616,6 @@ SNSS_ReadMapperBlock(SNSS_FILE *snssFile)
    }
 
    memcpy(&snssFile->mapperBlock.extraData.mapperData, &blockBytes[0x18], 0x80);
-
-   free(blockBytes);
 
    return SNSS_OK;
 }

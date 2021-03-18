@@ -14,6 +14,8 @@
 
 #include <stdio.h>
 
+#include "../memguard.h"
+
 /**************************************************************************/
 /* endian customization */
 /**************************************************************************/
@@ -66,7 +68,6 @@ typedef enum _SNSS_RETURN_CODES
    SNSS_OUT_OF_MEMORY,
    SNSS_UNSUPPORTED_BLOCK
 } SNSS_RETURN_CODE;
-
 
 #define TAG_LENGTH 4
 #define SNSS_BLOCK_VERSION 1
@@ -327,31 +328,35 @@ typedef struct _SNSS_FILE
 } SNSS_FILE;
 
 #ifdef __cplusplus
-extern "C" {
+extern "C"
+{
 #endif /* __cplusplus */
 
-/* general file manipulation routines */
-SNSS_RETURN_CODE SNSS_OpenFile (SNSS_FILE **snssFile, const char *filename, 
-                                SNSS_OPEN_MODE mode);
-SNSS_RETURN_CODE SNSS_CloseFile (SNSS_FILE **snssFile);
+   /* general file manipulation routines */
+   SNSS_RETURN_CODE SNSS_OpenFile(SNSS_FILE **snssFile, const char *filename,
+                                  SNSS_OPEN_MODE mode);
+   SNSS_RETURN_CODE SNSS_CloseFile(SNSS_FILE **snssFile);
 
-/* block traversal */
-SNSS_RETURN_CODE SNSS_GetNextBlockType (SNSS_BLOCK_TYPE *blockType, 
-                                        SNSS_FILE *snssFile);
-SNSS_RETURN_CODE SNSS_SkipNextBlock (SNSS_FILE *snssFile);
+   /* block traversal */
+   SNSS_RETURN_CODE SNSS_GetNextBlockType(SNSS_BLOCK_TYPE *blockType,
+                                          SNSS_FILE *snssFile);
+   SNSS_RETURN_CODE SNSS_SkipNextBlock(SNSS_FILE *snssFile);
 
-/* functions to read/write SNSS blocks */
-SNSS_RETURN_CODE SNSS_ReadBlock (SNSS_FILE *snssFile, SNSS_BLOCK_TYPE blockType);
-SNSS_RETURN_CODE SNSS_WriteBlock (SNSS_FILE *snssFile, SNSS_BLOCK_TYPE blockType);
+   /* functions to read/write SNSS blocks */
+   SNSS_RETURN_CODE SNSS_ReadBlock(SNSS_FILE *snssFile, SNSS_BLOCK_TYPE blockType);
+   SNSS_RETURN_CODE SNSS_WriteBlock(SNSS_FILE *snssFile, SNSS_BLOCK_TYPE blockType);
 
-/* support functions */
-const char *SNSS_GetErrorString (SNSS_RETURN_CODE code);
+   /* support functions */
+   const char *SNSS_GetErrorString(SNSS_RETURN_CODE code);
+
+   static SNSS_FILE *snssFileBlock;
+   static char *blockBytes;
 
 #ifdef __cplusplus
 }
 #endif /* __cplusplus */
 
-#endif /* _LIBSNSS_H_ */ 
+#endif /* _LIBSNSS_H_ */
 
 /*
 ** $Log: libsnss.h,v $

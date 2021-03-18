@@ -29,40 +29,40 @@
 #ifndef _NES6502_H_
 #define _NES6502_H_
 
-#include <noftypes.h>
+#include "../noftypes.h"
 
 /* Define this to enable decimal mode in ADC / SBC (not needed in NES) */
 /*#define  NES6502_DECIMAL*/
 
-#define  NES6502_NUMBANKS  16
-#define  NES6502_BANKSHIFT 12
-#define  NES6502_BANKSIZE  (0x10000 / NES6502_NUMBANKS)
-#define  NES6502_BANKMASK  (NES6502_BANKSIZE - 1)
+#define NES6502_NUMBANKS 16
+#define NES6502_BANKSHIFT 12
+#define NES6502_BANKSIZE (0x10000 / NES6502_NUMBANKS)
+#define NES6502_BANKMASK (NES6502_BANKSIZE - 1)
 
 /* P (flag) register bitmasks */
-#define  N_FLAG         0x80
-#define  V_FLAG         0x40
-#define  R_FLAG         0x20  /* Reserved, always 1 */
-#define  B_FLAG         0x10
-#define  D_FLAG         0x08
-#define  I_FLAG         0x04
-#define  Z_FLAG         0x02
-#define  C_FLAG         0x01
+#define N_FLAG 0x80
+#define V_FLAG 0x40
+#define R_FLAG 0x20 /* Reserved, always 1 */
+#define B_FLAG 0x10
+#define D_FLAG 0x08
+#define I_FLAG 0x04
+#define Z_FLAG 0x02
+#define C_FLAG 0x01
 
 /* Vector addresses */
-#define  NMI_VECTOR     0xFFFA
-#define  RESET_VECTOR   0xFFFC
-#define  IRQ_VECTOR     0xFFFE
+#define NMI_VECTOR 0xFFFA
+#define RESET_VECTOR 0xFFFC
+#define IRQ_VECTOR 0xFFFE
 
 /* cycle counts for interrupts */
-#define  INT_CYCLES     7
-#define  RESET_CYCLES   6
+#define INT_CYCLES 7
+#define RESET_CYCLES 6
 
-#define  NMI_MASK       0x01
-#define  IRQ_MASK       0x02
+#define NMI_MASK 0x01
+#define IRQ_MASK 0x02
 
 /* Stack is located on 6502 page 1 */
-#define  STACK_OFFSET   0x0100
+#define STACK_OFFSET 0x0100
 
 typedef struct
 {
@@ -78,7 +78,7 @@ typedef struct
 
 typedef struct
 {
-   uint8 *mem_page[NES6502_NUMBANKS];  /* memory page pointers */
+   uint8 *mem_page[NES6502_NUMBANKS]; /* memory page pointers */
 
    nes6502_memread *read_handler;
    nes6502_memwrite *write_handler;
@@ -88,30 +88,31 @@ typedef struct
    uint8 x_reg, y_reg;
    uint8 s_reg;
 
-   uint8 jammed;  /* is processor jammed? */
-   
+   uint8 jammed; /* is processor jammed? */
+
    uint8 int_pending, int_latency;
 
    int32 total_cycles, burn_cycles;
 } nes6502_context;
 
 #ifdef __cplusplus
-extern "C" {
+extern "C"
+{
 #endif /* __cplusplus */
 
-/* Functions which govern the 6502's execution */
-extern void nes6502_reset(void);
-extern int nes6502_execute(int total_cycles);
-extern void nes6502_nmi(void);
-extern void nes6502_irq(void);
-extern uint8 nes6502_getbyte(uint32 address);
-extern uint32 nes6502_getcycles(bool reset_flag);
-extern void nes6502_burn(int cycles);
-extern void nes6502_release(void);
+   /* Functions which govern the 6502's execution */
+   extern void nes6502_reset(void);
+   extern int nes6502_execute(int total_cycles);
+   extern void nes6502_nmi(void);
+   extern void nes6502_irq(void);
+   extern uint8 nes6502_getbyte(uint32 address);
+   extern uint32 nes6502_getcycles(bool reset_flag);
+   extern void nes6502_burn(int cycles);
+   extern void nes6502_release(void);
 
-/* Context get/set */
-extern void nes6502_setcontext(nes6502_context *cpu);
-extern void nes6502_getcontext(nes6502_context *cpu);
+   /* Context get/set */
+   extern void nes6502_setcontext(nes6502_context *cpu);
+   extern void nes6502_getcontext(nes6502_context *cpu);
 
 #ifdef __cplusplus
 }

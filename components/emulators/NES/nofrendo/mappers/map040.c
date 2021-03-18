@@ -23,13 +23,13 @@
 ** $Id: map040.c,v 1.2 2001/04/27 14:37:11 neil Exp $
 */
 
-#include <noftypes.h>
-#include <nes_mmc.h>
-#include <nes.h>
-#include <libsnss.h>
-#include <log.h>
+#include "../noftypes.h"
+#include "../nes/nes_mmc.h"
+#include "../nes/nes.h"
+#include "../libsnss/libsnss.h"
+#include "../log.h"
 
-#define  MAP40_IRQ_PERIOD  (4096 / 113.666666)
+#define MAP40_IRQ_PERIOD (4096 / 113.666666)
 
 static struct
 {
@@ -45,7 +45,7 @@ static void map40_init(void)
    mmc_bankrom(8, 0xE000, 7);
 
    irq.enabled = false;
-   irq.counter = (int) MAP40_IRQ_PERIOD;
+   irq.counter = (int)MAP40_IRQ_PERIOD;
 }
 
 static void map40_hblank(int vblank)
@@ -71,7 +71,7 @@ static void map40_write(uint32 address, uint8 value)
    {
    case 0: /* 0x8000-0x9FFF */
       irq.enabled = false;
-      irq.counter = (int) MAP40_IRQ_PERIOD;
+      irq.counter = (int)MAP40_IRQ_PERIOD;
       break;
 
    case 1: /* 0xA000-0xBFFF */
@@ -100,23 +100,22 @@ static void map40_setstate(SnssMapperBlock *state)
 }
 
 static map_memwrite map40_memwrite[] =
-{
-   { 0x8000, 0xFFFF, map40_write },
-   {     -1,     -1, NULL }
-};
+    {
+        {0x8000, 0xFFFF, map40_write},
+        {-1, -1, NULL}};
 
 mapintf_t map40_intf =
-{
-   40, /* mapper number */
-   "SMB 2j (pirate)", /* mapper name */
-   map40_init, /* init routine */
-   NULL, /* vblank callback */
-   map40_hblank, /* hblank callback */
-   map40_getstate, /* get state (snss) */
-   map40_setstate, /* set state (snss) */
-   NULL, /* memory read structure */
-   map40_memwrite, /* memory write structure */
-   NULL /* external sound device */
+    {
+        40,                /* mapper number */
+        "SMB 2j (pirate)", /* mapper name */
+        map40_init,        /* init routine */
+        NULL,              /* vblank callback */
+        map40_hblank,      /* hblank callback */
+        map40_getstate,    /* get state (snss) */
+        map40_setstate,    /* set state (snss) */
+        NULL,              /* memory read structure */
+        map40_memwrite,    /* memory write structure */
+        NULL               /* external sound device */
 };
 
 /*

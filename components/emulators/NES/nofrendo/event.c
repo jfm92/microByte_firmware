@@ -24,29 +24,30 @@
 */
 
 #include <stdlib.h>
-#include <noftypes.h>
-#include <event.h>
-#include <nofrendo.h>
-#include <gui.h>
-#include <osd.h>
+
+#include "noftypes.h"
+#include "event.h"
+#include "nofrendo.h"
+#include "gui.h"
+#include "osd.h"
 
 /* TODO: put system specific stuff in their own files... */
-#include <nes.h>
-#include <nesinput.h>
-#include <nes_pal.h>
-#include <nesstate.h>
+#include "nes/nes.h"
+#include "nes/nesinput.h"
+#include "nes/nes_pal.h"
+#include "nes/nesstate.h"
 
 /* pointer to our current system's event handler table */
 static event_t *system_events = NULL;
 
 /* standard keyboard input */
-static nesinput_t kb_input = { INP_JOYPAD0, 0 };
-static nesinput_t kb_alt_input = { INP_JOYPAD1, 0 };
+static nesinput_t kb_input = {INP_JOYPAD0, 0};
+static nesinput_t kb_alt_input = {INP_JOYPAD1, 0};
 
 static void func_event_quit(int code)
 {
-  // UNUSED(code);
-  // main_quit();
+   UNUSED(code);
+   main_quit();
 }
 
 static void func_event_insert(int code)
@@ -57,8 +58,8 @@ static void func_event_insert(int code)
 
 static void func_event_eject(int code)
 {
-  // if (INP_STATE_MAKE == code)
-   //   main_eject();
+   if (INP_STATE_MAKE == code)
+      main_eject();
 }
 
 static void func_event_togglepause(int code)
@@ -69,7 +70,7 @@ static void func_event_togglepause(int code)
 
 static void func_event_soft_reset(int code)
 {
-   if (INP_STATE_MAKE == code) 
+   if (INP_STATE_MAKE == code)
       nes_reset(SOFT_RESET);
 }
 
@@ -111,13 +112,13 @@ static void func_event_state_slot_0(int code)
 
 static void func_event_state_slot_1(int code)
 {
-   if (INP_STATE_MAKE == code) 
+   if (INP_STATE_MAKE == code)
       state_setslot(1);
 }
 
 static void func_event_state_slot_2(int code)
 {
-   if (INP_STATE_MAKE == code) 
+   if (INP_STATE_MAKE == code)
       state_setslot(2);
 }
 
@@ -135,19 +136,19 @@ static void func_event_state_slot_4(int code)
 
 static void func_event_state_slot_5(int code)
 {
-   if (INP_STATE_MAKE == code) 
+   if (INP_STATE_MAKE == code)
       state_setslot(5);
 }
 
 static void func_event_state_slot_6(int code)
 {
-   if (INP_STATE_MAKE == code) 
+   if (INP_STATE_MAKE == code)
       state_setslot(6);
 }
 
 static void func_event_state_slot_7(int code)
 {
-   if (INP_STATE_MAKE == code) 
+   if (INP_STATE_MAKE == code)
       state_setslot(7);
 }
 
@@ -437,98 +438,96 @@ static void func_event_startsong(int code)
 
 /* NES events */
 static event_t nes_events[] =
-{
-   NULL, /* 0 */
-   func_event_quit,
-   func_event_insert,
-   func_event_eject,
-   func_event_togglepause,
-   func_event_soft_reset,
-   func_event_hard_reset,
-   func_event_snapshot,
-   func_event_toggle_frameskip,
-   /* saves */
-   func_event_state_save,
-   func_event_state_load, /* 10 */
-   func_event_state_slot_0,
-   func_event_state_slot_1,
-   func_event_state_slot_2,
-   func_event_state_slot_3,
-   func_event_state_slot_4,
-   func_event_state_slot_5,
-   func_event_state_slot_6,
-   func_event_state_slot_7,
-   func_event_state_slot_8,
-   func_event_state_slot_9, /* 20 */
-   /* GUI */
-   func_event_gui_toggle_oam,
-   func_event_gui_toggle_wave,
-   func_event_gui_toggle_pattern,
-   func_event_gui_pattern_color_up,
-   func_event_gui_pattern_color_down,
-   func_event_gui_toggle_fps,
-   func_event_gui_display_info,
-   func_event_gui_toggle,
-   /* sound */
-   func_event_toggle_channel_0,
-   func_event_toggle_channel_1, /* 30 */
-   func_event_toggle_channel_2,
-   func_event_toggle_channel_3,
-   func_event_toggle_channel_4,
-   func_event_toggle_channel_5,
-   func_event_set_filter_0,
-   func_event_set_filter_1,
-   func_event_set_filter_2,
-   /* picture */
-   func_event_toggle_sprites,
-   func_event_palette_hue_up,
-   func_event_palette_hue_down,
-   func_event_palette_tint_up, /* 40 */
-   func_event_palette_tint_down,
-   func_event_palette_set_default,
-   func_event_palette_set_shady,
-   /* joypad 1 */
-   func_event_joypad1_a,
-   func_event_joypad1_b, 
-   func_event_joypad1_start,
-   func_event_joypad1_select,
-   func_event_joypad1_up,
-   func_event_joypad1_down,
-   func_event_joypad1_left, /* 50 */
-   func_event_joypad1_right,
-   /* joypad 2 */
-   func_event_joypad2_a,
-   func_event_joypad2_b,
-   func_event_joypad2_start,
-   func_event_joypad2_select,
-   func_event_joypad2_up,
-   func_event_joypad2_down,
-   func_event_joypad2_left,
-   func_event_joypad2_right,
-   /* NSF control */
-   NULL, /* 60 */
-   NULL,
-   NULL,
-   /* OS-specific */
-   NULL,
-   NULL,
-   NULL,
-   NULL,
-   NULL,
-   NULL,
-   NULL,
-   NULL, /* 70 */
-   NULL,
-   /* last */
-   NULL
-};
-
+    {
+        NULL, /* 0 */
+        func_event_quit,
+        func_event_insert,
+        func_event_eject,
+        func_event_togglepause,
+        func_event_soft_reset,
+        func_event_hard_reset,
+        func_event_snapshot,
+        func_event_toggle_frameskip,
+        /* saves */
+        func_event_state_save,
+        func_event_state_load, /* 10 */
+        func_event_state_slot_0,
+        func_event_state_slot_1,
+        func_event_state_slot_2,
+        func_event_state_slot_3,
+        func_event_state_slot_4,
+        func_event_state_slot_5,
+        func_event_state_slot_6,
+        func_event_state_slot_7,
+        func_event_state_slot_8,
+        func_event_state_slot_9, /* 20 */
+        /* GUI */
+        func_event_gui_toggle_oam,
+        func_event_gui_toggle_wave,
+        func_event_gui_toggle_pattern,
+        func_event_gui_pattern_color_up,
+        func_event_gui_pattern_color_down,
+        func_event_gui_toggle_fps,
+        func_event_gui_display_info,
+        func_event_gui_toggle,
+        /* sound */
+        func_event_toggle_channel_0,
+        func_event_toggle_channel_1, /* 30 */
+        func_event_toggle_channel_2,
+        func_event_toggle_channel_3,
+        func_event_toggle_channel_4,
+        func_event_toggle_channel_5,
+        func_event_set_filter_0,
+        func_event_set_filter_1,
+        func_event_set_filter_2,
+        /* picture */
+        func_event_toggle_sprites,
+        func_event_palette_hue_up,
+        func_event_palette_hue_down,
+        func_event_palette_tint_up, /* 40 */
+        func_event_palette_tint_down,
+        func_event_palette_set_default,
+        func_event_palette_set_shady,
+        /* joypad 1 */
+        func_event_joypad1_a,
+        func_event_joypad1_b,
+        func_event_joypad1_start,
+        func_event_joypad1_select,
+        func_event_joypad1_up,
+        func_event_joypad1_down,
+        func_event_joypad1_left, /* 50 */
+        func_event_joypad1_right,
+        /* joypad 2 */
+        func_event_joypad2_a,
+        func_event_joypad2_b,
+        func_event_joypad2_start,
+        func_event_joypad2_select,
+        func_event_joypad2_up,
+        func_event_joypad2_down,
+        func_event_joypad2_left,
+        func_event_joypad2_right,
+        /* NSF control */
+        NULL, /* 60 */
+        NULL,
+        NULL,
+        /* OS-specific */
+        NULL,
+        NULL,
+        NULL,
+        NULL,
+        NULL,
+        NULL,
+        NULL,
+        NULL, /* 70 */
+        NULL,
+        /* last */
+        NULL};
 
 static event_t *event_system_table[NUM_SUPPORTED_SYSTEMS] =
-{
-   NULL, /* unknown */
-   NULL, /* autodetect */
-   nes_events, /* nes */
+    {
+        NULL,       /* unknown */
+        NULL,       /* autodetect */
+        nes_events, /* nes */
 };
 
 void event_init(void)
@@ -556,7 +555,7 @@ void event_set(int index, event_t handler)
 
    for (i = 0; i < NUM_SUPPORTED_SYSTEMS; i++)
    {
-      if(event_system_table[i])
+      if (event_system_table[i])
       {
          event_system_table[i][index] = handler;
       }
@@ -567,7 +566,6 @@ event_t event_get(int index)
 {
    return system_events[index];
 }
-
 
 /*
 ** $Log: event.c,v $

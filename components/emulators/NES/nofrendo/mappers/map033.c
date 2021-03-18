@@ -23,9 +23,9 @@
 ** $Id: map033.c,v 1.2 2001/04/27 14:37:11 neil Exp $
 */
 
-#include <noftypes.h>
-#include <nes_mmc.h>
-#include <nes_ppu.h>
+#include "../noftypes.h"
+#include "../nes/nes_mmc.h"
+#include "../nes/nes_ppu.h"
 
 /* mapper 33: Taito TC0190*/
 static void map33_write(uint32 address, uint8 value)
@@ -57,11 +57,11 @@ static void map33_write(uint32 address, uint8 value)
       break;
 
    case 1: /* $A00X */
-      {
-         int loc = 0x1000 + (reg << 10);
-         mmc_bankvrom(1, loc, value);
-      }
-      break;
+   {
+      int loc = 0x1000 + (reg << 10);
+      mmc_bankvrom(1, loc, value);
+   }
+   break;
 
    case 2: /* $C00X */
    case 3: /* $E00X */
@@ -70,7 +70,7 @@ static void map33_write(uint32 address, uint8 value)
       case 0:
          /* irqs maybe ? */
          //break;
-      
+
       case 1:
          /* this doesn't seem to work just right */
          if (value & 1)
@@ -86,25 +86,23 @@ static void map33_write(uint32 address, uint8 value)
    }
 }
 
-
 static map_memwrite map33_memwrite[] =
-{
-   { 0x8000, 0xFFFF, map33_write },
-   {     -1,     -1, NULL }
-};
+    {
+        {0x8000, 0xFFFF, map33_write},
+        {-1, -1, NULL}};
 
 mapintf_t map33_intf =
-{
-   33, /* mapper number */
-   "Taito TC0190", /* mapper name */
-   NULL, /* init routine */
-   NULL, /* vblank callback */
-   NULL, /* hblank callback */
-   NULL, /* get state (snss) */
-   NULL, /* set state (snss) */
-   NULL, /* memory read structure */
-   map33_memwrite, /* memory write structure */
-   NULL /* external sound device */
+    {
+        33,             /* mapper number */
+        "Taito TC0190", /* mapper name */
+        NULL,           /* init routine */
+        NULL,           /* vblank callback */
+        NULL,           /* hblank callback */
+        NULL,           /* get state (snss) */
+        NULL,           /* set state (snss) */
+        NULL,           /* memory read structure */
+        map33_memwrite, /* memory write structure */
+        NULL            /* external sound device */
 };
 
 /*
