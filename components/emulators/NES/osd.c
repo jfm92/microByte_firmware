@@ -24,6 +24,8 @@
 #include "user_input.h"
 #include "NES_manager.h"
 
+#include <driver/i2s.h>
+
 TimerHandle_t timer;
 
 /* memory allocation */
@@ -41,12 +43,12 @@ extern void *mem_alloc(int size, bool prefer_fast_memory)
 
 /* sound */
 #define DEFAULT_SAMPLERATE 16000
-#define DEFAULT_FRAGSIZE 128
+#define DEFAULT_FRAGSIZE 64
 static void (*audio_callback)(void *buffer, int length) = NULL;
 static int16_t *audio_frame;
 
 int osd_init_sound(){
-    audio_frame = heap_caps_malloc(4 * DEFAULT_FRAGSIZE, MALLOC_CAP_8BIT | MALLOC_CAP_DMA);
+    audio_frame = heap_caps_malloc(4 * DEFAULT_FRAGSIZE, MALLOC_CAP_8BIT);
 	audio_callback = NULL;
     return 0;
 }
@@ -158,7 +160,7 @@ static void free_write(int num_dirties, rect_t *dirty_rects)
 static void custom_blit(bitmap_t *bmp, int num_dirties, rect_t *dirty_rects)
 {
 	xQueueSend(nofrendo_vidQueue, &bmp, 0);
-	//do_audio_frame();
+	do_audio_frame();
 }
 
 viddriver_t sdlDriver =
