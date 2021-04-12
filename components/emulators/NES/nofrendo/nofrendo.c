@@ -234,7 +234,7 @@ int main_loop(const char *filename, system_t type)
 
    if (gui_init())
       return -1;
-
+   gui_togglefps();
    osd_getvideoinfo(&video);
    if (vid_init(video.default_width, video.default_height, video.driver))
       return -1;
