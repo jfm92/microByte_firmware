@@ -34,14 +34,14 @@
 #include "../cpu/nes6502.h"
 #include "../bitmap.h"
 
-#define NES_SCREEN_WIDTH 240
+#define NES_SCREEN_WIDTH 240 //256
 #define NES_SCREEN_HEIGHT 240
 
 /* NTSC = 60Hz, PAL = 50Hz */
 #ifdef PAL
 #define NES_REFRESH_RATE 50
 #else /* !PAL */
-#define NES_REFRESH_RATE 50
+#define NES_REFRESH_RATE 60
 #endif /* !PAL */
 
 #define MAX_MEM_HANDLERS 32

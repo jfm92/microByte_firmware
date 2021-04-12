@@ -405,7 +405,6 @@ void nes_emulate(void)
          frames_to_render = 0;
          nes_renderframe(true);
          system_video(true);
-         do_audio_frame();
       }
    }
 }
