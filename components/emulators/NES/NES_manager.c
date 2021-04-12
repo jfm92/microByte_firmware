@@ -24,11 +24,12 @@ void NES_start(const char *game_name){
     TaskHandle_t idle_0 = xTaskGetIdleTaskHandleForCPU(0);
     esp_task_wdt_delete(idle_0);
 
-    nofrendo_vidQueue = xQueueCreate(7, sizeof(bitmap_t *));
+    nofrendo_vidQueue = xQueueCreate(10, sizeof(bitmap_t *));
     nofrendo_audioQueue = xQueueCreate(10, sizeof(int16_t *));
 
-    xTaskCreatePinnedToCore(&nofrendo_task, "nofrendo_main_task", 1024*5, (void *)game_name , 1, &nofrendoTask_handler, 0);
-    xTaskCreatePinnedToCore(&nofrendo_video_task, "nofrendo_video_task", 2048, NULL, 4, &videoTask_handler, 0);
+    xTaskCreatePinnedToCore(&nofrendo_video_task, "nofrendo_video_task", 2048, NULL, 0, &videoTask_handler, 0);
+    xTaskCreatePinnedToCore(&nofrendo_task, "nofrendo_main_task", 1024*5, (void *)game_name , 1, &nofrendoTask_handler,1);
+    
 }
 
 void NES_resume(){
