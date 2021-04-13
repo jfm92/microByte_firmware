@@ -24,10 +24,10 @@ void NES_start(const char *game_name){
     TaskHandle_t idle_0 = xTaskGetIdleTaskHandleForCPU(0);
     esp_task_wdt_delete(idle_0);
 
-    nofrendo_vidQueue = xQueueCreate(10, sizeof(bitmap_t *));
-    nofrendo_audioQueue = xQueueCreate(10, sizeof(int16_t *));
+    nofrendo_vidQueue = xQueueCreate(7, sizeof(bitmap_t *));
+    //nofrendo_audioQueue = xQueueCreate(10, sizeof(int16_t *));
 
-    xTaskCreatePinnedToCore(&nofrendo_video_task, "nofrendo_video_task", 2048, NULL, 0, &videoTask_handler, 0);
+    xTaskCreatePinnedToCore(&nofrendo_video_task, "nofrendo_video_task", 2048, NULL, 1, &videoTask_handler, 0);
     xTaskCreatePinnedToCore(&nofrendo_task, "nofrendo_main_task", 1024*5, (void *)game_name , 1, &nofrendoTask_handler,1);
     
 }
@@ -67,7 +67,6 @@ static void nofrendo_task(void *arg){
 static void nofrendo_video_task(void *arg){
     bitmap_t *bmp = NULL;
 	while (1){
-		// xQueueReceive(vidQueue, &bmp, portMAX_DELAY); //skip one frame to drop to 30
 		xQueueReceive(nofrendo_vidQueue, &bmp, portMAX_DELAY);
         display_HAL_NES_frame((const uint8_t **)bmp->line[0]);
 	}
