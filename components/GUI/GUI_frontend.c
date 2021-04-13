@@ -78,7 +78,6 @@ void config_menu(lv_obj_t * parent);
 static void configuration_cb(lv_obj_t * parent, lv_event_t e);
 static void config_option_cb(lv_obj_t * parent, lv_event_t e);
 static void mbox_about_cb(lv_obj_t * parent, lv_event_t e);
-static void color_picker_cb(lv_obj_t * parent, lv_event_t e);
 static void mbox_battery_cb(lv_obj_t * parent, lv_event_t e);
 static void fw_update_cb(lv_obj_t * parent, lv_event_t e);
 
@@ -924,8 +923,6 @@ static void configuration_cb(lv_obj_t * parent, lv_event_t e){
         lv_obj_set_event_cb(list_btn, config_option_cb);
         list_btn = lv_list_add_btn(list_config, LV_SYMBOL_SD_CARD, "Dark Mode");
         lv_obj_set_event_cb(list_btn, config_option_cb);
-        list_btn = lv_list_add_btn(list_config, LV_SYMBOL_SD_CARD, "Color");
-        lv_obj_set_event_cb(list_btn, config_option_cb);
 
         list_btn = lv_list_add_btn(list_config, LV_SYMBOL_VOLUME_MAX, "Volume");
         lv_obj_set_event_cb(list_btn, config_option_cb);
@@ -1037,32 +1034,6 @@ static void config_option_cb(lv_obj_t * parent, lv_event_t e){
             LV_THEME_DEFAULT_INIT(lv_theme_get_color_primary(), lv_theme_get_color_secondary(),
             GUI_THEME,
             lv_theme_get_font_small(), lv_theme_get_font_normal(), lv_theme_get_font_subtitle(), lv_theme_get_font_title());
-        }
-        else if(strcmp(lv_list_get_btn_text(parent),"Color")==0){
-
-            mbox_color = lv_msgbox_create(lv_layer_top(), NULL);
-            lv_msgbox_set_text(mbox_color, "GUI Color Selector");
-
-            lv_obj_align(mbox_color, NULL, LV_ALIGN_CENTER, 0, -80);
-
-            lv_obj_t * cpicker;
-
-            cpicker = lv_cpicker_create(mbox_color, NULL);
-            lv_obj_set_size(cpicker, 120, 120);
-            lv_obj_align(cpicker, NULL, LV_ALIGN_CENTER, 0, 0);
-
-            lv_color_t color_main = lv_theme_get_color_primary();
-
-            // TODO: Rework color selector.
-            if(color.full != color_main.full){
-                lv_cpicker_set_color(cpicker,color);
-            }
-            
-
-            lv_obj_set_event_cb(cpicker, color_picker_cb);
-
-            lv_group_add_obj(group_interact, cpicker);
-            lv_group_focus_obj(cpicker);
         }
         else if(strcmp(lv_list_get_btn_text(parent),"Volume")==0){
             mbox_volume = lv_msgbox_create(lv_layer_top(), NULL);
@@ -1219,18 +1190,6 @@ static void mbox_battery_cb(lv_obj_t * parent, lv_event_t e){
     }  
 }
 
-static void color_picker_cb(lv_obj_t * parent, lv_event_t e){
-    if(e == LV_EVENT_CANCEL){
-        lv_obj_del(parent);
-        lv_obj_del(mbox_color);
-    }
-    else if(e == LV_EVENT_VALUE_CHANGED){
-        color = lv_cpicker_get_color(parent);
-        LV_THEME_DEFAULT_INIT(color, lv_theme_get_color_secondary(),
-            GUI_THEME,
-            lv_theme_get_font_small(), lv_theme_get_font_normal(), lv_theme_get_font_subtitle(), lv_theme_get_font_title());
-    }
-}
 
 /****** External Async functions ***********/
 void async_battery_alert(bool game_mode){
