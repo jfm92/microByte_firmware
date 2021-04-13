@@ -95,6 +95,8 @@ uint32_t btn_a_time = 0;
 uint32_t btn_b_time = 0;
 uint32_t btn_menu_time = 0;
 
+#define bouncing_time 7 //MS to wait to avoid bouncing on button selection
+
 uint8_t emulator_selected = 0x00;
 
 bool sub_menu = false;
@@ -1298,7 +1300,7 @@ static bool user_input_task(lv_indev_drv_t * indev_drv, lv_indev_data_t * data){
         uint32_t actual_time= xTaskGetTickCount()/portTICK_PERIOD_MS;
 
         // To avoid bounce with the buttons, we need to wait 2 ms.
-        if((actual_time-btn_down_time)>2){
+        if((actual_time-btn_down_time) > bouncing_time){
             data->state = LV_INDEV_STATE_PR;
             data->key = LV_KEY_DOWN;
 
@@ -1316,7 +1318,7 @@ static bool user_input_task(lv_indev_drv_t * indev_drv, lv_indev_data_t * data){
             btn_right_time = actual_time;
         }
         else{
-            if((actual_time-btn_right_time)>2){
+            if((actual_time-btn_right_time) > bouncing_time){
                 if(tab_num > 0 ){
                     tab_num--;
                     data->state = LV_INDEV_STATE_PR;
@@ -1331,7 +1333,7 @@ static bool user_input_task(lv_indev_drv_t * indev_drv, lv_indev_data_t * data){
     if(!((inputs_value >> 2) & 0x01)){
         // Button up pushed
         uint32_t actual_time= xTaskGetTickCount()/portTICK_PERIOD_MS;
-        if((actual_time-btn_up_time)>2){
+        if((actual_time-btn_up_time) > bouncing_time){
             data->state = LV_INDEV_STATE_PR;
             data->key = LV_KEY_UP;
             btn_up_time = actual_time;
@@ -1349,7 +1351,7 @@ static bool user_input_task(lv_indev_drv_t * indev_drv, lv_indev_data_t * data){
             btn_right_time = actual_time;
         }
         else{
-            if((actual_time-btn_right_time)>2){
+            if((actual_time-btn_right_time) > bouncing_time){
                 if(tab_num < 2){
                     tab_num++;
                     data->state = LV_INDEV_STATE_PR;
@@ -1365,7 +1367,7 @@ static bool user_input_task(lv_indev_drv_t * indev_drv, lv_indev_data_t * data){
         // Button menu pushed
         uint32_t actual_time= xTaskGetTickCount()/portTICK_PERIOD_MS;
 
-        if((actual_time-btn_menu_time)>5){
+        if((actual_time-btn_menu_time) > bouncing_time){
             struct SYSTEM_MODE emulator;
             emulator.mode = MODE_GAME;
             emulator.status = 0;
@@ -1382,7 +1384,7 @@ static bool user_input_task(lv_indev_drv_t * indev_drv, lv_indev_data_t * data){
         // Button B pushed
         uint32_t actual_time= xTaskGetTickCount()/portTICK_PERIOD_MS;
 
-        if((actual_time-btn_b_time)>2){
+        if((actual_time-btn_b_time) > bouncing_time){
             data->state = LV_INDEV_STATE_PR;
             data->key = LV_KEY_ESC;
             btn_b_time = actual_time;
@@ -1393,7 +1395,7 @@ static bool user_input_task(lv_indev_drv_t * indev_drv, lv_indev_data_t * data){
         // Button A pushed
         uint32_t actual_time= xTaskGetTickCount()/portTICK_PERIOD_MS;
 
-        if((actual_time-btn_a_time)>2){
+        if((actual_time-btn_a_time) > bouncing_time){
             data->state = LV_INDEV_STATE_PR;
             data->key = LV_KEY_ENTER;
             btn_a_time = actual_time;
