@@ -26,48 +26,48 @@
 #ifndef _NES_PPU_H_
 #define _NES_PPU_H_
 
-#include <bitmap.h>
+#include "../bitmap.h"
 
 /* PPU register defines */
-#define  PPU_CTRL0            0x2000
-#define  PPU_CTRL1            0x2001
-#define  PPU_STAT             0x2002
-#define  PPU_OAMADDR          0x2003
-#define  PPU_OAMDATA          0x2004
-#define  PPU_SCROLL           0x2005
-#define  PPU_VADDR            0x2006
-#define  PPU_VDATA            0x2007
+#define PPU_CTRL0 0x2000
+#define PPU_CTRL1 0x2001
+#define PPU_STAT 0x2002
+#define PPU_OAMADDR 0x2003
+#define PPU_OAMDATA 0x2004
+#define PPU_SCROLL 0x2005
+#define PPU_VADDR 0x2006
+#define PPU_VDATA 0x2007
 
-#define  PPU_OAMDMA           0x4014
-#define  PPU_JOY0             0x4016
-#define  PPU_JOY1             0x4017
+#define PPU_OAMDMA 0x4014
+#define PPU_JOY0 0x4016
+#define PPU_JOY1 0x4017
 
 /* $2000 */
-#define  PPU_CTRL0F_NMI       0x80
-#define  PPU_CTRL0F_OBJ16     0x20
-#define  PPU_CTRL0F_BGADDR    0x10
-#define  PPU_CTRL0F_OBJADDR   0x08
-#define  PPU_CTRL0F_ADDRINC   0x04
-#define  PPU_CTRL0F_NAMETAB   0x03
+#define PPU_CTRL0F_NMI 0x80
+#define PPU_CTRL0F_OBJ16 0x20
+#define PPU_CTRL0F_BGADDR 0x10
+#define PPU_CTRL0F_OBJADDR 0x08
+#define PPU_CTRL0F_ADDRINC 0x04
+#define PPU_CTRL0F_NAMETAB 0x03
 
 /* $2001 */
-#define  PPU_CTRL1F_OBJON     0x10
-#define  PPU_CTRL1F_BGON      0x08
-#define  PPU_CTRL1F_OBJMASK   0x04
-#define  PPU_CTRL1F_BGMASK    0x02
+#define PPU_CTRL1F_OBJON 0x10
+#define PPU_CTRL1F_BGON 0x08
+#define PPU_CTRL1F_OBJMASK 0x04
+#define PPU_CTRL1F_BGMASK 0x02
 
 /* $2002 */
-#define  PPU_STATF_VBLANK     0x80
-#define  PPU_STATF_STRIKE     0x40
-#define  PPU_STATF_MAXSPRITE  0x20
+#define PPU_STATF_VBLANK 0x80
+#define PPU_STATF_STRIKE 0x40
+#define PPU_STATF_MAXSPRITE 0x20
 
 /* Sprite attribute byte bitmasks */
-#define  OAMF_VFLIP           0x80
-#define  OAMF_HFLIP           0x40
-#define  OAMF_BEHIND          0x20
+#define OAMF_VFLIP 0x80
+#define OAMF_HFLIP 0x40
+#define OAMF_BEHIND 0x20
 
 /* Maximum number of sprites per horizontal scanline */
-#define  PPU_MAXSPRITE        8
+#define PPU_MAXSPRITE 8
 
 /* some mappers do *dumb* things */
 typedef void (*ppulatchfunc_t)(uint32 address, uint8 value);
@@ -93,7 +93,7 @@ typedef struct ppu_s
 
    bool bg_on, obj_on;
    bool obj_mask, bg_mask;
-   
+
    uint8 latch, vdata_latch;
    uint8 strobe;
 
@@ -113,7 +113,6 @@ typedef struct ppu_s
    bool drawsprites;
 } ppu_t;
 
-
 /* TODO: should use this pointers */
 extern void ppu_setlatchfunc(ppulatchfunc_t func);
 extern void ppu_setvromswitch(ppuvromswitch_t func);
@@ -129,7 +128,6 @@ extern void ppu_mirror(int nt1, int nt2, int nt3, int nt4);
 
 extern void ppu_setpage(int size, int page_num, uint8 *location);
 extern uint8 *ppu_getpage(int page);
-
 
 /* control */
 extern void ppu_reset(int reset_type);

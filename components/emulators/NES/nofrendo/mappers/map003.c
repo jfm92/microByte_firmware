@@ -23,8 +23,8 @@
 ** $Id: map003.c,v 1.2 2001/04/27 14:37:11 neil Exp $
 */
 
-#include <noftypes.h>
-#include <nes_mmc.h>
+#include "../noftypes.h"
+#include "../nes/nes_mmc.h"
 
 /* mapper 3: CNROM */
 static void map3_write(uint32 address, uint8 value)
@@ -35,23 +35,22 @@ static void map3_write(uint32 address, uint8 value)
 }
 
 static map_memwrite map3_memwrite[] =
-{
-   { 0x8000, 0xFFFF, map3_write },
-   {     -1,     -1, NULL }
-};
+    {
+        {0x8000, 0xFFFF, map3_write},
+        {-1, -1, NULL}};
 
 mapintf_t map3_intf =
-{
-   3, /* mapper number */
-   "CNROM", /* mapper name */
-   NULL, /* init routine */
-   NULL, /* vblank callback */
-   NULL, /* hblank callback */
-   NULL, /* get state (snss) */
-   NULL, /* set state (snss) */
-   NULL, /* memory read structure */
-   map3_memwrite, /* memory write structure */
-   NULL /* external sound device */
+    {
+        3,             /* mapper number */
+        "CNROM",       /* mapper name */
+        NULL,          /* init routine */
+        NULL,          /* vblank callback */
+        NULL,          /* hblank callback */
+        NULL,          /* get state (snss) */
+        NULL,          /* set state (snss) */
+        NULL,          /* memory read structure */
+        map3_memwrite, /* memory write structure */
+        NULL           /* external sound device */
 };
 
 /*

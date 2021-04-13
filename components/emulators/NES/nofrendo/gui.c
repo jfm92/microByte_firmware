@@ -26,43 +26,44 @@
 #include <stdio.h>
 #include <string.h>
 #include <stdarg.h>
-#include <noftypes.h>
-#include <nes_ppu.h>
-#include <nes_apu.h>
-#include <nesinput.h>
-#include <nes.h>
-#include <log.h>
-#include <osd.h>
 
-#include <bitmap.h>
+#include "noftypes.h"
+#include "nes/nes_ppu.h"
+#include "sndhrdw/nes_apu.h"
+#include "nes/nesinput.h"
+#include "nes/nes.h"
+#include "log.h"
+#include "osd.h"
 
-#include <gui.h>
-#include <gui_elem.h>
-#include <vid_drv.h>
+#include "bitmap.h"
+
+#include "gui.h"
+#include "gui_elem.h"
+#include "vid_drv.h"
 
 /* TODO: oh god */
 /* 8-bit GUI color table */
 rgb_t gui_pal[GUI_TOTALCOLORS] =
-{
-   { 0x00, 0x00, 0x00 }, /* black      */
-   { 0x3F, 0x3F, 0x3F }, /* dark gray  */
-   { 0x7F, 0x7F, 0x7F }, /* gray       */
-   { 0xBF, 0xBF, 0xBF }, /* light gray */
-   { 0xFF, 0xFF, 0xFF }, /* white      */
-   { 0xFF, 0x00, 0x00 }, /* red        */
-   { 0x00, 0xFF, 0x00 }, /* green      */
-   { 0x00, 0x00, 0xFF }, /* blue       */
-   { 0xFF, 0xFF, 0x00 }, /* yellow     */
-   { 0xFF, 0xAF, 0x00 }, /* orange     */
-   { 0xFF, 0x00, 0xFF }, /* purple     */
-   { 0x3F, 0x7F, 0x7F }, /* teal       */
-   { 0x00, 0x2A, 0x00 }, /* dk. green  */
-   { 0x00, 0x00, 0x3F }  /* dark blue  */
+    {
+        {0x00, 0x00, 0x00}, /* black      */
+        {0x3F, 0x3F, 0x3F}, /* dark gray  */
+        {0x7F, 0x7F, 0x7F}, /* gray       */
+        {0xBF, 0xBF, 0xBF}, /* light gray */
+        {0xFF, 0xFF, 0xFF}, /* white      */
+        {0xFF, 0x00, 0x00}, /* red        */
+        {0x00, 0xFF, 0x00}, /* green      */
+        {0x00, 0x00, 0xFF}, /* blue       */
+        {0xFF, 0xFF, 0x00}, /* yellow     */
+        {0xFF, 0xAF, 0x00}, /* orange     */
+        {0xFF, 0x00, 0xFF}, /* purple     */
+        {0x3F, 0x7F, 0x7F}, /* teal       */
+        {0x00, 0x2A, 0x00}, /* dk. green  */
+        {0x00, 0x00, 0x3F}  /* dark blue  */
 };
 
 /**************************************************************/
-#include <pcx.h>
-#include <nesstate.h>
+#include "pcx.h"
+#include "nes/nesstate.h"
 static bool option_drawsprites = true;
 
 /* save a PCX snapshot */
@@ -74,7 +75,12 @@ void gui_savesnap(void)
    if (osd_makesnapname(filename, PATH_MAX) < 0)
       return;
 
-   if (pcx_write(filename, vid_getbuffer(), nes->ppu->curpal)) 
+#ifdef NOFRENDO_DOUBLE_FRAMEBUFFER
+   if (pcx_write(filename, nes->vidbuf, nes->ppu->curpal))
+#else /* !NOFRENDO_DOUBLE_FRAMEBUFFER */
+   if (pcx_write(filename, vid_getbuffer(), nes->ppu->curpal))
+#endif /* !NOFRENDO_DOUBLE_FRAMEBUFFER */
+
       return;
 
    gui_sendmsg(GUI_GREEN, "Screen saved to %s", filename);
@@ -103,14 +109,14 @@ void gui_togglefs(void)
 /* display rom information */
 void gui_displayinfo()
 {
-   gui_sendmsg(GUI_ORANGE, (char *) rom_getinfo(nes_getcontextptr()->rominfo));
+   gui_sendmsg(GUI_ORANGE, (char *)rom_getinfo(nes_getcontextptr()->rominfo));
 }
 
 void gui_toggle_chan(int chan)
 {
-#define  FILL_CHAR   0x7C           /* ASCII 124 '|' */
-#define  BLANK_CHAR  0x7F           /* ASCII 127   [delta] */
-   static bool chan_enabled[6] = { true, true, true, true, true, true };
+#define FILL_CHAR 0x7C  /* ASCII 124 '|' */
+#define BLANK_CHAR 0x7F /* ASCII 127   [delta] */
+   static bool chan_enabled[6] = {true, true, true, true, true, true};
 
    chan_enabled[chan] ^= true;
    apu_setchan(chan, chan_enabled[chan]);
@@ -123,10 +129,10 @@ void gui_toggle_chan(int chan)
                chan_enabled[4] ? FILL_CHAR : BLANK_CHAR,
                chan_enabled[5] ? FILL_CHAR : BLANK_CHAR);
 }
-                        
+
 void gui_setfilter(int filter_type)
 {
-   char *types[3] = { "no", "lowpass", "weighted" };
+   char *types[3] = {"no", "lowpass", "weighted"};
    static int last_filter = 2;
 
    if (last_filter == filter_type || filter_type < 0 || filter_type > 2)
@@ -137,7 +143,6 @@ void gui_setfilter(int filter_type)
    last_filter = filter_type;
 }
 /**************************************************************/
-
 
 enum
 {
@@ -152,7 +157,6 @@ enum
    BUTTON_UP,
    BUTTON_DOWN
 };
-
 
 /* TODO: roll options into a structure */
 static message_t msg;
@@ -172,7 +176,6 @@ static int gui_refresh = 60; /* default to 60Hz */
 static int mouse_x, mouse_y, mouse_button;
 
 static bitmap_t *gui_surface;
-
 
 /* Put a pixel on our bitmap- just for GUI use */
 INLINE void gui_putpixel(int x_pos, int y_pos, uint8 color)
@@ -242,7 +245,7 @@ INLINE void gui_charline(char ch, int x_pos, int y_pos, uint8 color)
    }
 }
 
-static void gui_putchar(const uint8 *dat, int height, int x_pos, int y_pos, uint8 color)
+static void gui_putchar(uint8 *dat, int height, int x_pos, int y_pos, uint8 color)
 {
    while (height--)
       gui_charline(*dat++, x_pos, y_pos++, color);
@@ -333,7 +336,7 @@ void gui_tick(int ticks)
 
    gui_ticks += ticks;
    fps_counter += ticks;
-   
+
    if (fps_counter >= gui_refresh)
    {
       fps_counter -= gui_refresh;
@@ -346,7 +349,7 @@ static void gui_tickdec(void)
 {
 #ifdef NOFRENDO_DEBUG
    static int hertz_ticks = 0;
-#endif
+#endif /* NOFRENDO_DEBUG */
    int ticks = gui_ticks;
 
    if (0 == ticks)
@@ -360,9 +363,9 @@ static void gui_tickdec(void)
    if (hertz_ticks >= (10 * gui_refresh))
    {
       hertz_ticks -= (10 * gui_refresh);
-      mem_checkblocks(); 
+      mem_checkblocks();
    }
-#endif
+#endif /* NOFRENDO_DEBUG */
 
    /* TODO: bleh */
    if (msg.ttl > 0)
@@ -441,7 +444,7 @@ static void gui_updatemsg(void)
 /* Little thing to display the waveform */
 static void gui_updatewave(int wave_type)
 {
-#define  WAVEDISP_WIDTH   128
+#define WAVEDISP_WIDTH 128
    int loop, xofs, yofs;
    int difference, offset;
    float scale;
@@ -458,14 +461,13 @@ static void gui_updatewave(int wave_type)
 
    xofs = (NES_SCREEN_WIDTH - WAVEDISP_WIDTH);
    yofs = 1;
-   scale = (float) (vis_length / (float) WAVEDISP_WIDTH);
+   scale = (float)(vis_length / (float)WAVEDISP_WIDTH);
 
    if (NULL == vis_buffer)
    {
       /* draw centerline */
       gui_hline(xofs, yofs + 0x20, WAVEDISP_WIDTH, GUI_GRAY);
       gui_textbar("no sound", xofs + 40, yofs + 0x20 - 4, &small, GUI_RED, GUI_DKGRAY, BUTTON_UP);
-
    }
    else if (GUI_WAVELINE == wave_type)
    {
@@ -474,17 +476,17 @@ static void gui_updatewave(int wave_type)
 
       /* initial old value */
       if (16 == vis_bps)
-         oldval = 0x40 - (((((uint16 *) vis_buffer)[0] >> 8) ^ 0x80) >> 2);
+         oldval = 0x40 - (((((uint16 *)vis_buffer)[0] >> 8) ^ 0x80) >> 2);
       else
-         oldval = 0x40 - (((uint8 *) vis_buffer)[0] >> 2);
+         oldval = 0x40 - (((uint8 *)vis_buffer)[0] >> 2);
 
       for (loop = 1; loop < WAVEDISP_WIDTH; loop++)
       {
          //val = 0x40 - (vis_buffer[(uint32) (loop * scale)] >> 2);
          if (16 == vis_bps)
-            val = 0x40 - (((((uint16 *) vis_buffer)[(uint32) (loop * scale)] >> 8) ^ 0x80) >> 2);
+            val = 0x40 - (((((uint16 *)vis_buffer)[(uint32)(loop * scale)] >> 8) ^ 0x80) >> 2);
          else
-            val = 0x40 - (((uint8 *) vis_buffer)[(uint32) (loop * scale)] >> 2);
+            val = 0x40 - (((uint8 *)vis_buffer)[(uint32)(loop * scale)] >> 2);
          if (oldval < val)
          {
             offset = oldval;
@@ -507,9 +509,9 @@ static void gui_updatewave(int wave_type)
       {
          //val = vis_buffer[(uint32) (loop * scale)] >> 2;
          if (16 == vis_bps)
-            val = ((((uint16 *) vis_buffer)[(uint32) (loop * scale)] >> 8) ^ 0x80) >> 2;
+            val = ((((uint16 *)vis_buffer)[(uint32)(loop * scale)] >> 8) ^ 0x80) >> 2;
          else
-            val = ((uint8 *) vis_buffer)[(uint32) (loop * scale)] >> 2;
+            val = ((uint8 *)vis_buffer)[(uint32)(loop * scale)] >> 2;
          if (val == 0x20)
             gui_putpixel(xofs + loop, yofs + 0x20, GUI_GREEN);
          else if (val < 0x20)
@@ -522,7 +524,6 @@ static void gui_updatewave(int wave_type)
 
    gui_rect(xofs, yofs - 1, WAVEDISP_WIDTH, 66, GUI_DKGRAY);
 }
-
 
 static void gui_updatepattern(void)
 {
@@ -545,7 +546,6 @@ static void gui_updateoam(void)
    gui_textbar("Current OAM", 0, y, &small, GUI_GREEN, GUI_DKGRAY, BUTTON_UP);
    ppu_dumpoam(gui_surface, 0, y + 9);
 }
-
 
 /* The GUI overlay */
 void gui_frame(bool draw)
@@ -577,8 +577,8 @@ void gui_frame(bool draw)
 
    if (option_showgui)
    {
-     // osd_getmouse(&mouse_x, &mouse_y, &mouse_button);
-     // gui_drawmouse();
+      osd_getmouse(&mouse_x, &mouse_y, &mouse_button);
+      gui_drawmouse();
    }
 }
 
@@ -589,10 +589,10 @@ void gui_sendmsg(int color, char *format, ...)
    vsprintf(msg.text, format, arg);
 
 #ifdef NOFRENDO_DEBUG
-   log_print("GUI: ");
-   log_print(msg.text);
-   log_print("\n");
-#endif
+   nofrendo_log_print("GUI: ");
+   nofrendo_log_print(msg.text);
+   nofrendo_log_print("\n");
+#endif /* NOFRENDO_DEBUG */
 
    va_end(arg);
 

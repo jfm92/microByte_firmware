@@ -23,9 +23,9 @@
 ** $Id: map015.c,v 1.2 2001/04/27 14:37:11 neil Exp $
 */
 
-#include <noftypes.h>
-#include <nes_mmc.h>
-#include <nes_ppu.h>
+#include "../noftypes.h"
+#include "../nes/nes_mmc.h"
+#include "../nes/nes_ppu.h"
 
 /* mapper 15: Contra 100-in-1 */
 static void map15_write(uint32 address, uint8 value)
@@ -90,23 +90,22 @@ static void map15_init(void)
 }
 
 static map_memwrite map15_memwrite[] =
-{
-   { 0x8000, 0xFFFF, map15_write },
-   {     -1,     -1, NULL }
-};
+    {
+        {0x8000, 0xFFFF, map15_write},
+        {-1, -1, NULL}};
 
 mapintf_t map15_intf =
-{
-   15, /* mapper number */
-   "Contra 100-in-1", /* mapper name */
-   map15_init, /* init routine */
-   NULL, /* vblank callback */
-   NULL, /* hblank callback */
-   NULL, /* get state (snss) */
-   NULL, /* set state (snss) */
-   NULL, /* memory read structure */
-   map15_memwrite, /* memory write structure */
-   NULL /* external sound device */
+    {
+        15,                /* mapper number */
+        "Contra 100-in-1", /* mapper name */
+        map15_init,        /* init routine */
+        NULL,              /* vblank callback */
+        NULL,              /* hblank callback */
+        NULL,              /* get state (snss) */
+        NULL,              /* set state (snss) */
+        NULL,              /* memory read structure */
+        map15_memwrite,    /* memory write structure */
+        NULL               /* external sound device */
 };
 
 /*

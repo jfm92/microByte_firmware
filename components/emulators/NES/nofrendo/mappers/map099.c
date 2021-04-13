@@ -23,9 +23,9 @@
 ** $Id: map099.c,v 1.2 2001/04/27 14:37:11 neil Exp $
 */
 
-#include <noftypes.h>
-#include <nes_mmc.h>
-#include <nes_ppu.h>
+#include "../noftypes.h"
+#include "../nes/nes_mmc.h"
+#include "../nes/nes_ppu.h"
 
 /* Switch VROM for VS games */
 static void map99_vromswitch(uint8 value)
@@ -42,17 +42,17 @@ static void map99_init(void)
 }
 
 mapintf_t map99_intf =
-{
-   99, /* mapper number */
-   "VS. System", /* mapper name */
-   map99_init, /* init routine */
-   NULL, /* vblank callback */
-   NULL, /* hblank callback */
-   NULL, /* get state (snss) */
-   NULL, /* set state (snss) */
-   NULL, /* memory read structure */
-   NULL, /* memory write structure */
-   NULL /* external sound device */
+    {
+        99,           /* mapper number */
+        "VS. System", /* mapper name */
+        map99_init,   /* init routine */
+        NULL,         /* vblank callback */
+        NULL,         /* hblank callback */
+        NULL,         /* get state (snss) */
+        NULL,         /* set state (snss) */
+        NULL,         /* memory read structure */
+        NULL,         /* memory write structure */
+        NULL          /* external sound device */
 };
 
 /*

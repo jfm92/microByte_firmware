@@ -24,10 +24,10 @@
 */
 
 #include <string.h>
-#include <noftypes.h>
-#include <nes_mmc.h>
-#include <nes_ppu.h>
-#include <libsnss.h>
+#include "../noftypes.h"
+#include "../nes/nes_mmc.h"
+#include "../nes/nes_ppu.h"
+#include "../libsnss/libsnss.h"
 
 static uint8 latch[2];
 static uint8 regs[4];
@@ -136,23 +136,22 @@ static void map9_setstate(SnssMapperBlock *state)
 }
 
 static map_memwrite map9_memwrite[] =
-{
-   { 0x8000, 0xFFFF, map9_write },
-   {     -1,     -1, NULL }
-};
+    {
+        {0x8000, 0xFFFF, map9_write},
+        {-1, -1, NULL}};
 
 mapintf_t map9_intf =
-{
-   9, /* mapper number */
-   "MMC2", /* mapper name */
-   map9_init, /* init routine */
-   NULL, /* vblank callback */
-   NULL, /* hblank callback */
-   map9_getstate, /* get state (snss) */
-   map9_setstate, /* set state (snss) */
-   NULL, /* memory read structure */
-   map9_memwrite, /* memory write structure */
-   NULL /* external sound device */
+    {
+        9,             /* mapper number */
+        "MMC2",        /* mapper name */
+        map9_init,     /* init routine */
+        NULL,          /* vblank callback */
+        NULL,          /* hblank callback */
+        map9_getstate, /* get state (snss) */
+        map9_setstate, /* set state (snss) */
+        NULL,          /* memory read structure */
+        map9_memwrite, /* memory write structure */
+        NULL           /* external sound device */
 };
 
 /*

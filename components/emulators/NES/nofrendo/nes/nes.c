@@ -26,31 +26,29 @@
 #include <stdio.h>
 #include <string.h>
 #include <stdlib.h>
-#include <noftypes.h>
-#include "nes6502.h"
-#include <log.h>
-#include <osd.h>
-#include <gui.h>
-#include <nes.h>
-#include <nes_apu.h>
-#include <nes_ppu.h>
-#include <nes_rom.h>
-#include <nes_mmc.h>
-#include <vid_drv.h>
-#include <nofrendo.h>
-#include <freertos/FreeRTOS.h>
-#include "esp_system.h"
 
+#include "../noftypes.h"
+#include "../cpu/nes6502.h"
+#include "../log.h"
+#include "../osd.h"
+#include "../gui.h"
+#include "nes.h"
+#include "../sndhrdw/nes_apu.h"
+#include "nes_ppu.h"
+#include "nes_rom.h"
+#include "nes_mmc.h"
+#include "../vid_drv.h"
+#include "../nofrendo.h"
 
-#define  NES_CLOCK_DIVIDER    12
+#define NES_CLOCK_DIVIDER 12
 //#define  NES_MASTER_CLOCK     21477272.727272727272
-#define  NES_MASTER_CLOCK     (236250000 / 11)
-#define  NES_SCANLINE_CYCLES  (1364.0 / NES_CLOCK_DIVIDER)
-#define  NES_FIQ_PERIOD       (NES_MASTER_CLOCK / NES_CLOCK_DIVIDER / 60)
+#define NES_MASTER_CLOCK (236250000 / 11)
+#define NES_SCANLINE_CYCLES (1364.0 / NES_CLOCK_DIVIDER)
+#define NES_FIQ_PERIOD (NES_MASTER_CLOCK / NES_CLOCK_DIVIDER / 60)
 
-#define  NES_RAMSIZE          0x8000
+#define NES_RAMSIZE 0x800
 
-#define  NES_SKIP_LIMIT       (NES_REFRESH_RATE / 5)   /* 12 or 10, depending on PAL/NTSC */
+#define NES_SKIP_LIMIT (NES_REFRESH_RATE / 5) /* 12 or 10, depending on PAL/NTSC */
 
 static nes_t nes;
 
@@ -113,33 +111,34 @@ static uint8 read_protect(uint32 address)
    return 0xFF;
 }
 
-#define  LAST_MEMORY_HANDLER  { -1, -1, NULL }
+#define LAST_MEMORY_HANDLER \
+   {                        \
+      -1, -1, NULL          \
+   }
 /* read/write handlers for standard NES */
 static nes6502_memread default_readhandler[] =
-{
-   { 0x0800, 0x1FFF, ram_read },
-   { 0x2000, 0x3FFF, ppu_read },
-   { 0x4000, 0x4015, apu_read },
-   { 0x4016, 0x4017, ppu_readhigh },
-   LAST_MEMORY_HANDLER
-};
+    {
+        {0x0800, 0x1FFF, ram_read},
+        {0x2000, 0x3FFF, ppu_read},
+        {0x4000, 0x4015, apu_read},
+        {0x4016, 0x4017, ppu_readhigh},
+        LAST_MEMORY_HANDLER};
 
 static nes6502_memwrite default_writehandler[] =
-{
-   { 0x0800, 0x1FFF, ram_write },
-   { 0x2000, 0x3FFF, ppu_write },
-   { 0x4000, 0x4013, apu_write },
-   { 0x4015, 0x4015, apu_write },
-   { 0x4014, 0x4017, ppu_writehigh },
-   LAST_MEMORY_HANDLER
-};
+    {
+        {0x0800, 0x1FFF, ram_write},
+        {0x2000, 0x3FFF, ppu_write},
+        {0x4000, 0x4013, apu_write},
+        {0x4015, 0x4015, apu_write},
+        {0x4014, 0x4017, ppu_writehigh},
+        LAST_MEMORY_HANDLER};
 
 /* this big nasty boy sets up the address handlers that the CPU uses */
 static void build_address_handlers(nes_t *machine)
 {
    int count, num_handlers = 0;
    mapintf_t *intf;
-   
+
    ASSERT(machine);
    intf = machine->mmc->intf;
 
@@ -252,8 +251,10 @@ static void build_address_handlers(nes_t *machine)
 void nes_irq(void)
 {
 #ifdef NOFRENDO_DEBUG
-//   if (nes.scanline <= NES_SCREEN_HEIGHT)
-//      memset(nes.vidbuf->line[nes.scanline - 1], GUI_RED, NES_SCREEN_WIDTH);
+#ifdef NOFRENDO_DOUBLE_FRAMEBUFFER
+   if (nes.scanline <= NES_SCREEN_HEIGHT)
+      memset(nes.vidbuf->line[nes.scanline - 1], GUI_RED, NES_SCREEN_WIDTH);
+#endif /* NOFRENDO_DOUBLE_FRAMEBUFFER */
 #endif /* NOFRENDO_DEBUG */
 
    nes6502_irq();
@@ -273,7 +274,7 @@ static uint8 nes_clearfiq(void)
 void nes_setfiq(uint8 value)
 {
    nes.fiq_state = value;
-   nes.fiq_cycles = (int) NES_FIQ_PERIOD;
+   nes.fiq_cycles = (int)NES_FIQ_PERIOD;
 }
 
 static void nes_checkfiq(int cycles)
@@ -281,7 +282,7 @@ static void nes_checkfiq(int cycles)
    nes.fiq_cycles -= cycles;
    if (nes.fiq_cycles <= 0)
    {
-      nes.fiq_cycles += (int) NES_FIQ_PERIOD;
+      nes.fiq_cycles += (int)NES_FIQ_PERIOD;
       if (0 == (nes.fiq_state & 0xC0))
       {
          nes.fiq_occurred = true;
@@ -295,17 +296,19 @@ void nes_nmi(void)
    nes6502_nmi();
 }
 
-void nes_renderframe(uint8_t draw_flag)
+static void nes_renderframe(bool draw_flag)
 {
-
    int elapsed_cycles;
    mapintf_t *mapintf = nes.mmc->intf;
    int in_vblank = 0;
 
    while (262 != nes.scanline)
    {
-//      ppu_scanline(nes.vidbuf, nes.scanline, draw_flag);
-		ppu_scanline(vid_getbuffer(), nes.scanline, draw_flag);
+#ifdef NOFRENDO_DOUBLE_FRAMEBUFFER
+      ppu_scanline(nes.vidbuf, nes.scanline, draw_flag);
+#else  /* !NOFRENDO_DOUBLE_FRAMEBUFFER */
+      ppu_scanline(vid_getbuffer(), nes.scanline, draw_flag);
+#endif /* !NOFRENDO_DOUBLE_FRAMEBUFFER */
 
       if (241 == nes.scanline)
       {
@@ -319,14 +322,14 @@ void nes_renderframe(uint8_t draw_flag)
          if (mapintf->vblank)
             mapintf->vblank();
          in_vblank = 1;
-      } 
+      }
 
       if (mapintf->hblank)
          mapintf->hblank(in_vblank);
 
-      nes.scanline_cycles += (float) NES_SCANLINE_CYCLES;
-      elapsed_cycles = nes6502_execute((int) nes.scanline_cycles);
-      nes.scanline_cycles -= (float) elapsed_cycles;
+      nes.scanline_cycles += (float)NES_SCANLINE_CYCLES;
+      elapsed_cycles = nes6502_execute((int)nes.scanline_cycles);
+      nes.scanline_cycles -= (float)elapsed_cycles;
       nes_checkfiq(elapsed_cycles);
 
       ppu_endscanline(nes.scanline);
@@ -336,21 +339,23 @@ void nes_renderframe(uint8_t draw_flag)
    nes.scanline = 0;
 }
 
-void system_video(uint8_t draw)
+static void system_video(bool draw)
 {
    /* TODO: hack */
-   //if (false == draw)
-   //{
-   //   gui_frame(false);
-   //   return;
-   //}
+   if (false == draw)
+   {
+      gui_frame(false);
+      return;
+   }
 
+#ifdef NOFRENDO_DOUBLE_FRAMEBUFFER
    /* blit the NES screen to our video surface */
-   //vid_blit(vid_getbuffer(), 0, (NES_SCREEN_HEIGHT - NES_VISIBLE_HEIGHT) / 2,
-   //         0, 0, NES_SCREEN_WIDTH, NES_VISIBLE_HEIGHT);
+   vid_blit(nes.vidbuf, 0, (NES_SCREEN_HEIGHT - NES_VISIBLE_HEIGHT) / 2,
+            0, 0, NES_SCREEN_WIDTH, NES_VISIBLE_HEIGHT);
+#endif /* NOFRENDO_DOUBLE_FRAMEBUFFER */
 
    /* overlay our GUI on top of it */
-   //gui_frame(true);
+   gui_frame(true);
 
    /* blit to screen */
    vid_flush();
@@ -359,76 +364,49 @@ void system_video(uint8_t draw)
    osd_getinput();
 }
 
-extern  void do_audio_frame();
-
 /* main emulation loop */
+extern void do_audio_frame();
 void nes_emulate(void)
 {
-    int last_ticks, frames_to_render;
+   int last_ticks, frames_to_render;
 
-    osd_setsound(nes.apu->process);
+   osd_setsound(nes.apu->process);
 
-    last_ticks = nofrendo_ticks;
-    frames_to_render = 0;
-    nes.scanline_cycles = 0;
-    nes.fiq_cycles = (int) NES_FIQ_PERIOD;
+   last_ticks = nofrendo_ticks;
+   frames_to_render = 0;
+   nes.scanline_cycles = 0;
+   nes.fiq_cycles = (int)NES_FIQ_PERIOD;
 
-    uint startTime;
-    uint stopTime;
-    uint totalElapsedTime = 0;
-    int frame = 0;
-    int skipFrame = 0;
+   while (false == nes.poweroff)
+   {
+      if (nofrendo_ticks != last_ticks)
+      {
+         int tick_diff = nofrendo_ticks - last_ticks;
 
+         frames_to_render += tick_diff;
+         gui_tick(tick_diff);
+         last_ticks = nofrendo_ticks;
+      }
 
-    for (int i = 0; i < 4; ++i)
-    {
-        nes_renderframe(1);
-        system_video(1);
-    }
-
-    //load_sram();
-
-    //if (forceConsoleReset)
-   // {
-     //   nes_reset(SOFT_RESET);
-    //}
-
-    while (false == nes.poweroff)
-    {
-        startTime = xthal_get_ccount();
-
-        bool renderFrame = ((skipFrame % 2) == 0);
-
-        nes_renderframe(renderFrame);
-        system_video(renderFrame);
-
-        if (skipFrame % 7 == 0) ++skipFrame;
-        ++skipFrame;
-
-        //do_audio_frame();
-
-        stopTime = xthal_get_ccount();
-
-        int elapsedTime;
-        if (stopTime > startTime)
-            elapsedTime = (stopTime - startTime);
-        else
-            elapsedTime = ((uint64_t)stopTime + (uint64_t)0xffffffff) - (startTime);
-
-        totalElapsedTime += elapsedTime;
-        ++frame;
-
-        if (frame == 60)
-        {
-            float seconds = totalElapsedTime / (CONFIG_ESP32_DEFAULT_CPU_FREQ_MHZ * 1000000.0f);
-            float fps = frame / seconds;
-
-            printf("HEAP:0x%x, FPS:%f\n", esp_get_free_heap_size(), fps);
-
-            frame = 0;
-            totalElapsedTime = 0;
-        }
-    }
+      if (true == nes.pause)
+      {
+         /* TODO: dim the screen, and pause/silence the apu */
+         system_video(true);
+         frames_to_render = 0;
+      }
+      else if (frames_to_render > 1)
+      {
+         frames_to_render--;
+         nes_renderframe(false);
+         system_video(false);
+      }
+      else if ((1 == frames_to_render && true == nes.autoframeskip) || false == nes.autoframeskip)
+      {
+         frames_to_render = 0;
+         nes_renderframe(true);
+         system_video(true);
+      }
+   }
 }
 
 static void mem_trash(uint8 *buffer, int length)
@@ -436,7 +414,7 @@ static void mem_trash(uint8 *buffer, int length)
    int i;
 
    for (i = 0; i < length; i++)
-      buffer[i] = (uint8) rand();
+      buffer[i] = (uint8)rand();
 }
 
 /* Reset NES hardware */
@@ -456,7 +434,7 @@ void nes_reset(int reset_type)
 
    nes.scanline = 241;
 
-   gui_sendmsg(GUI_GREEN, "NES %s", 
+   gui_sendmsg(GUI_GREEN, "NES %s",
                (HARD_RESET == reset_type) ? "powered on" : "reset");
 }
 
@@ -468,15 +446,19 @@ void nes_destroy(nes_t **machine)
       mmc_destroy(&(*machine)->mmc);
       ppu_destroy(&(*machine)->ppu);
       apu_destroy(&(*machine)->apu);
-//      bmp_destroy(&(*machine)->vidbuf);
+
+#ifdef NOFRENDO_DOUBLE_FRAMEBUFFER
+      bmp_destroy(&(*machine)->vidbuf);
+#endif /* NOFRENDO_DOUBLE_FRAMEBUFFER */
+
       if ((*machine)->cpu)
       {
          if ((*machine)->cpu->mem_page[0])
-            free((*machine)->cpu->mem_page[0]);
-         free((*machine)->cpu);
+            NOFRENDO_FREE((*machine)->cpu->mem_page[0]);
+         NOFRENDO_FREE((*machine)->cpu);
       }
 
-      free(*machine);
+      NOFRENDO_FREE(*machine);
       *machine = NULL;
    }
 }
@@ -497,13 +479,9 @@ int nes_insertcart(const char *filename, nes_t *machine)
    nes6502_setcontext(machine->cpu);
 
    /* rom file */
-   printf("rom load \r\n");
    machine->rominfo = rom_load(filename);
-   if (NULL == machine->rominfo){
-      printf("rom info null\r\n");
-       goto _fail;
-   }
-     
+   if (NULL == machine->rominfo)
+      goto _fail;
 
    /* map cart's SRAM to CPU $6000-$7FFF */
    if (machine->rominfo->sram)
@@ -514,17 +492,15 @@ int nes_insertcart(const char *filename, nes_t *machine)
 
    /* mapper */
    machine->mmc = mmc_create(machine->rominfo);
-   if (NULL == machine->mmc){
+   if (NULL == machine->mmc)
       goto _fail;
-   }
-      
 
    /* if there's VRAM, let the PPU know */
    if (NULL != machine->rominfo->vram)
       machine->ppu->vram_present = true;
-   
+
    apu_setext(machine->apu, machine->mmc->intf->sound_ext);
-   
+
    build_address_handlers(machine);
 
    nes_setcontext(machine);
@@ -537,7 +513,6 @@ _fail:
    return -1;
 }
 
-
 /* Initialize NES CPU, hardware, etc. */
 nes_t *nes_create(void)
 {
@@ -545,7 +520,7 @@ nes_t *nes_create(void)
    sndinfo_t osd_sound;
    int i;
 
-   machine = malloc(sizeof(nes_t));
+   machine = NOFRENDO_MALLOC(sizeof(nes_t));
    if (NULL == machine)
       return NULL;
 
@@ -553,21 +528,23 @@ nes_t *nes_create(void)
 
    /* bitmap */
    /* 8 pixel overdraw */
-//   machine->vidbuf = bmp_create(NES_SCREEN_WIDTH, NES_SCREEN_HEIGHT, 8);
-//   if (NULL == machine->vidbuf)
-//      goto _fail;
+#ifdef NOFRENDO_DOUBLE_FRAMEBUFFER
+   machine->vidbuf = bmp_create(NES_SCREEN_WIDTH, NES_SCREEN_HEIGHT, 8);
+   if (NULL == machine->vidbuf)
+      goto _fail;
+#endif /* NOFRENDO_DOUBLE_FRAMEBUFFER */
 
    machine->autoframeskip = true;
 
    /* cpu */
-   machine->cpu = malloc(sizeof(nes6502_context));
+   machine->cpu = NOFRENDO_MALLOC(sizeof(nes6502_context));
    if (NULL == machine->cpu)
       goto _fail;
 
    memset(machine->cpu, 0, sizeof(nes6502_context));
-   
+
    /* allocate 2kB RAM */
-   machine->cpu->mem_page[0] = malloc(NES_RAMSIZE);
+   machine->cpu->mem_page[0] = NOFRENDO_MALLOC(NES_RAMSIZE);
    if (NULL == machine->cpu->mem_page[0])
       goto _fail;
 

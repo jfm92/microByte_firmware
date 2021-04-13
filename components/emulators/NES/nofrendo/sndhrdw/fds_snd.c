@@ -23,9 +23,9 @@
 ** $Id: fds_snd.c,v 1.2 2001/04/27 14:37:11 neil Exp $
 */
 
-#include <noftypes.h>
-#include <nes_apu.h>
-#include <fds_snd.h>
+#include "../noftypes.h"
+#include "nes_apu.h"
+#include "fds_snd.h"
 
 static int32 fds_incsize = 0;
 
@@ -51,25 +51,23 @@ static void fds_reset(void)
    apu_t apu;
 
    apu_getcontext(&apu);
-//   fds_incsize = apu.cycle_rate;
-   fds_incsize = (int32) (APU_BASEFREQ * 65536.0 / (float) apu.sample_rate);
+   //   fds_incsize = apu.cycle_rate;
+   fds_incsize = (int32)(APU_BASEFREQ * 65536.0 / (float)apu.sample_rate);
 }
 
 static apu_memwrite fds_memwrite[] =
-{
-   { 0x4040, 0x4092, fds_write }, 
-   {     -1,     -1, NULL }
-};
+    {
+        {0x4040, 0x4092, fds_write},
+        {-1, -1, NULL}};
 
-apuext_t fds_ext = 
-{
-   NULL, /* no init */
-   NULL, /* no shutdown */
-   fds_reset,
-   fds_process,
-   NULL, /* no reads */
-   fds_memwrite
-};
+apuext_t fds_ext =
+    {
+        NULL, /* no init */
+        NULL, /* no shutdown */
+        fds_reset,
+        fds_process,
+        NULL, /* no reads */
+        fds_memwrite};
 
 /*
 ** $Log: fds_snd.c,v $

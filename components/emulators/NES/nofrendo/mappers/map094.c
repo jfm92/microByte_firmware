@@ -23,8 +23,8 @@
 ** $Id: map094.c,v 1.2 2001/04/27 14:37:11 neil Exp $
 */
 
-#include <noftypes.h>
-#include <nes_mmc.h>
+#include "../noftypes.h"
+#include "../nes/nes_mmc.h"
 
 /* mapper 94: Senjou no Ookami */
 static void map94_write(uint32 address, uint8 value)
@@ -36,23 +36,22 @@ static void map94_write(uint32 address, uint8 value)
 }
 
 static map_memwrite map94_memwrite[] =
-{
-   { 0x8000, 0xFFFF, map94_write },
-   {     -1,     -1, NULL }
-};
+    {
+        {0x8000, 0xFFFF, map94_write},
+        {-1, -1, NULL}};
 
 mapintf_t map94_intf =
-{
-   94, /* mapper number */
-   "Mapper 94", /* mapper name */
-   NULL, /* init routine */
-   NULL, /* vblank callback */
-   NULL, /* hblank callback */
-   NULL, /* get state (snss) */
-   NULL, /* set state (snss) */
-   NULL, /* memory read structure */
-   map94_memwrite, /* memory write structure */
-   NULL /* external sound device */
+    {
+        94,             /* mapper number */
+        "Mapper 94",    /* mapper name */
+        NULL,           /* init routine */
+        NULL,           /* vblank callback */
+        NULL,           /* hblank callback */
+        NULL,           /* get state (snss) */
+        NULL,           /* set state (snss) */
+        NULL,           /* memory read structure */
+        map94_memwrite, /* memory write structure */
+        NULL            /* external sound device */
 };
 
 /*

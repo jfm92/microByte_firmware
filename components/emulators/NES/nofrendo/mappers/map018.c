@@ -23,28 +23,29 @@
 ** $Id: map018.c,v 1.2 2001/04/27 14:37:11 neil Exp $
 */
 
-#include <noftypes.h>
-#include <nes_mmc.h>
-#include <nes_ppu.h>
+#include "../noftypes.h"
+#include "../nes/nes_mmc.h"
+#include "../nes/nes_ppu.h"
 
 /* mapper 18: Jaleco SS8806 */
-#define  VRC_PBANK(bank, value, high) \
-do { \
-   if ((high)) \
-      highprgnybbles[(bank)] = (value) & 0x0F; \
-   else \
-      lowprgnybbles[(bank)] = (value) & 0x0F; \
-   mmc_bankrom(8, 0x8000 + ((bank) << 13), (highprgnybbles[(bank)] << 4)+lowprgnybbles[(bank)]); \
-} while (0)
+#define VRC_PBANK(bank, value, high)                                                                  \
+   do                                                                                                 \
+   {                                                                                                  \
+      if ((high))                                                                                     \
+         highprgnybbles[(bank)] = (value)&0x0F;                                                       \
+      else                                                                                            \
+         lowprgnybbles[(bank)] = (value)&0x0F;                                                        \
+      mmc_bankrom(8, 0x8000 + ((bank) << 13), (highprgnybbles[(bank)] << 4) + lowprgnybbles[(bank)]); \
+   } while (0)
 
-#define VRC_VBANK(bank, value, high) \
-{ \
-   if ((high)) \
-      highnybbles[(bank)] = (value) & 0x0F; \
-   else \
-      lownybbles[(bank)] = (value) & 0x0F; \
-   mmc_bankvrom(1, (bank) << 10, (highnybbles[(bank)] << 4)+lownybbles[(bank)]); \
-}
+#define VRC_VBANK(bank, value, high)                                                  \
+   {                                                                                  \
+      if ((high))                                                                     \
+         highnybbles[(bank)] = (value)&0x0F;                                          \
+      else                                                                            \
+         lownybbles[(bank)] = (value)&0x0F;                                           \
+      mmc_bankvrom(1, (bank) << 10, (highnybbles[(bank)] << 4) + lownybbles[(bank)]); \
+   }
 
 static struct
 {
@@ -63,75 +64,132 @@ static uint8 highnybbles[8];
 static uint8 lowprgnybbles[3];
 static uint8 highprgnybbles[3];
 
-
 static void map18_write(uint32 address, uint8 value)
 {
    switch (address)
    {
-   case 0x8000: VRC_PBANK(0, value, 0); break;
-   case 0x8001: VRC_PBANK(0, value, 1); break;
-   case 0x8002: VRC_PBANK(1, value, 0); break;
-   case 0x8003: VRC_PBANK(1, value, 1); break;
-   case 0x9000: VRC_PBANK(2, value, 0); break;
-   case 0x9001: VRC_PBANK(2, value, 1); break;
-   case 0xA000: VRC_VBANK(0, value, 0); break;
-   case 0xA001: VRC_VBANK(0, value, 1); break;
-   case 0xA002: VRC_VBANK(1, value, 0); break;
-   case 0xA003: VRC_VBANK(1, value, 1); break;
-   case 0xB000: VRC_VBANK(2, value, 0); break;
-   case 0xB001: VRC_VBANK(2, value, 1); break;
-   case 0xB002: VRC_VBANK(3, value, 0); break;
-   case 0xB003: VRC_VBANK(3, value, 1); break;
-   case 0xC000: VRC_VBANK(4, value, 0); break;
-   case 0xC001: VRC_VBANK(4, value, 1); break;
-   case 0xC002: VRC_VBANK(5, value, 0); break;
-   case 0xC003: VRC_VBANK(5, value, 1); break;
-   case 0xD000: VRC_VBANK(6, value, 0); break;
-   case 0xD001: VRC_VBANK(6, value, 1); break;
-   case 0xD002: VRC_VBANK(7, value, 0); break;
-   case 0xD003: VRC_VBANK(7, value, 1); break;
+   case 0x8000:
+      VRC_PBANK(0, value, 0);
+      break;
+   case 0x8001:
+      VRC_PBANK(0, value, 1);
+      break;
+   case 0x8002:
+      VRC_PBANK(1, value, 0);
+      break;
+   case 0x8003:
+      VRC_PBANK(1, value, 1);
+      break;
+   case 0x9000:
+      VRC_PBANK(2, value, 0);
+      break;
+   case 0x9001:
+      VRC_PBANK(2, value, 1);
+      break;
+   case 0xA000:
+      VRC_VBANK(0, value, 0);
+      break;
+   case 0xA001:
+      VRC_VBANK(0, value, 1);
+      break;
+   case 0xA002:
+      VRC_VBANK(1, value, 0);
+      break;
+   case 0xA003:
+      VRC_VBANK(1, value, 1);
+      break;
+   case 0xB000:
+      VRC_VBANK(2, value, 0);
+      break;
+   case 0xB001:
+      VRC_VBANK(2, value, 1);
+      break;
+   case 0xB002:
+      VRC_VBANK(3, value, 0);
+      break;
+   case 0xB003:
+      VRC_VBANK(3, value, 1);
+      break;
+   case 0xC000:
+      VRC_VBANK(4, value, 0);
+      break;
+   case 0xC001:
+      VRC_VBANK(4, value, 1);
+      break;
+   case 0xC002:
+      VRC_VBANK(5, value, 0);
+      break;
+   case 0xC003:
+      VRC_VBANK(5, value, 1);
+      break;
+   case 0xD000:
+      VRC_VBANK(6, value, 0);
+      break;
+   case 0xD001:
+      VRC_VBANK(6, value, 1);
+      break;
+   case 0xD002:
+      VRC_VBANK(7, value, 0);
+      break;
+   case 0xD003:
+      VRC_VBANK(7, value, 1);
+      break;
    case 0xE000:
-      irq.nybbles[0]=value&0x0F;
-      irq.clockticks= (irq.nybbles[0]) | (irq.nybbles[1]<<4) |
-                     (irq.nybbles[2]<<8) | (irq.nybbles[3]<<12);
-      irq.counter=(uint8)(irq.clockticks/114);
-      if(irq.counter>15) irq.counter-=16;
+      irq.nybbles[0] = value & 0x0F;
+      irq.clockticks = (irq.nybbles[0]) | (irq.nybbles[1] << 4) |
+                       (irq.nybbles[2] << 8) | (irq.nybbles[3] << 12);
+      irq.counter = (uint8)(irq.clockticks / 114);
+      if (irq.counter > 15)
+         irq.counter -= 16;
       break;
    case 0xE001:
-      irq.nybbles[1]=value&0x0F;
-      irq.clockticks= (irq.nybbles[0]) | (irq.nybbles[1]<<4) |
-                     (irq.nybbles[2]<<8) | (irq.nybbles[3]<<12);
-      irq.counter=(uint8)(irq.clockticks/114);
-      if(irq.counter>15) irq.counter-=16;
+      irq.nybbles[1] = value & 0x0F;
+      irq.clockticks = (irq.nybbles[0]) | (irq.nybbles[1] << 4) |
+                       (irq.nybbles[2] << 8) | (irq.nybbles[3] << 12);
+      irq.counter = (uint8)(irq.clockticks / 114);
+      if (irq.counter > 15)
+         irq.counter -= 16;
       break;
    case 0xE002:
-      irq.nybbles[2]=value&0x0F;
-      irq.clockticks= (irq.nybbles[0]) | (irq.nybbles[1]<<4) |
-                     (irq.nybbles[2]<<8) | (irq.nybbles[3]<<12);
-      irq.counter=(uint8)(irq.clockticks/114);
-      if(irq.counter>15) irq.counter-=16;
+      irq.nybbles[2] = value & 0x0F;
+      irq.clockticks = (irq.nybbles[0]) | (irq.nybbles[1] << 4) |
+                       (irq.nybbles[2] << 8) | (irq.nybbles[3] << 12);
+      irq.counter = (uint8)(irq.clockticks / 114);
+      if (irq.counter > 15)
+         irq.counter -= 16;
       break;
    case 0xE003:
-      irq.nybbles[3]=value&0x0F;
-      irq.clockticks= (irq.nybbles[0]) | (irq.nybbles[1]<<4) |
-                     (irq.nybbles[2]<<8) | (irq.nybbles[3]<<12);
-      irq.counter=(uint8)(irq.clockticks/114);
-      if(irq.counter>15) irq.counter-=16;
+      irq.nybbles[3] = value & 0x0F;
+      irq.clockticks = (irq.nybbles[0]) | (irq.nybbles[1] << 4) |
+                       (irq.nybbles[2] << 8) | (irq.nybbles[3] << 12);
+      irq.counter = (uint8)(irq.clockticks / 114);
+      if (irq.counter > 15)
+         irq.counter -= 16;
       break;
    case 0xF000:
-      if(value&0x01) irq.enabled=true;
+      if (value & 0x01)
+         irq.enabled = true;
       break;
-   case 0xF001: 
-      irq.enabled=value&0x01;
+   case 0xF001:
+      irq.enabled = value & 0x01;
       break;
-   case 0xF002: 
-      switch(value&0x03)
+   case 0xF002:
+      switch (value & 0x03)
       {
-      case 0:  ppu_mirror(0, 0, 1, 1); break;
-      case 1:  ppu_mirror(0, 1, 0, 1); break;
-      case 2:  ppu_mirror(1,1,1,1);break;
-      case 3:  ppu_mirror(1,1,1,1);break; // should this be zero?
-      default: break;
+      case 0:
+         ppu_mirror(0, 0, 1, 1);
+         break;
+      case 1:
+         ppu_mirror(0, 1, 0, 1);
+         break;
+      case 2:
+         ppu_mirror(1, 1, 1, 1);
+         break;
+      case 3:
+         ppu_mirror(1, 1, 1, 1);
+         break; // should this be zero?
+      default:
+         break;
       }
       break;
    default:
@@ -139,12 +197,10 @@ static void map18_write(uint32 address, uint8 value)
    }
 }
 
-
 static map_memwrite map18_memwrite[] =
-{
-   { 0x8000, 0xFFFF, map18_write },
-   {     -1,     -1, NULL }
-};
+    {
+        {0x8000, 0xFFFF, map18_write},
+        {-1, -1, NULL}};
 
 static void map18_getstate(SnssMapperBlock *state)
 {
@@ -155,23 +211,22 @@ static void map18_getstate(SnssMapperBlock *state)
 
 static void map18_setstate(SnssMapperBlock *state)
 {
-   irq.counter = (state->extraData.mapper18.irqCounterHighByte << 8)
-                       | state->extraData.mapper18.irqCounterLowByte;
+   irq.counter = (state->extraData.mapper18.irqCounterHighByte << 8) | state->extraData.mapper18.irqCounterLowByte;
    irq.enabled = state->extraData.mapper18.irqCounterEnabled;
 }
 
 mapintf_t map18_intf =
-{
-   18, /* mapper number */
-   "Jaleco SS8806", /* mapper name */
-   map18_init, /* init routine */
-   NULL, /* vblank callback */
-   NULL, /* hblank callback */
-   map18_getstate, /* get state (snss) */
-   map18_setstate, /* set state (snss) */
-   NULL, /* memory read structure */
-   map18_memwrite, /* memory write structure */
-   NULL /* external sound device */
+    {
+        18,              /* mapper number */
+        "Jaleco SS8806", /* mapper name */
+        map18_init,      /* init routine */
+        NULL,            /* vblank callback */
+        NULL,            /* hblank callback */
+        map18_getstate,  /* get state (snss) */
+        map18_setstate,  /* set state (snss) */
+        NULL,            /* memory read structure */
+        map18_memwrite,  /* memory write structure */
+        NULL             /* external sound device */
 };
 
 /*

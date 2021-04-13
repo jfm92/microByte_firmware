@@ -24,30 +24,31 @@
 */
 
 #include <string.h>
-#include <noftypes.h>
-#include "nes6502.h"
-#include <nes_mmc.h>
-#include <nes_ppu.h>
-#include <libsnss.h>
-#include <log.h>
-#include <mmclist.h>
-#include <nes_rom.h>
 
-#define  MMC_8KROM         (mmc.cart->rom_banks * 2)
-#define  MMC_16KROM        (mmc.cart->rom_banks)
-#define  MMC_32KROM        (mmc.cart->rom_banks / 2)
-#define  MMC_8KVROM        (mmc.cart->vrom_banks)
-#define  MMC_4KVROM        (mmc.cart->vrom_banks * 2)
-#define  MMC_2KVROM        (mmc.cart->vrom_banks * 4)
-#define  MMC_1KVROM        (mmc.cart->vrom_banks * 8)
+#include "../noftypes.h"
+#include "../cpu/nes6502.h"
+#include "nes_mmc.h"
+#include "nes_ppu.h"
+#include "../libsnss/libsnss.h"
+#include "../log.h"
+#include "mmclist.h"
+#include "nes_rom.h"
 
-#define  MMC_LAST8KROM     (MMC_8KROM - 1)
-#define  MMC_LAST16KROM    (MMC_16KROM - 1)
-#define  MMC_LAST32KROM    (MMC_32KROM - 1)
-#define  MMC_LAST8KVROM    (MMC_8KVROM - 1)
-#define  MMC_LAST4KVROM    (MMC_4KVROM - 1)
-#define  MMC_LAST2KVROM    (MMC_2KVROM - 1)
-#define  MMC_LAST1KVROM    (MMC_1KVROM - 1)
+#define MMC_8KROM (mmc.cart->rom_banks * 2)
+#define MMC_16KROM (mmc.cart->rom_banks)
+#define MMC_32KROM (mmc.cart->rom_banks / 2)
+#define MMC_8KVROM (mmc.cart->vrom_banks)
+#define MMC_4KVROM (mmc.cart->vrom_banks * 2)
+#define MMC_2KVROM (mmc.cart->vrom_banks * 4)
+#define MMC_1KVROM (mmc.cart->vrom_banks * 8)
+
+#define MMC_LAST8KROM (MMC_8KROM - 1)
+#define MMC_LAST16KROM (MMC_16KROM - 1)
+#define MMC_LAST32KROM (MMC_32KROM - 1)
+#define MMC_LAST8KVROM (MMC_8KVROM - 1)
+#define MMC_LAST4KVROM (MMC_4KVROM - 1)
+#define MMC_LAST2KVROM (MMC_2KVROM - 1)
+#define MMC_LAST1KVROM (MMC_1KVROM - 1)
 
 static mmc_t mmc;
 
@@ -101,7 +102,7 @@ void mmc_bankvrom(int size, uint32 address, int bank)
       break;
 
    default:
-      log_printf("invalid VROM bank size %d\n", size);
+      nofrendo_log_printf("invalid VROM bank size %d\n", size);
    }
 }
 
@@ -110,7 +111,7 @@ void mmc_bankrom(int size, uint32 address, int bank)
 {
    nes6502_context mmc_cpu;
 
-   nes6502_getcontext(&mmc_cpu); 
+   nes6502_getcontext(&mmc_cpu);
 
    switch (size)
    {
@@ -152,7 +153,7 @@ void mmc_bankrom(int size, uint32 address, int bank)
       break;
 
    default:
-      log_printf("invalid ROM bank size %d\n", size);
+      nofrendo_log_printf("invalid ROM bank size %d\n", size);
       break;
    }
 
@@ -176,7 +177,7 @@ bool mmc_peek(int map_num)
 
 static void mmc_setpages(void)
 {
-   log_printf("setting up mapper %d\n", mmc.intf->number);
+   nofrendo_log_printf("setting up mapper %d\n", mmc.intf->number);
 
    /* Switch ROM into CPU space, set VROM/VRAM (done for ALL ROMs) */
    mmc_bankrom(16, 0x8000, 0);
@@ -217,32 +218,30 @@ void mmc_reset(void)
    if (mmc.intf->init)
       mmc.intf->init();
 
-   log_printf("reset memory mapper\n");
+   nofrendo_log_printf("reset memory mapper\n");
 }
-
 
 void mmc_destroy(mmc_t **nes_mmc)
 {
    if (*nes_mmc)
-      free(*nes_mmc);
+      NOFRENDO_FREE(*nes_mmc);
 }
 
 mmc_t *mmc_create(rominfo_t *rominfo)
 {
    mmc_t *temp;
    mapintf_t **map_ptr;
-  
+
    for (map_ptr = mappers; (*map_ptr)->number != rominfo->mapper_number; map_ptr++)
    {
       if (NULL == *map_ptr)
          return NULL; /* Should *never* happen */
    }
 
-   temp = malloc(sizeof(mmc_t));
-   if (NULL == temp){
+   temp = NOFRENDO_MALLOC(sizeof(mmc_t));
+   if (NULL == temp)
       return NULL;
-   }
-      
+
    memset(temp, 0, sizeof(mmc_t));
 
    temp->intf = *map_ptr;
@@ -250,11 +249,10 @@ mmc_t *mmc_create(rominfo_t *rominfo)
 
    mmc_setcontext(temp);
 
-   log_printf("created memory mapper: %s\n", (*map_ptr)->name);
+   nofrendo_log_printf("created memory mapper: %s\n", (*map_ptr)->name);
 
    return temp;
 }
-
 
 /*
 ** $Log: nes_mmc.c,v $

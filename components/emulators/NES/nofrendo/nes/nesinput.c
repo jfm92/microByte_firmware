@@ -23,9 +23,9 @@
 ** $Id: nesinput.c,v 1.2 2001/04/27 14:37:11 neil Exp $
 */
 
-#include <noftypes.h>
-#include <nesinput.h>
-#include <log.h>
+#include "../noftypes.h"
+#include "nesinput.h"
+#include "../log.h"
 
 /* TODO: make a linked list of inputs sources, so they
 **       can be removed if need be
@@ -36,7 +36,6 @@ static int active_entries = 0;
 
 /* read counters */
 static int pad0_readcount, pad1_readcount, ppad_readcount, ark_readcount;
-
 
 static int retrieve_type(int type)
 {
@@ -57,7 +56,7 @@ static uint8 get_pad0(void)
 {
    uint8 value;
 
-   value = (uint8) retrieve_type(INP_JOYPAD0);
+   value = (uint8)retrieve_type(INP_JOYPAD0);
 
    /* mask out left/right simultaneous keypresses */
    if ((value & INP_PAD_UP) && (value & INP_PAD_DOWN))
@@ -74,7 +73,7 @@ static uint8 get_pad1(void)
 {
    uint8 value;
 
-   value = (uint8) retrieve_type(INP_JOYPAD1);
+   value = (uint8)retrieve_type(INP_JOYPAD1);
 
    /* mask out left/right simultaneous keypresses */
    if ((value & INP_PAD_UP) && (value & INP_PAD_DOWN))
@@ -89,14 +88,14 @@ static uint8 get_pad1(void)
 
 static uint8 get_zapper(void)
 {
-   return (uint8) (retrieve_type(INP_ZAPPER));
+   return (uint8)(retrieve_type(INP_ZAPPER));
 }
 
 static uint8 get_powerpad(void)
 {
    int value;
    uint8 ret_val = 0;
-   
+
    value = retrieve_type(INP_POWERPAD);
 
    if (((value >> 8) >> ppad_readcount) & 1)
@@ -167,9 +166,9 @@ void input_event(nesinput_t *input, int state, int value)
    ASSERT(input);
 
    if (state == INP_STATE_MAKE)
-      input->data |= value;   /* OR it in */
-   else /* break state */
-      input->data &= ~value;  /* mask it out */
+      input->data |= value;  /* OR it in */
+   else                      /* break state */
+      input->data &= ~value; /* mask it out */
 }
 
 void input_strobe(void)

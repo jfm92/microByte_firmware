@@ -23,19 +23,19 @@
 ** $Id: mapvrc.c,v 1.2 2001/04/27 14:37:11 neil Exp $
 */
 
-#include <noftypes.h>
-#include <nes_mmc.h>
-#include <nes.h>
-#include <log.h>
+#include "../noftypes.h"
+#include "../nes/nes_mmc.h"
+#include "../nes/nes.h"
+#include "../log.h"
 
-#define VRC_VBANK(bank, value, high) \
-{ \
-   if ((high)) \
-      highnybbles[(bank)] = (value) & 0x0F; \
-   else \
-      lownybbles[(bank)] = (value) & 0x0F; \
-   mmc_bankvrom(1, (bank) << 10, (highnybbles[(bank)] << 4)+lownybbles[(bank)]); \
-}
+#define VRC_VBANK(bank, value, high)                                                  \
+   {                                                                                  \
+      if ((high))                                                                     \
+         highnybbles[(bank)] = (value)&0x0F;                                          \
+      else                                                                            \
+         lownybbles[(bank)] = (value)&0x0F;                                           \
+      mmc_bankvrom(1, (bank) << 10, (highnybbles[(bank)] << 4) + lownybbles[(bank)]); \
+   }
 
 static struct
 {
@@ -58,10 +58,10 @@ static void map21_write(uint32 address, uint8 value)
    switch (address)
    {
    case 0x8000:
-      if (select_c000) 
-         mmc_bankrom(8, 0xC000,value);
+      if (select_c000)
+         mmc_bankrom(8, 0xC000, value);
       else
-         mmc_bankrom(8, 0x8000,value);
+         mmc_bankrom(8, 0x8000, value);
       break;
 
    case 0x9000:
@@ -71,61 +71,97 @@ static void map21_write(uint32 address, uint8 value)
          ppu_mirror(0, 1, 0, 1); /* vertical */
          break;
 
-      case 1: 
+      case 1:
          ppu_mirror(0, 0, 1, 1); /* horizontal */
          break;
 
-      case 2: 
-         ppu_mirror(0, 0, 0, 0); 
+      case 2:
+         ppu_mirror(0, 0, 0, 0);
          break;
 
-      case 3: 
-         ppu_mirror(1, 1, 1, 1); 
+      case 3:
+         ppu_mirror(1, 1, 1, 1);
          break;
 
-      default: 
+      default:
          break;
       }
       break;
-   case 0x9002: select_c000=(value&0x02)>>1; break;
-   case 0xA000: mmc_bankrom(8, 0xA000,value); break;
+   case 0x9002:
+      select_c000 = (value & 0x02) >> 1;
+      break;
+   case 0xA000:
+      mmc_bankrom(8, 0xA000, value);
+      break;
 
-   case 0xB000: VRC_VBANK(0,value,0); break;
+   case 0xB000:
+      VRC_VBANK(0, value, 0);
+      break;
    case 0xB002:
-   case 0xB040: VRC_VBANK(0,value,1); break;
+   case 0xB040:
+      VRC_VBANK(0, value, 1);
+      break;
    case 0xB001:
    case 0xB004:
-   case 0xB080: VRC_VBANK(1,value,0); break;
+   case 0xB080:
+      VRC_VBANK(1, value, 0);
+      break;
    case 0xB003:
    case 0xB006:
-   case 0xB0C0: VRC_VBANK(1,value,1); break;
-   case 0xC000: VRC_VBANK(2,value,0); break;
+   case 0xB0C0:
+      VRC_VBANK(1, value, 1);
+      break;
+   case 0xC000:
+      VRC_VBANK(2, value, 0);
+      break;
    case 0xC002:
-   case 0xC040: VRC_VBANK(2,value,1); break;
+   case 0xC040:
+      VRC_VBANK(2, value, 1);
+      break;
    case 0xC001:
    case 0xC004:
-   case 0xC080: VRC_VBANK(3,value,0); break;
+   case 0xC080:
+      VRC_VBANK(3, value, 0);
+      break;
    case 0xC003:
    case 0xC006:
-   case 0xC0C0: VRC_VBANK(3,value,1); break;
-   case 0xD000: VRC_VBANK(4,value,0); break;
+   case 0xC0C0:
+      VRC_VBANK(3, value, 1);
+      break;
+   case 0xD000:
+      VRC_VBANK(4, value, 0);
+      break;
    case 0xD002:
-   case 0xD040: VRC_VBANK(4,value,1); break;
+   case 0xD040:
+      VRC_VBANK(4, value, 1);
+      break;
    case 0xD001:
    case 0xD004:
-   case 0xD080: VRC_VBANK(5,value,0); break;
+   case 0xD080:
+      VRC_VBANK(5, value, 0);
+      break;
    case 0xD003:
    case 0xD006:
-   case 0xD0C0: VRC_VBANK(5,value,1); break;
-   case 0xE000: VRC_VBANK(6,value,0); break;
+   case 0xD0C0:
+      VRC_VBANK(5, value, 1);
+      break;
+   case 0xE000:
+      VRC_VBANK(6, value, 0);
+      break;
    case 0xE002:
-   case 0xE040: VRC_VBANK(6,value,1); break;
+   case 0xE040:
+      VRC_VBANK(6, value, 1);
+      break;
    case 0xE001:
    case 0xE004:
-   case 0xE080: VRC_VBANK(7,value,0); break;
+   case 0xE080:
+      VRC_VBANK(7, value, 0);
+      break;
    case 0xE003:
    case 0xE006:
-   case 0xE0C0: VRC_VBANK(7,value,1); break;
+   case 0xE0C0:
+      VRC_VBANK(7, value, 1);
+      break;
 
    case 0xF000:
       irq.latch &= 0xF0;
@@ -151,8 +187,8 @@ static void map21_write(uint32 address, uint8 value)
 
    default:
 #ifdef NOFRENDO_DEBUG
-      log_printf("wrote $%02X to $%04X", value, address);
-#endif
+      nofrendo_log_printf("wrote $%02X to $%04X", value, address);
+#endif /* !NOFRENDO_DEBUG */
       break;
    }
 }
@@ -160,13 +196,13 @@ static void map21_write(uint32 address, uint8 value)
 static void map22_write(uint32 address, uint8 value)
 {
    int reg = address >> 12;
-   
+
    switch (reg)
    {
    case 0x8:
       mmc_bankrom(8, 0x8000, value);
       break;
-   
+
    case 0xA:
       mmc_bankrom(8, 0xA000, value);
       break;
@@ -178,7 +214,7 @@ static void map22_write(uint32 address, uint8 value)
          ppu_mirror(0, 1, 0, 1); /* vertical */
          break;
 
-      case 1: 
+      case 1:
          ppu_mirror(0, 0, 1, 1); /* horizontal */
          break;
 
@@ -196,11 +232,11 @@ static void map22_write(uint32 address, uint8 value)
    case 0xC:
    case 0xD:
    case 0xE:
-      {
-         int loc = (((reg - 0xB) << 1) + (address & 1)) << 10;
-         mmc_bankvrom(1, loc, value >> 1);
-      }
-      break;
+   {
+      int loc = (((reg - 0xB) << 1) + (address & 1)) << 10;
+      mmc_bankvrom(1, loc, value >> 1);
+   }
+   break;
 
    default:
       break;
@@ -220,17 +256,17 @@ static void map23_write(uint32 address, uint8 value)
    case 0xAFFF:
       mmc_bankrom(8, 0xA000, value);
       break;
-   
+
    case 0x9000:
    case 0x9004:
    case 0x9008:
-      switch(value & 3)
+      switch (value & 3)
       {
       case 0:
          ppu_mirror(0, 1, 0, 1); /* vertical */
          break;
 
-      case 1: 
+      case 1:
          ppu_mirror(0, 0, 1, 1); /* horizontal */
          break;
 
@@ -244,41 +280,73 @@ static void map23_write(uint32 address, uint8 value)
       }
       break;
 
-   case 0xB000: VRC_VBANK(0,value,0); break;
+   case 0xB000:
+      VRC_VBANK(0, value, 0);
+      break;
    case 0xB001:
-   case 0xB004: VRC_VBANK(0,value,1); break;
+   case 0xB004:
+      VRC_VBANK(0, value, 1);
+      break;
    case 0xB002:
-   case 0xB008: VRC_VBANK(1,value,0); break;
+   case 0xB008:
+      VRC_VBANK(1, value, 0);
+      break;
    case 0xB003:
-   case 0xB00C: VRC_VBANK(1,value,1); break;
-   case 0xC000: VRC_VBANK(2,value,0); break;
+   case 0xB00C:
+      VRC_VBANK(1, value, 1);
+      break;
+   case 0xC000:
+      VRC_VBANK(2, value, 0);
+      break;
    case 0xC001:
-   case 0xC004: VRC_VBANK(2,value,1); break;
+   case 0xC004:
+      VRC_VBANK(2, value, 1);
+      break;
    case 0xC002:
-   case 0xC008: VRC_VBANK(3,value,0); break;
+   case 0xC008:
+      VRC_VBANK(3, value, 0);
+      break;
    case 0xC003:
-   case 0xC00C: VRC_VBANK(3,value,1); break;
-   case 0xD000: VRC_VBANK(4,value,0); break;
+   case 0xC00C:
+      VRC_VBANK(3, value, 1);
+      break;
+   case 0xD000:
+      VRC_VBANK(4, value, 0);
+      break;
    case 0xD001:
-   case 0xD004: VRC_VBANK(4,value,1); break;
+   case 0xD004:
+      VRC_VBANK(4, value, 1);
+      break;
    case 0xD002:
-   case 0xD008: VRC_VBANK(5,value,0); break;
+   case 0xD008:
+      VRC_VBANK(5, value, 0);
+      break;
    case 0xD003:
-   case 0xD00C: VRC_VBANK(5,value,1); break;
-   case 0xE000: VRC_VBANK(6,value,0); break;
+   case 0xD00C:
+      VRC_VBANK(5, value, 1);
+      break;
+   case 0xE000:
+      VRC_VBANK(6, value, 0);
+      break;
    case 0xE001:
-   case 0xE004: VRC_VBANK(6,value,1); break;
+   case 0xE004:
+      VRC_VBANK(6, value, 1);
+      break;
    case 0xE002:
-   case 0xE008: VRC_VBANK(7,value,0); break;
+   case 0xE008:
+      VRC_VBANK(7, value, 0);
+      break;
    case 0xE003:
-   case 0xE00C: VRC_VBANK(7,value,1); break;
+   case 0xE00C:
+      VRC_VBANK(7, value, 1);
+      break;
 
-   case 0xF000: 
+   case 0xF000:
       irq.latch &= 0xF0;
       irq.latch |= (value & 0x0F);
       break;
 
-   case 0xF004: 
+   case 0xF004:
       irq.latch &= 0x0F;
       irq.latch |= ((value & 0x0F) << 4);
       break;
@@ -295,13 +363,13 @@ static void map23_write(uint32 address, uint8 value)
 
    default:
 #ifdef NOFRENDO_DEBUG
-      log_printf("wrote $%02X to $%04X",value,address);
-#endif
+      nofrendo_log_printf("wrote $%02X to $%04X", value, address);
+#endif /* !NOFRENDO_DEBUG */
       break;
    }
 }
 
-static void vrc_hblank(int vblank) 
+static void vrc_hblank(int vblank)
 {
    UNUSED(vblank);
 
@@ -317,25 +385,20 @@ static void vrc_hblank(int vblank)
    }
 }
 
-
-
 static map_memwrite map21_memwrite[] =
-{
-   { 0x8000, 0xFFFF, map21_write },
-   {     -1,     -1, NULL }
-};
+    {
+        {0x8000, 0xFFFF, map21_write},
+        {-1, -1, NULL}};
 
 static map_memwrite map22_memwrite[] =
-{
-   { 0x8000, 0xFFFF, map22_write },
-   {     -1,     -1, NULL }
-};
+    {
+        {0x8000, 0xFFFF, map22_write},
+        {-1, -1, NULL}};
 
 static map_memwrite map23_memwrite[] =
-{
-   { 0x8000, 0xFFFF, map23_write },
-   {     -1,     -1, NULL }
-};
+    {
+        {0x8000, 0xFFFF, map23_write},
+        {-1, -1, NULL}};
 
 static void map21_getstate(SnssMapperBlock *state)
 {
@@ -350,59 +413,59 @@ static void map21_setstate(SnssMapperBlock *state)
 }
 
 mapintf_t map21_intf =
-{
-   21, /* mapper number */
-   "Konami VRC4 A", /* mapper name */
-   vrc_init, /* init routine */
-   NULL, /* vblank callback */
-   vrc_hblank, /* hblank callback */
-   map21_getstate, /* get state (snss) */
-   map21_setstate, /* set state (snss) */
-   NULL, /* memory read structure */
-   map21_memwrite, /* memory write structure */
-   NULL /* external sound device */
+    {
+        21,              /* mapper number */
+        "Konami VRC4 A", /* mapper name */
+        vrc_init,        /* init routine */
+        NULL,            /* vblank callback */
+        vrc_hblank,      /* hblank callback */
+        map21_getstate,  /* get state (snss) */
+        map21_setstate,  /* set state (snss) */
+        NULL,            /* memory read structure */
+        map21_memwrite,  /* memory write structure */
+        NULL             /* external sound device */
 };
 
 mapintf_t map22_intf =
-{
-   22, /* mapper number */
-   "Konami VRC2 A", /* mapper name */
-   vrc_init, /* init routine */
-   NULL, /* vblank callback */
-   NULL, /* hblank callback */
-   NULL, /* get state (snss) */
-   NULL, /* set state (snss) */
-   NULL, /* memory read structure */
-   map22_memwrite, /* memory write structure */
-   NULL /* external sound device */
+    {
+        22,              /* mapper number */
+        "Konami VRC2 A", /* mapper name */
+        vrc_init,        /* init routine */
+        NULL,            /* vblank callback */
+        NULL,            /* hblank callback */
+        NULL,            /* get state (snss) */
+        NULL,            /* set state (snss) */
+        NULL,            /* memory read structure */
+        map22_memwrite,  /* memory write structure */
+        NULL             /* external sound device */
 };
 
 mapintf_t map23_intf =
-{
-   23, /* mapper number */
-   "Konami VRC2 B", /* mapper name */
-   vrc_init, /* init routine */
-   NULL, /* vblank callback */
-   vrc_hblank, /* hblank callback */
-   NULL, /* get state (snss) */
-   NULL, /* set state (snss) */
-   NULL, /* memory read structure */
-   map23_memwrite, /* memory write structure */
-   NULL /* external sound device */
+    {
+        23,              /* mapper number */
+        "Konami VRC2 B", /* mapper name */
+        vrc_init,        /* init routine */
+        NULL,            /* vblank callback */
+        vrc_hblank,      /* hblank callback */
+        NULL,            /* get state (snss) */
+        NULL,            /* set state (snss) */
+        NULL,            /* memory read structure */
+        map23_memwrite,  /* memory write structure */
+        NULL             /* external sound device */
 };
 
 mapintf_t map25_intf =
-{
-   25, /* mapper number */
-   "Konami VRC4 B", /* mapper name */
-   NULL, /* init routine */
-   NULL, /* vblank callback */
-   vrc_hblank, /* hblank callback */
-   NULL, /* get state (snss) */
-   NULL, /* set state (snss) */
-   NULL, /* memory read structure */
-   map21_memwrite, /* memory write structure */
-   NULL /* external sound device */
+    {
+        25,              /* mapper number */
+        "Konami VRC4 B", /* mapper name */
+        NULL,            /* init routine */
+        NULL,            /* vblank callback */
+        vrc_hblank,      /* hblank callback */
+        NULL,            /* get state (snss) */
+        NULL,            /* set state (snss) */
+        NULL,            /* memory read structure */
+        map21_memwrite,  /* memory write structure */
+        NULL             /* external sound device */
 };
 
 /*
