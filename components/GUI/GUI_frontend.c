@@ -80,6 +80,9 @@ static void config_option_cb(lv_obj_t * parent, lv_event_t e);
 static void mbox_config_cb(lv_obj_t * parent, lv_event_t e);
 static void fw_update_cb(lv_obj_t * parent, lv_event_t e);
 
+//Extra functions
+static void GUI_theme_color(uint8_t color_selected);
+
 /**********************
  *  GLOBAL VARIABLES
  **********************/
@@ -101,7 +104,6 @@ bool sub_menu = false;
 
 // TODO: Get this configuration from the ROM
 uint32_t GUI_THEME = LV_THEME_MATERIAL_FLAG_LIGHT;
-lv_color_t color;
 
 struct BATTERY_STATUS management;
 
@@ -242,7 +244,9 @@ void GUI_frontend(void){
     tab_ext_app_manager = lv_tabview_add_tab(tab_main_menu,"External Application");
     tab_config = lv_tabview_add_tab(tab_main_menu,"Configuration");
 
-    color = lv_theme_get_color_primary();
+    //Set the saved color configuration
+    uint8_t theme_color = system_get_config(SYS_GUI_COLOR);
+    GUI_theme_color(theme_color);
 
     emulators_menu(tab_emulators);
     external_app_menu(tab_ext_app_manager);
@@ -1035,12 +1039,14 @@ static void config_option_cb(lv_obj_t * parent, lv_event_t e){
         }
         else if(strcmp(lv_list_get_btn_text(parent),"GUI Color Mode")==0){
 
-            if(GUI_THEME == LV_THEME_MATERIAL_FLAG_LIGHT) GUI_THEME = LV_THEME_MATERIAL_FLAG_DARK;
-            else GUI_THEME = LV_THEME_MATERIAL_FLAG_LIGHT;
-
-            LV_THEME_DEFAULT_INIT(lv_theme_get_color_primary(), lv_theme_get_color_secondary(),
-            GUI_THEME,
-            lv_theme_get_font_small(), lv_theme_get_font_normal(), lv_theme_get_font_subtitle(), lv_theme_get_font_title());
+            if(GUI_THEME == LV_THEME_MATERIAL_FLAG_LIGHT){
+                system_save_config(SYS_GUI_COLOR,1);
+                GUI_theme_color(1);
+            }
+            else{
+                system_save_config(SYS_GUI_COLOR,0);
+                GUI_theme_color(0);
+            }
         }
         else if(strcmp(lv_list_get_btn_text(parent),"Volume")==0){
             mbox_volume = lv_msgbox_create(lv_layer_top(), NULL);
@@ -1183,6 +1189,15 @@ static void mbox_config_cb(lv_obj_t * parent, lv_event_t e){
     if(e == LV_EVENT_CANCEL){
         lv_obj_del(parent);
     }  
+}
+
+static void GUI_theme_color(uint8_t color_selected){
+    if(color_selected) GUI_THEME = LV_THEME_MATERIAL_FLAG_DARK;
+    else GUI_THEME = LV_THEME_MATERIAL_FLAG_LIGHT;
+
+    LV_THEME_DEFAULT_INIT(lv_theme_get_color_primary(), lv_theme_get_color_secondary(),
+    GUI_THEME,
+    lv_theme_get_font_small(), lv_theme_get_font_normal(), lv_theme_get_font_subtitle(), lv_theme_get_font_title());
 }
 
 /****** External Async functions ***********/
