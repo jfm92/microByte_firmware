@@ -33,9 +33,6 @@
 #include "LED_notification.h"
 #include "backlight_ctrl.h"
 
-#include "nvs_flash.h"
-#include "nvs.h"
-
 uint8_t console_running = NULL;
 
 TaskHandle_t gui_handler;
@@ -80,7 +77,7 @@ static void timer_isr(void){
 void app_main(void){
 
     /**************** Basic initialization **************/
-
+    system_init_config();
     //And the light was done. Initialize the LED control thread and perfom an "fade animation"
     LED_init();
     LED_mode(LED_FADE_ON); //There are a few animations available to choose.
@@ -97,26 +94,19 @@ void app_main(void){
     //This initialize the display's backlight control. This is a dirty backligh control module, I plan to change in a near future.
     backlight_init();
 
+    int8_t backlight_level = system_get_config(SYS_BRIGHT);
+    if(backlight_level > -1) backlight_set(backlight_level);
+
     /**************** Boot status **************/
 
-    //Initialize nvs flash , to check if the last restart was an emulator exit or a power-off
-    esp_err_t err = nvs_flash_init();
-    nvs_handle_t my_handle;
+    //Get the previous system state.
+    int32_t status = system_get_state();
 
-    // Open
-    nvs_open("nvs", NVS_READWRITE, &my_handle);
-
-    int32_t status = 0; //Value to know is the boot screen should be done
-    nvs_get_i32(my_handle, "status", &status);
-
-    //If status is 1, it was modified before restart the system, so we don't want the boot screen animation
-    if(status){
+    //If the reset was done by a soft reset, it's not necessary to do the intro animation.
+    if(status == SYS_SOFT_RESET){
         boot_screen_ani = false;
-        status = 0; //Back again to the default status
-        nvs_set_i32(my_handle, "status", status);
+        system_set_state(SYS_NORMAL_STATE);
     }
-
-    nvs_close(&my_handle);
 
     //The device can boot in 0.5 seconds, the magic of the micontrollers. But it think that it looks better
     // a fancy intro, and when it's showing the intro animation, all the peripherals are starting.
@@ -145,7 +135,7 @@ void app_main(void){
     update_check();
 
     //The boot animation is fancy, let's wait a little to see it
-    if(boot_screen_ani) vTaskDelay(1500 / portTICK_RATE_MS);
+    if(boot_screen_ani) vTaskDelay(2000 / portTICK_RATE_MS);
     
     //Once we don't need the boot screen, we will delete the task and free the resources.
     vTaskDelete(intro_handler);
@@ -310,15 +300,8 @@ void app_main(void){
                 break;
 
                 case MODE_OUT:
-                err = nvs_open("nvs", NVS_READWRITE, &my_handle);
-                    if (err != ESP_OK) return err;
-
-                    status = 1; // value will default to 0, if not set yet in NVS
-                    err = nvs_set_i32(my_handle, "status", status);
-
-
-                    nvs_close(&my_handle);
-                    printf("nvs closing\r\n");
+                    system_set_state(SYS_SOFT_RESET);
+                    ESP_LOGI(TAG,"System Soft Reset");
                     esp_restart();
                 break;
             }
