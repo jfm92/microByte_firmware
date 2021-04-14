@@ -12,11 +12,12 @@
 
 #include "sound_driver.h"
 #include "system_configuration.h"
+#include "system_manager.h"
 
 /**********************
 *      VARIABLES
 **********************/
-float volume_level = 0.8f; // When starts the sound level it's at the 80%
+float volume_level;
 
 /**********************
 *  STATIC VARIABLES
@@ -60,6 +61,8 @@ bool audio_init(uint32_t sample_rate){
         return false;
     }
 
+
+    volume_level = (float)audio_volume_get()/100.0f; //Get the saved volume value and transforn into float
     return true;
 }
 
@@ -93,11 +96,13 @@ void audio_terminate(){
 }
 
 uint8_t audio_volume_get(){
-    ESP_LOGI(TAG,"Volumen level: %i",(uint8_t)volume_level*100);
-    return volume_level*100;
+    uint8_t level = system_get_config(SYS_VOLUME);
+    ESP_LOGI(TAG,"Volumen level: %i",level);
+    return level;
 }
 
 void audio_volume_set(float level){
     if(level >= 0 || level <= 100) volume_level = level/100.0f;
     ESP_LOGI(TAG,"Volumen level set: %i",(uint8_t)volume_level *100);
+    system_save_config(SYS_VOLUME,level);
 }
