@@ -1,9 +1,23 @@
+/*********************
+ *      INCLUDES
+ *********************/
 #include "system_manager.h"
 #include "string.h"
 #include "esp_ota_ops.h"
 #include "soc/dport_reg.h"
 #include "soc/efuse_periph.h"
 #include "esp32/spiram.h"
+
+#include "nvs_flash.h"
+#include "nvs.h"
+
+
+nvs_handle_t config_handle;
+
+
+/**********************
+ *   GLOBAL FUNCTIONS
+ **********************/
 
 int system_memory(uint8_t memory){
 
@@ -43,5 +57,61 @@ void system_info(){
     // Get Flash
     esp_flash_get_size(NULL, &FLASH_size);
     FLASH_size = FLASH_size/(1024*1024);
-
 }
+
+void system_init_config(){
+    //TODO: Implement error control if it fails initialization.
+    nvs_flash_init();
+}
+
+//set save reset reason
+void system_set_state(int8_t state){
+    //TODO: Check if it's a valid code
+    nvs_open("nvs", NVS_READWRITE, &config_handle);
+    nvs_set_i8(config_handle, "prev_state", state);
+    nvs_close(&config_handle);
+}
+    
+// get reset reason
+int8_t system_get_state(){
+    int8_t prev_state;
+    nvs_open("nvs", NVS_READWRITE, &config_handle);
+    nvs_get_i8(config_handle, "prev_state", &prev_state);
+    nvs_close(&config_handle);
+    return prev_state;
+}
+
+void system_save_config(uint8_t config, int8_t value){
+    nvs_open("nvs", NVS_READWRITE, &config_handle);
+    if(config == SYS_BRIGHT && value <= 100){
+        nvs_set_i8(config_handle, "scr_bright", value);
+    }
+    else if(config == SYS_VOLUME && value <= 100){
+        nvs_set_i8(config_handle, "sound_volume", value);
+    }
+    else if(config == SYS_GUI_COLOR){
+        nvs_set_i8(config_handle, "GUI_color", value);
+    }
+    nvs_close(&config_handle);
+}
+
+int8_t system_get_config(uint8_t config){
+    nvs_open("nvs", NVS_READWRITE, &config_handle);
+    int8_t value = -1;
+    if(config == SYS_BRIGHT && value <= 100){
+        nvs_get_i8(config_handle, "scr_bright", &value);
+        if(value < 1 || value > 100) value = 100;
+    }
+    else if(config == SYS_VOLUME && value <= 100){
+        nvs_get_i8(config_handle, "sound_volume", &value);
+        if(value < 0 || value > 100) value = 80; //Default value of 80%
+    }
+    else if(config == SYS_GUI_COLOR){
+        nvs_get_i8(config_handle, "GUI_color", &value);
+        //if(value != 0 || value != 1) value = 0;
+    }
+    nvs_close(&config_handle);
+
+    return value;
+}
+
