@@ -4,14 +4,13 @@
 #include "esp_log.h"
 #include "driver/ledc.h"
 #include "system_configuration.h"
-
+#include "system_manager.h"
 #include "backlight_ctrl.h"
 
 /**********************
 *      VARIABLES
 **********************/
 ledc_channel_config_t backlight_led;
-uint16_t backligth_level = 100;//Global variable to save the backlight value
 
 /**********************
  *   GLOBAL FUNCTIONS
@@ -45,15 +44,16 @@ void backlight_init(){
 
 void backlight_set(uint8_t level){
     
-    if(level > 100) return;
+    if(level < 1 || level > 100) return;
 
-    backligth_level = (8000 * level)/100; //Calcute the equivalent duty cycle
+    uint16_t backligth_level = (8000 * level)/100; //Calcute the equivalent duty cycle
 
     //Set the change duty cycle to be done in 100 mS.
     ledc_set_fade_with_time(backlight_led.speed_mode, backlight_led.channel , backligth_level, 100);
     ledc_fade_start(backlight_led.speed_mode,backlight_led.channel , LEDC_FADE_NO_WAIT);
+    system_save_config(SYS_BRIGHT,level);
 }
 
 uint8_t backlight_get(){
-    return backligth_level;
+    return system_get_config(SYS_BRIGHT);
 }
