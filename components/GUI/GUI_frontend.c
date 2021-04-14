@@ -77,8 +77,7 @@ static void app_execute_cb(lv_obj_t * parent, lv_event_t e);
 void config_menu(lv_obj_t * parent);
 static void configuration_cb(lv_obj_t * parent, lv_event_t e);
 static void config_option_cb(lv_obj_t * parent, lv_event_t e);
-static void mbox_about_cb(lv_obj_t * parent, lv_event_t e);
-static void mbox_battery_cb(lv_obj_t * parent, lv_event_t e);
+static void mbox_config_cb(lv_obj_t * parent, lv_event_t e);
 static void fw_update_cb(lv_obj_t * parent, lv_event_t e);
 
 /**********************
@@ -919,9 +918,9 @@ static void configuration_cb(lv_obj_t * parent, lv_event_t e){
         list_btn = lv_list_add_btn(list_config, LV_SYMBOL_DOWNLOAD, "Update firmware");
         lv_obj_set_event_cb(list_btn, config_option_cb);
 
-        list_btn = lv_list_add_btn(list_config, LV_SYMBOL_IMAGE, "Brightness");
+        list_btn = lv_list_add_btn(list_config, LV_SYMBOL_EYE_OPEN, "Brightness");
         lv_obj_set_event_cb(list_btn, config_option_cb);
-        list_btn = lv_list_add_btn(list_config, LV_SYMBOL_SD_CARD, "Dark Mode");
+        list_btn = lv_list_add_btn(list_config, LV_SYMBOL_IMAGE, "GUI Color Mode");
         lv_obj_set_event_cb(list_btn, config_option_cb);
 
         list_btn = lv_list_add_btn(list_config, LV_SYMBOL_VOLUME_MAX, "Volume");
@@ -949,13 +948,21 @@ static void config_option_cb(lv_obj_t * parent, lv_event_t e){
 
             lv_obj_align(mbox_about, NULL, LV_ALIGN_CENTER, 0, -50);
 
-            lv_obj_t * label1 = lv_label_create(mbox_about, NULL);
-            char spec_text[256];
-            sprintf(spec_text,"\u2022 CPU: %s\n\u2022 RAM: %i MB \n\u2022 Flash: %i MB\n\u2022 FW Version: %s",cpu_version,RAM_size,FLASH_size,app_version);
-            lv_label_set_text(label1,spec_text);
+            char *aux_text;
+            lv_obj_t * label_hw_info = lv_label_create(mbox_about, NULL);
+            aux_text = malloc(256);
+            sprintf(aux_text,"\u2022 CPU: %s\n\u2022 RAM: %i MB \n\u2022 Flash: %i MB",cpu_version,RAM_size,FLASH_size);
+            lv_label_set_text(label_hw_info,aux_text);
+            free(aux_text);
+
+            lv_obj_t * label_fw_version = lv_label_create(mbox_about, NULL);
+            aux_text = malloc(256); 
+            sprintf(aux_text,"%s",app_version);
+            lv_label_set_text(label_fw_version,aux_text);
+            free(aux_text);
 
             lv_group_add_obj(group_interact, mbox_about);
-            lv_obj_set_event_cb(mbox_about, mbox_about_cb);
+            lv_obj_set_event_cb(mbox_about, mbox_config_cb);
             lv_group_focus_obj(mbox_about);
         }
         else if(strcmp(lv_list_get_btn_text(parent),"Update firmware")==0){
@@ -1026,7 +1033,7 @@ static void config_option_cb(lv_obj_t * parent, lv_event_t e){
             lv_group_add_obj(group_interact, slider);
             lv_group_focus_obj(slider);
         }
-        else if(strcmp(lv_list_get_btn_text(parent),"Dark Mode")==0){
+        else if(strcmp(lv_list_get_btn_text(parent),"GUI Color Mode")==0){
 
             if(GUI_THEME == LV_THEME_MATERIAL_FLAG_LIGHT) GUI_THEME = LV_THEME_MATERIAL_FLAG_DARK;
             else GUI_THEME = LV_THEME_MATERIAL_FLAG_LIGHT;
@@ -1075,27 +1082,28 @@ static void config_option_cb(lv_obj_t * parent, lv_event_t e){
             lv_bar_set_anim_time(bar_battery, 2000);
             
             
-            if(management.voltage >= 4190){
+            if(management.voltage >= 4165){
                 // Connected to the USB
                 // TODO: Change the possition of the text or if it's possible create an animation with the numbers
                 lv_obj_t * label_battery_bar = lv_label_create(bar_battery, NULL);
-                lv_label_set_text(label_battery_bar,"Connected to USB");
+                lv_label_set_text(label_battery_bar,"Charged");
+                lv_obj_align(label_battery_bar, NULL, LV_ALIGN_CENTER, 5, 0);
 
                 lv_obj_set_style_local_bg_color(bar_battery, LV_BAR_PART_INDIC, LV_STATE_DEFAULT, lv_color_hex(0x25CDF6));
                 lv_bar_set_value(bar_battery, 100, LV_ANIM_ON);
             }
             else{
-                // TODO: Change the possition of the text or if it's possible create an animation with the numbers
                 lv_obj_t * label_battery_bar = lv_label_create(bar_battery, NULL);
                 char battery_level[4];
                 sprintf(battery_level,"%i",management.percentage);
                 lv_label_set_text(label_battery_bar,battery_level);
+                lv_obj_align(label_battery_bar, NULL, LV_ALIGN_CENTER, 5, 0);
 
                 lv_obj_set_style_local_bg_color(bar_battery, LV_BAR_PART_INDIC, LV_STATE_DEFAULT, lv_color_hex(0x0CC62D));
                 lv_bar_set_value(bar_battery, management.percentage, LV_ANIM_ON);
 
             }
-            lv_obj_set_event_cb(mbox_battery, mbox_battery_cb);
+            lv_obj_set_event_cb(mbox_battery, mbox_config_cb);
             lv_group_add_obj(group_interact, mbox_battery);
             lv_group_focus_obj(mbox_battery);
         }
@@ -1112,19 +1120,12 @@ static void config_option_cb(lv_obj_t * parent, lv_event_t e){
                 ,sd_card_info.card_name, sd_card_info.card_size, sd_card_info.card_speed,\
                 (sd_card_info.card_type & SDIO) ? "SDIO" : "SDHC/SDXC");
                 lv_label_set_text(label1,spec_text);
-                static const char * btns[] = {"Ok", "Unmount", ""};
-                lv_msgbox_add_btns(mbox_SD, btns);
-
-                // TODO: Implement Unmount card
-                // TODO: Implement safe close of the ad
+                lv_obj_set_event_cb(mbox_SD, mbox_config_cb);
             }
             else{
                 lv_obj_t * label1 = lv_label_create(mbox_SD, NULL);
                 lv_label_set_text(label1,"SD card not available");
-                static const char * btns[] = {"Ok", "Mount", ""};
-                lv_msgbox_add_btns(mbox_SD, btns);
-
-                // TODO: Implement Mount card
+                lv_obj_set_event_cb(mbox_SD, mbox_config_cb);
             }
 
             lv_group_add_obj(group_interact, mbox_SD);
@@ -1178,18 +1179,11 @@ static void fw_update_cb(lv_obj_t * parent, lv_event_t e){
     } 
 }
 
-static void mbox_about_cb(lv_obj_t * parent, lv_event_t e){
+static void mbox_config_cb(lv_obj_t * parent, lv_event_t e){
     if(e == LV_EVENT_CANCEL){
         lv_obj_del(parent);
     }  
 }
-
-static void mbox_battery_cb(lv_obj_t * parent, lv_event_t e){
-    if(e == LV_EVENT_CANCEL ){
-        lv_obj_del(parent);
-    }  
-}
-
 
 /****** External Async functions ***********/
 void async_battery_alert(bool game_mode){
