@@ -159,82 +159,75 @@ void app_main(void){
 
     while(1){
         
-
         if( xQueueReceive(modeQueue, &management ,portMAX_DELAY)){
             switch(management.mode){
 
                 case MODE_GAME:
-                    if(management.status == 1){
-                        battery_game_mode(true);
+                    if(management.status == 1){//Execute the emulator.
+                        battery_game_mode(true); //Block periodic battery status messages when your're playing.
 
+                        //Check which console you've selected, execute the LED load animation and load the game.
                         if(management.console == GAMEBOY_COLOR || management.console == GAMEBOY){
-                             LED_mode(LED_LOAD_ANI);
+                            LED_mode(LED_LOAD_ANI);
                             vTaskSuspend(gui_handler);
                             gnuboy_execute_game(management.game_name,management.console, management.load_save_game);
+                            gnuboy_start();
                                 
-                                gnuboy_start();
-                                
-                                game_executed = true;
-                                game_running=true;
-                                console_running = management.console;
-                                LED_mode(LED_TURN_OFF);
-                                LED_mode(LED_FADE_ON);
-                           /* timer = xTimerCreate("nes", pdMS_TO_TICKS( 30000 ), pdTRUE, NULL, timer_isr);
-                            if(timer != pdPASS) xTimerStart(timer, 0);
-                            else{
-                                ESP_LOGE(TAG,"Save timer initialization fail.");
-                            }*/
-	                        
-                            
-                            
+                            game_executed = true;
+                            game_running=true;
+                            console_running = management.console;
+                            LED_mode(LED_TURN_OFF);
+                            LED_mode(LED_FADE_ON);
+
                         }
                         else if(management.console == NES){
+                            LED_mode(LED_LOAD_ANI);
                             vTaskSuspend(gui_handler);
                             NES_start(management.game_name);
+                            //NES management it's slightly different so, it's necessary to first start the emulator.
                             if(management.load_save_game){
                                 vTaskDelay(1500 / portTICK_RATE_MS);
                                 NES_load_game();
                             }
                             game_executed = true;
                             game_running=true;
-                            console_running = NES;
+                            console_running = management.console;
+                            LED_mode(LED_TURN_OFF);
+                            LED_mode(LED_FADE_ON);
                         }
                         else if(management.console == SMS || management.console == GG){
+                            LED_mode(LED_LOAD_ANI);
                             vTaskSuspend(gui_handler);
-
                             SMS_execute_game(management.game_name,management.console,management.load_save_game);
                             SMS_start();
                             game_executed = true;
                             game_running=true;
                             console_running = management.console;
+                            LED_mode(LED_TURN_OFF);
+                            LED_mode(LED_FADE_ON);
                         }
                     }
                     else{
                         if(game_running && game_executed){
+                            //Suspend console main task to avoid conflicts.
                            if(console_running == GAMEBOY_COLOR || console_running == GAMEBOY ) gnuboy_suspend();
-                           else if(console_running == NES){
-                               printf("NES suspend\r\n");
-                               NES_suspend();
-                           }
+                           else if(console_running == NES) NES_suspend();
                            else if(console_running == SMS || console_running == GG) SMS_suspend();
 
                             // To avoid noise whe is suspend the audio task, is necesary to clean the dma from previous data.
                             audio_terminate();
-                            // Is necessary this delay to avoid bouncing between suspend and delay state.
-                            //vTaskDelay(100 / portTICK_RATE_MS);
                             vTaskResume(gui_handler);
-                            printf("Gui refresh\r\n");
                             GUI_refresh();
                             // Refresh menu image
                             game_running=false;
                         }
-                        else if(!game_running && game_executed){
+                        else if(!game_running && game_executed){ //This case is only used if we push menu button once you're on the on game menu
                             vTaskSuspend(gui_handler);
                             // Is necessary this delay to avoid bouncing between suspend and delay state
                             vTaskDelay(250 / portTICK_RATE_MS);
                             if(console_running == GAMEBOY_COLOR || console_running == GAMEBOY ) gnuboy_resume();
-                           else if(console_running == NES) NES_resume();
-                           else if(console_running == SMS || console_running == GG) SMS_resume();
+                            else if(console_running == NES) NES_resume();
+                            else if(console_running == SMS || console_running == GG) SMS_resume();
                             game_running=true;
                         }
 
@@ -242,13 +235,9 @@ void app_main(void){
                 break;
 
                 case MODE_SAVE_GAME:
-
-                        ESP_LOGI(TAG,"Saving data GameBoy Color");
-                      // gnuboy_save();
-                      //SMS_save_game();
-                      NES_save_game();
-
-                    
+                    if(management.console == NES) NES_save_game();
+                    else if(management.console == GAMEBOY_COLOR || management.console == GAMEBOY) gnuboy_save();
+                    else if(management.console == SMS || management.console == GG) SMS_save_game();     
                 break;
 
                 case MODE_EXT_APP:
