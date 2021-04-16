@@ -15,8 +15,6 @@ QueueHandle_t batteryQueue;
 #define MODE_UPDATE         0x05
 #define MODE_OUT            0x06
 #define MODE_BATTERY_ALERT  0x07
-#define MODE_CHANGE_VOLUME  0x08
-#define MODE_CHANGE_BRIGHT  0x09
 
 //Emulators available to select
 #define GAMEBOY         0x00

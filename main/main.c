@@ -266,14 +266,6 @@ void app_main(void){
                     game_running=false;
                 break;
 
-                case MODE_CHANGE_VOLUME:
-                    audio_volume_set((float)management.volume_level);
-                break;
-
-                case MODE_CHANGE_BRIGHT:
-                    //st7789_backlight_set(management.brightness_level);
-                break;
-
                 case MODE_UPDATE:
                     ESP_LOGI(TAG,"Update firmware");
 
