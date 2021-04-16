@@ -63,29 +63,29 @@ uint16_t input_read(void){
             // Check if any of the special buttons was pushed
             if(!((inputs_value >> 0) & 0x01)){
                 // Down arrow, volume down
-                int volume_aux = audio_volume_get();
+              /*  int volume_aux = audio_volume_get();
                 volume_aux -= 10;
                 if(volume_aux < 0)volume_aux = 0;
                 
                 management.mode = MODE_CHANGE_VOLUME;
                 management.volume_level = volume_aux;
                 
-                if( xQueueSend( modeQueue,&management, ( TickType_t ) 10) != pdPASS ) ESP_LOGE(TAG, "Queue send failed");
+                if( xQueueSend( modeQueue,&management, ( TickType_t ) 10) != pdPASS ) ESP_LOGE(TAG, "Queue send failed");*/
 
             } 
             else if(!((inputs_value >> 2) & 0x01)){
                 //UP arrow, volume UP
-                int volume_aux = audio_volume_get();
+               /* int volume_aux = audio_volume_get();
                 volume_aux += 10;
                 if(volume_aux > 100)volume_aux = 100;
                 
                 management.mode = MODE_CHANGE_VOLUME;
                 management.volume_level = volume_aux;
                 
-                if( xQueueSend( modeQueue,&management, ( TickType_t ) 10) != pdPASS ) ESP_LOGE(TAG, "Queue send failed");
+                if( xQueueSend( modeQueue,&management, ( TickType_t ) 10) != pdPASS ) ESP_LOGE(TAG, "Queue send failed");*/
             }
             else if(!((inputs_value >> 1) & 0x01)){
-                // Right arrow, brightness up
+              /*  // Right arrow, brightness up
                 int brightness_aux = 0;//st7789_backlight_get();
                 brightness_aux += 10;
                 if(brightness_aux > 100)brightness_aux = 100;
@@ -93,10 +93,10 @@ uint16_t input_read(void){
                 management.mode = MODE_CHANGE_BRIGHT;
                 management.volume_level = brightness_aux;
                 
-                if( xQueueSend( modeQueue,&management, ( TickType_t ) 10) != pdPASS ) ESP_LOGE(TAG, "Queue send failed");
+                if( xQueueSend( modeQueue,&management, ( TickType_t ) 10) != pdPASS ) ESP_LOGE(TAG, "Queue send failed");*/
             }
             else if(!((inputs_value >> 3) & 0x01)){
-                // Left arrow, brightness down
+             /*   // Left arrow, brightness down
                 int brightness_aux = 0;//st7789_backlight_get();
                 brightness_aux -= 10;
                 if(brightness_aux < 0 )brightness_aux = 0;
@@ -104,7 +104,7 @@ uint16_t input_read(void){
                 management.mode = MODE_CHANGE_BRIGHT;
                 management.volume_level = brightness_aux;
                 
-                if( xQueueSend( modeQueue,&management, ( TickType_t ) 10) != pdPASS ) ESP_LOGE(TAG, "Queue send failed");
+                if( xQueueSend( modeQueue,&management, ( TickType_t ) 10) != pdPASS ) ESP_LOGE(TAG, "Queue send failed");*/
             }
             else{
                 if((actual_time-menu_btn_time)>25){
