@@ -139,10 +139,9 @@ bool sd_init(){
 }
 
 
-uint8_t sd_game_list(char game_name[30][100],uint8_t console){
+uint8_t sd_game_list(char *game_list[100],uint8_t console){
     
     struct dirent *entry;
-    //TODO: Improve game name management, at this moment the max size of the name is 100 characters and 30 games per console
     // Open the folder of the specific console
     DIR *dir = NULL;
     if(console == NES) dir =  opendir("/sdcard/NES");
@@ -165,38 +164,43 @@ uint8_t sd_game_list(char game_name[30][100],uint8_t console){
         size_t nameLength = strlen(entry->d_name);
 
         // TODO: Rework game list maker, set by alphabetical order
-
         if ((strcmp(entry->d_name + (nameLength - 4), ".nes") == 0) && console == NES) {
-            sprintf(game_name[i],"%s",entry->d_name);
-            ESP_LOGI(TAG, "Found %s ",game_name[i]);
+            game_list[i] = malloc(nameLength + 1);
+            sprintf(game_list[i],"%s",entry->d_name);
+            ESP_LOGI(TAG, "Found %s ",(char *)game_list[i]);
             i++;
         }
         else if ((strcmp(entry->d_name + (nameLength - 3), ".gb") == 0) && console == GAMEBOY){
-            sprintf(game_name[i],"%s",entry->d_name);
-            ESP_LOGI(TAG, "Found %s ",game_name[i]);
+            game_list[i] = malloc(nameLength + 1);
+            sprintf(game_list[i],"%s",entry->d_name);
+            ESP_LOGI(TAG, "Found %s ",(char *)game_list[i]);
             i++;
         }
         else if ((strcmp(entry->d_name + (nameLength - 4), ".gbc") == 0) && console == GAMEBOY_COLOR){
-            sprintf(game_name[i],"%s",entry->d_name);
-            ESP_LOGI(TAG, "Found %s ",game_name[i]);
+            game_list[i] = malloc(nameLength + 1);
+            sprintf(game_list[i],"%s",entry->d_name);
+            ESP_LOGI(TAG, "Found %s ",(char *)game_list[i]);
             i++;
         }
         else if ((strcmp(entry->d_name + (nameLength - 4), ".sms") == 0) && console == SMS){
-            sprintf(game_name[i],"%s",entry->d_name);
-            ESP_LOGI(TAG, "Found %s ",game_name[i]);
+            game_list[i] = malloc(nameLength + 1);
+            sprintf(game_list[i],"%s",entry->d_name);
+            ESP_LOGI(TAG, "Found %s ",(char *)game_list[i]);
             i++;
         }
         else if ((strcmp(entry->d_name + (nameLength - 3), ".gg") == 0) && console == GG){
-            sprintf(game_name[i],"%s",entry->d_name);
-            ESP_LOGI(TAG, "Found %s ",game_name[i]);
+            game_list[i] = malloc(nameLength + 1);
+            sprintf(game_list[i],"%s",entry->d_name);
+            ESP_LOGI(TAG, "Found %s ",(char *)game_list[i]);
             i++;
         }
     }
+
     // Return the number of files
     return i;
 }
 
-uint8_t sd_app_list(char app_name[30][100],bool update){
+uint8_t sd_app_list(char *app_list[100],bool update){
     struct dirent *entry;
 
     DIR *dir = NULL;
@@ -206,12 +210,11 @@ uint8_t sd_app_list(char app_name[30][100],bool update){
     // Only find .bin file on the apps folder
     uint8_t i =0;
     while((entry = readdir(dir)) != NULL){
-        
         size_t nameLength = strlen(entry->d_name);
-
+        app_list[i] = malloc(nameLength + 1);
         if(strcmp(entry->d_name + (nameLength - 4), ".bin") == 0) {
-            sprintf(app_name[i],"%s",entry->d_name);
-            ESP_LOGI(TAG, "Found %s ",app_name[i]);
+            sprintf(app_list[i],"%s",entry->d_name);
+            ESP_LOGI(TAG, "Found %s ",app_list[i]);
             i++;
         }
     }
@@ -221,7 +224,7 @@ uint8_t sd_app_list(char app_name[30][100],bool update){
     
 
 size_t sd_file_size(const char *path){
-    
+    //TODO: There is a bug which with some specific letters combination, fail opening the file and crash the program
     FILE *fd = fopen(path, "rb");
 
     fseek(fd, 0, SEEK_END);
@@ -305,6 +308,5 @@ char * IRAM_ATTR sd_get_file_flash (const char *path){
 bool sd_mounted(){
     return SD_mount;
 }
-
 
 

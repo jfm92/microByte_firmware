@@ -47,13 +47,13 @@ bool sd_init();
  * This function  gives the number of game available and the name of them for each console.
  * 
  * Arguments:
- *  -game_name: Two dimensions array in which will be save the game names.
+ *  -game_list: Array with a list of available games.
  *  -console: Console to check the available games.
  * 
  * Returns: Number of available games for the console.
  * 
  */
-uint8_t sd_game_list(char game_name[30][100], uint8_t console);
+uint8_t sd_game_list(char *game_list[100], uint8_t console);
 
 /*
  * Function:  sd_app_list 
@@ -62,13 +62,13 @@ uint8_t sd_game_list(char game_name[30][100], uint8_t console);
  * This function gives the number of update or external applications available on the SD card.
  * 
  * Arguments:
- *  -app_name: Two dimensions array in which will be save the external application name or the updates available on the SD
+ *  -app_name: List of available apps.
  *  -update: True is you are looking for an update binary, otherwise false for the external applications.
  * 
  * Returns: Number of available external apps of updates binaries.
  * 
  */
-uint8_t sd_app_list(char app_name[30][100], bool update);
+uint8_t sd_app_list(char *app_list[100], bool update);
 
 /*
  * Function:  sd_file_size 

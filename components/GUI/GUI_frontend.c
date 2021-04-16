@@ -465,8 +465,8 @@ static void game_list_cb(lv_obj_t * parent, lv_event_t e){
         }
 
         // Get the game list of each console.
-        char game_name[30][100];
-        uint8_t games_num = sd_game_list(game_name, emulator_selected);
+        char *game_list[100];
+        uint8_t games_num = sd_game_list(game_list, emulator_selected);
 
         ESP_LOGI(TAG,"Found %i games",games_num);
 
@@ -479,9 +479,10 @@ static void game_list_cb(lv_obj_t * parent, lv_event_t e){
             lv_page_glue_obj(list_game_emulator,true);
             // Add a button for each game
             for(int i=0;i<games_num;i++){
-                lv_obj_t * game_btn = lv_list_add_btn(list_game_emulator, NULL, game_name[i]);
+                lv_obj_t * game_btn = lv_list_add_btn(list_game_emulator, NULL, game_list[i]);
                 lv_group_add_obj(group_interact, game_btn);
                 lv_obj_set_event_cb(game_btn, game_menu_cb);
+                free(game_list[i]);
             }
             lv_group_add_obj(group_interact, list_game_emulator);
 
@@ -811,8 +812,8 @@ static void external_app_cb(lv_obj_t * parent, lv_event_t e){
 
     if(e == LV_EVENT_CLICKED){
 
-        char app_name[30][100];
-        uint8_t app_num = sd_app_list(app_name,false);
+        char *app_list[100];
+        uint8_t app_num = sd_app_list(app_list,false);
 
         ESP_LOGI(TAG,"Found %i applications",app_num);
 
@@ -826,9 +827,10 @@ static void external_app_cb(lv_obj_t * parent, lv_event_t e){
              lv_page_glue_obj(list_external_app,true);
             // Add a button for each game
             for(int i=0;i<app_num;i++){
-                lv_obj_t * app_btn = lv_list_add_btn(list_external_app, NULL, app_name[i]);
+                lv_obj_t * app_btn = lv_list_add_btn(list_external_app, NULL, app_list[i]);
                 lv_group_add_obj(group_interact, app_btn);
                 lv_obj_set_event_cb(app_btn, app_execute_cb);
+                free(app_list[i]);
             }
             lv_group_add_obj(group_interact, list_external_app);
 
