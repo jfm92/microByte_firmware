@@ -141,6 +141,10 @@ static lv_obj_t * container_header_game_icon;
 static lv_obj_t * list_game_emulator;
 static lv_obj_t * list_game_options;
 static lv_obj_t * mbox_game_options;
+//Buttons of the game initialization list
+static lv_obj_t * btn_game_new;
+static lv_obj_t * btn_game_resume;
+static lv_obj_t * btn_game_delete;
 
 // On-game menu objects
 
@@ -568,22 +572,7 @@ static void emulators_list_cb(lv_obj_t * parent, lv_event_t e){
 
 static void game_menu_cb(lv_obj_t * parent, lv_event_t e){
     if(e == LV_EVENT_CLICKED) {
-       /* ESP_LOGI(TAG, "Loading: %s",(char *)lv_list_get_btn_text(parent));
-
-        struct SYSTEM_MODE emulator;
-        emulator.mode = MODE_GAME;
-        emulator.status = 1;
-        emulator.console = emulator_selected;
-        strcpy(emulator.game_name, (char *)lv_list_get_btn_text(parent));
-
-        if( xQueueSend( modeQueue,&emulator, ( TickType_t ) 10) != pdPASS ){
-            ESP_LOGE(TAG, "Error sending game execution queue");
-        }
-
-        printf("on game_menu\r\n");
-
-        on_game_menu();*/
-
+       
         lv_obj_set_hidden(container_header_game_icon,true);
         lv_obj_set_hidden(list_emulators_main,true);
         lv_obj_set_hidden(list_game_emulator,true);
@@ -597,17 +586,18 @@ static void game_menu_cb(lv_obj_t * parent, lv_event_t e){
 
         list_game_options = lv_list_create(mbox_game_options, NULL);
 
-        lv_obj_t * list_btn;
-
-        list_btn = lv_list_add_btn(list_game_options, LV_SYMBOL_HOME, "New Game");
-        lv_obj_set_event_cb(list_btn, game_execute_cb);
+        btn_game_new = lv_list_add_btn(list_game_options, LV_SYMBOL_HOME, "New Game");
+        lv_obj_set_event_cb(btn_game_new, game_execute_cb);
 
         //TODO: Check if exist a saved data of the game. If not, don't create the button
-        list_btn = lv_list_add_btn(list_game_options, LV_SYMBOL_SAVE, "Resume Game");
-        lv_obj_set_event_cb(list_btn, game_execute_cb);
+        if(sd_sav_exist((char *)lv_list_get_btn_text(parent),emulator_selected)){
+            btn_game_resume = lv_list_add_btn(list_game_options, LV_SYMBOL_SAVE, "Resume Game");
+            lv_obj_set_event_cb(btn_game_resume, game_execute_cb);
 
-        list_btn = lv_list_add_btn(list_game_options, LV_SYMBOL_CLOSE, "Delete Save Data");
-        lv_obj_set_event_cb(list_btn, game_execute_cb);
+            btn_game_delete = lv_list_add_btn(list_game_options, LV_SYMBOL_CLOSE, "Delete Save Data");
+            lv_obj_set_event_cb(btn_game_delete, game_execute_cb);
+        }
+        
 
         lv_group_add_obj(group_interact, list_game_options);
         lv_group_focus_obj(list_game_options);
@@ -623,8 +613,6 @@ static void game_menu_cb(lv_obj_t * parent, lv_event_t e){
         lv_obj_del(list_game_emulator);
         lv_obj_set_hidden(list_emulators_main,false);
         lv_group_focus_obj(list_emulators_main);
-        printf("foo\r\n");
-        
     }
 }
 
@@ -645,8 +633,6 @@ static void game_execute_cb(lv_obj_t * parent, lv_event_t e){
                 ESP_LOGE(TAG, "Error sending game execution queue");
             }
 
-            printf("on game_menu\r\n");
-
             on_game_menu();
 
         }
@@ -662,14 +648,14 @@ static void game_execute_cb(lv_obj_t * parent, lv_event_t e){
             if( xQueueSend( modeQueue,&emulator, ( TickType_t ) 10) != pdPASS ){
                 ESP_LOGE(TAG, "Error sending game execution queue");
             }
-
-            printf("on game_menu\r\n");
-
             on_game_menu();
 
         }
         else if(strcmp(lv_list_get_btn_text(parent),"Delete Save Data")==0){
-            
+            sd_sav_remove((char *)lv_msgbox_get_text(mbox_game_options), emulator_selected);
+            //Update the list of options
+            lv_obj_del(btn_game_delete);
+            lv_obj_del(btn_game_resume);
         }
 
         //Get the name of the game from the text of the message box

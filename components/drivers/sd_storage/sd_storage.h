@@ -117,7 +117,7 @@ void  sd_get_file (const char *path, void * data);
  * Returns: Pointer to the region of the flash memory where is allocated the data.
  * 
  */
-char * IRAM_ATTR sd_get_file_flash (const char *path);
+char * sd_get_file_flash (const char *path);
 
 /*
  * Function:  sd_mounted 
@@ -130,7 +130,32 @@ char * IRAM_ATTR sd_get_file_flash (const char *path);
  */
 bool sd_mounted();
 
-/*********WIP**********/
-void sd_format();
-void sd_unmount();
-void sd_mount();
+/*
+ * Function:  sd_sav_exist 
+ * --------------------
+ * 
+ * Check if a save file exists
+ * 
+ * Arguments:
+ *      - file_name: Game name that you want to check
+ *      - emulator: Console that you want to check.
+ * 
+ * Returns: True if it exists
+ * 
+ */
+bool sd_sav_exist(char *file_name,uint8_t emulator);
+
+/*
+ * Function:  sd_sav_remove 
+ * --------------------
+ * 
+ * Remove a save file from a game
+ * 
+ * Arguments:
+ *      - file_name: Game name that you want to check
+ *      - emulator: Console that you want to check.
+ * 
+ * Returns: Nothing.
+ * 
+ */
+void sd_sav_remove(char *file_name,uint8_t emulator);

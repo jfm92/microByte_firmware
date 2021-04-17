@@ -283,7 +283,7 @@ char * IRAM_ATTR sd_get_file_flash (const char *path){
     }
 
     char * temp_buffer;
-    temp_buffer =  malloc(BLOCK_SIZE);
+    temp_buffer =  heap_caps_malloc(BLOCK_SIZE,MALLOC_CAP_8BIT | MALLOC_CAP_INTERNAL );
     esp_fill_random(temp_buffer,BLOCK_SIZE);
 
     while (true){
@@ -300,7 +300,7 @@ char * IRAM_ATTR sd_get_file_flash (const char *path){
     free(temp_buffer);
     // Return a pointer to the position of the saved file on the internal flash.
 
-	ESP_ERROR_CHECK(esp_partition_mmap(partition, 0, partition->size, SPI_FLASH_MMAP_DATA, &map_ptr, &map_handle));
+	ESP_ERROR_CHECK(esp_partition_mmap(partition, 0, 0x300000, SPI_FLASH_MMAP_DATA, &map_ptr, &map_handle));
    return map_ptr;
 }
 
@@ -309,4 +309,34 @@ bool sd_mounted(){
     return SD_mount;
 }
 
+bool sd_sav_exist(char *file_name, uint8_t emulator){
+    char *file_route = malloc(256);
+    
+    if(emulator == GAMEBOY) sprintf(file_route,"/sdcard/GameBoy/Save_Data/%s.sav",file_name);
+    else if(emulator == GAMEBOY_COLOR) sprintf(file_route,"/sdcard/GameBoy_Color/Save_Data/%s.sav",file_name);
+    else if(emulator == NES) sprintf(file_route,"/sdcard/NES/Save_Data/%s.sav",file_name);
+    else if(emulator == SMS) sprintf(file_route,"/sdcard/Master_System/Save_Data/%s.sav",file_name);
+    else if(emulator == GG) sprintf(file_route,"/sdcard/Game_Gear/Save_Data/%s.sav",file_name);
+
+    struct stat st;
+    if(stat(file_route, &st) == -1){
+        free(file_route);
+        return false;
+    }
+
+    free(file_route);
+
+    return true;
+}
+
+void sd_sav_remove(char *file_name, uint8_t emulator){
+    char *file_route = malloc(256);
+    if(emulator == GAMEBOY) sprintf(file_route,"/sdcard/GameBoy/Save_Data/%s.sav",file_name);
+    else if(emulator == GAMEBOY_COLOR) sprintf(file_route,"/sdcard/GameBoy_Color/Save_Data/%s.sav",file_name);
+    else if(emulator == NES) sprintf(file_route,"/sdcard/NES/Save_Data/%s.sav",file_name);
+    else if(emulator == SMS) sprintf(file_route,"/sdcard/Master_System/Save_Data/%s.sav",file_name);
+    else if(emulator == GG) sprintf(file_route,"/sdcard/Game_Gear/Save_Data/%s.sav",file_name);
+
+    remove(file_route);
+}
 
