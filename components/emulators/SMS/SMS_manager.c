@@ -62,6 +62,8 @@ bool GAME_GEAR = false;
 bool load_game = false; //Variable to know if we want to load the save data.
 char sms_game_name[300];
 
+bool button_ss = false; //Variable to save if we want to use state save/load buttons
+
 static const char *TAG = "SMS_manager";
 
 /**********************
@@ -73,7 +75,8 @@ void SMS_start(){
     // Queue creation
     vidQueue = xQueueCreate(7, sizeof(uint16_t *));
     audioQueue = xQueueCreate(1, sizeof(uint32_t *));
-
+    
+    button_ss = system_get_config(SYS_STATE_SAV_BTN);
 
     //Execute emulator tasks.
     xTaskCreatePinnedToCore(&videoTask, "videoTask", 1024 * 4, NULL, 1, &videoTask_handler, 0);
@@ -364,6 +367,10 @@ static void input_set(){
 
     if(!((inputs_value >> 10) & 0x01))  smsSystem |= INPUT_START;
     if(!((inputs_value >> 12) & 0x01))  smsSystem |= INPUT_PAUSE;
+
+    //Special function to instant load/save progress pushing x and y buttons
+    if(!((inputs_value >> 6) & 0x01) && button_ss) load_save_data();
+    if(!((inputs_value >> 7) & 0x01) && button_ss) SMS_save_game();
 
     input.pad[0] = smsButtons;
     input.system = smsSystem;
