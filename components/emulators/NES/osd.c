@@ -25,6 +25,7 @@
 #include "NES_manager.h"
 
 #include <driver/i2s.h>
+#include "system_manager.h"
 
 TimerHandle_t timer;
 
@@ -104,8 +105,10 @@ static char fb[1]; //dummy
 bitmap_t *myBitmap;
 
 /* initialise video */
+int8 btn_ss;//Variable to save button state save selected option
 static int init(int width, int height)
 {
+	btn_ss= system_get_config(SYS_STATE_SAV_BTN); //Check if we want state save/load buttons available
 	return 0;
 }
 
@@ -193,9 +196,8 @@ static void osd_freeinput(void){}
 void osd_getinput(void)
 {
     uint16_t b = input_read();
-
 	const int ev[16] = {
-		event_joypad1_down, event_joypad1_left, event_joypad1_up, event_joypad1_right, 0, 0, event_state_save, event_state_load,
+		event_joypad1_down, event_joypad1_left, event_joypad1_up, event_joypad1_right, 0, 0, (btn_ss & 1) ? event_state_save : 0, (btn_ss & 1) ? event_state_load : 0,
 		event_joypad1_b, event_joypad1_a, event_joypad1_start, 0, event_joypad1_select, 0, 0, 0};
 	static int oldb = 0xffff;
 	int chg = b ^ oldb;
