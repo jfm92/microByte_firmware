@@ -907,17 +907,22 @@ static void configuration_cb(lv_obj_t * parent, lv_event_t e){
 
         list_btn = lv_list_add_btn(list_config, LV_SYMBOL_SETTINGS, "About this device");
         lv_obj_set_event_cb(list_btn, config_option_cb);
+
         list_btn = lv_list_add_btn(list_config, LV_SYMBOL_DOWNLOAD, "Update firmware");
         lv_obj_set_event_cb(list_btn, config_option_cb);
 
+        //System config options
         list_btn = lv_list_add_btn(list_config, LV_SYMBOL_EYE_OPEN, "Brightness");
         lv_obj_set_event_cb(list_btn, config_option_cb);
         list_btn = lv_list_add_btn(list_config, LV_SYMBOL_IMAGE, "GUI Color Mode");
         lv_obj_set_event_cb(list_btn, config_option_cb);
-
         list_btn = lv_list_add_btn(list_config, LV_SYMBOL_VOLUME_MAX, "Volume");
         lv_obj_set_event_cb(list_btn, config_option_cb);
+        if(system_get_config(SYS_STATE_SAV_BTN)!=1) list_btn = lv_list_add_btn(list_config, LV_SYMBOL_SAVE, "Enable Button State Save");
+        else if(system_get_config(SYS_STATE_SAV_BTN)) list_btn = lv_list_add_btn(list_config, LV_SYMBOL_SAVE, "Disable Button State Save");
+        lv_obj_set_event_cb(list_btn, config_option_cb);
 
+        //System info options
         list_btn = lv_list_add_btn(list_config, LV_SYMBOL_BATTERY_FULL, "Battery Status");
         lv_obj_set_event_cb(list_btn, config_option_cb);
         list_btn = lv_list_add_btn(list_config, LV_SYMBOL_SD_CARD, "SD card Status");
@@ -927,8 +932,6 @@ static void configuration_cb(lv_obj_t * parent, lv_event_t e){
         lv_group_focus_obj(list_config);
     }
 }
-
-//TODO: Save the configuration change on the ROM memory to avoid reset lost.
 
 static void config_option_cb(lv_obj_t * parent, lv_event_t e){
     if(e == LV_EVENT_CLICKED){
@@ -1055,6 +1058,16 @@ static void config_option_cb(lv_obj_t * parent, lv_event_t e){
 
             lv_group_add_obj(group_interact, slider);
             lv_group_focus_obj(slider);
+        }
+        else if(strcmp(lv_list_get_btn_text(parent),"Enable Button State Save")==0){
+            lv_obj_t * label1 = lv_list_get_btn_label(parent);
+            lv_label_set_text(label1,"Disable Button State Save");
+            system_save_config(SYS_STATE_SAV_BTN,1);
+        }
+        else if(strcmp(lv_list_get_btn_text(parent),"Disable Button State Save")==0){
+            lv_obj_t * label1 = lv_list_get_btn_label(parent);
+            lv_label_set_text(label1,"Enable Button State Save");
+            system_save_config(SYS_STATE_SAV_BTN,0);
         }
         else if(strcmp(lv_list_get_btn_text(parent),"Battery Status")==0){
             //Create message box
