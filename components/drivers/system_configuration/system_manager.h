@@ -22,22 +22,23 @@ QueueHandle_t batteryQueue;
 #define NES             0x02
 #define SNES            0x03
 #define SMS             0x04
-#define GG              0x005
+#define GG              0x05
 
 //Memory types
-#define MEMORY_DMA 0x00
+#define MEMORY_DMA      0x00
 #define MEMORY_INTERNAL 0x01
-#define MEMORY_SPIRAM 0X02
-#define MEMORY_ALL 0x03
+#define MEMORY_SPIRAM   0X02
+#define MEMORY_ALL      0x03
 
 //System States
 #define SYS_NORMAL_STATE 0x00
-#define SYS_SOFT_RESET 0x01
+#define SYS_SOFT_RESET   0x01
 
 //System configuration variables
-#define SYS_BRIGHT 0x00
-#define SYS_VOLUME 0x01
-#define SYS_GUI_COLOR 0x02
+#define SYS_BRIGHT          0x00
+#define SYS_VOLUME          0x01
+#define SYS_GUI_COLOR       0x02
+#define SYS_STATE_SAV_BTN   0x03
 
 // Struct to send data from emulator or inner stuff to the main control loop
 struct SYSTEM_MODE{

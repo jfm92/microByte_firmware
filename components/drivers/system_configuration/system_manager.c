@@ -92,6 +92,10 @@ void system_save_config(uint8_t config, int8_t value){
     else if(config == SYS_GUI_COLOR){
         nvs_set_i8(config_handle, "GUI_color", value);
     }
+    else if(config == SYS_STATE_SAV_BTN){
+        nvs_set_i8(config_handle, "Save_State", value);
+        printf("Set save_State value %i\r\n",value);
+    }
     nvs_close(&config_handle);
 }
 
@@ -109,6 +113,10 @@ int8_t system_get_config(uint8_t config){
     else if(config == SYS_GUI_COLOR){
         nvs_get_i8(config_handle, "GUI_color", &value);
         //if(value != 0 || value != 1) value = 0;
+    }
+    else if(config == SYS_STATE_SAV_BTN) {
+        nvs_get_i8(config_handle, "Save_State", &value);
+        printf("Value get %i\r\n",value);
     }
     nvs_close(&config_handle);
 
