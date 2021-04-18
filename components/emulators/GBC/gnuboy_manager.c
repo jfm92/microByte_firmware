@@ -84,6 +84,8 @@ volatile unsigned char *currentAudioBufferPtr;
 char * game_name;
 uint8_t console_use;
 
+bool button_ss_gb = false; //Variable to save if we want to use state save/load buttons
+
 #define AUDIO_SAMPLE_RATE (16000)
 
 /**********************
@@ -95,6 +97,8 @@ void gnuboy_start(){
     // Queue creation
     vidQueue = xQueueCreate(7, sizeof(uint16_t *));
     audioQueue = xQueueCreate(1, sizeof(uint16_t *));
+
+    button_ss_gb = system_get_config(SYS_STATE_SAV_BTN);
 
     //Execute emulator tasks.
     xTaskCreatePinnedToCore(&videoTask, "videoTask", 1024*2, NULL, 1, &videoTask_handler, 0);
@@ -379,6 +383,10 @@ static void input_set(){
     pad_set(PAD_A,!((inputs_value >> 9) & 0x01));
     pad_set(PAD_START,!((inputs_value >> 10) & 0x01));
     pad_set(PAD_SELECT,!((inputs_value >> 12) & 0x01));
+
+    //Special function to instant load/save progress pushing x and y buttons
+    if(!((inputs_value >> 6) & 0x01) && button_ss_gb) gbc_state_load(game_name,console_use);
+    if(!((inputs_value >> 7) & 0x01) && button_ss_gb) gnuboy_save();
 
 }
 
