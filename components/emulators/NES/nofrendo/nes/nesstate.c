@@ -342,22 +342,27 @@ int state_save(void)
    SNSS_RETURN_CODE status;
    char fn[PATH_MAX + 1], ext[5];
    nes_t *machine;
-
    /* get the pointer to our NES machine context */
    machine = nes_getcontextptr();
+   
+   //Get game name
+   uint16_t route_len = strlen(machine->rominfo->filename) -4;
+   char *game_name = calloc(route_len - 13,sizeof(char));
+   strncpy(game_name,machine->rominfo->filename + 12, route_len - 8);
+   //Build save data route
+   sprintf(fn,"/sdcard/NES/Save_Data/%s.sav",game_name);
+
    ASSERT(machine);
-
    /* build our filename using the image's name and the slot number */
-   strncpy(fn, machine->rominfo->filename, PATH_MAX - 4);
-
-   ASSERT(state_slot >= FIRST_STATE_SLOT && state_slot <= LAST_STATE_SLOT);
-   sprintf(ext, ".ss%d", state_slot);
-   osd_newextension(fn, ext);
+   
 
    /* open our state file for writing */
    status = SNSS_OpenFile(&snssFile, fn, SNSS_OPEN_WRITE);
-   if (SNSS_OK != status)
+   if (SNSS_OK != status){
+      printf("Error opening\r\n");
       goto _error;
+   }
+      
 
    /* now get all of our blocks */
    if (0 == save_baseblock(machine, snssFile))
@@ -401,11 +406,13 @@ int state_save(void)
       goto _error;
 
    gui_sendmsg(GUI_GREEN, "State %d saved", state_slot);
+   free(game_name);
    return 0;
 
 _error:
    gui_sendmsg(GUI_RED, "error: %s", SNSS_GetErrorString(status));
    SNSS_CloseFile(&snssFile);
+   free(game_name);
    return -1;
 }
 
@@ -422,12 +429,12 @@ int state_load(void)
    machine = nes_getcontextptr();
    ASSERT(machine);
 
-   /* build the state name using the ROM's name and the slot number */
-   strncpy(fn, machine->rominfo->filename, PATH_MAX - 4);
-
-   ASSERT(state_slot >= FIRST_STATE_SLOT && state_slot <= LAST_STATE_SLOT);
-   sprintf(ext, ".ss%d", state_slot);
-   osd_newextension(fn, ext);
+   //Get game name
+   uint16_t route_len = strlen(machine->rominfo->filename) -4;
+   char *game_name = calloc(route_len - 13,sizeof(char));
+   strncpy(game_name,machine->rominfo->filename + 12, route_len - 8);
+   //Build save data route
+   sprintf(fn,"/sdcard/NES/Save_Data/%s.sav",game_name);
 
    /* open our file for writing */
    status = SNSS_OpenFile(&snssFile, fn, SNSS_OPEN_READ);
@@ -484,12 +491,13 @@ int state_load(void)
       goto _error;
 
    gui_sendmsg(GUI_GREEN, "State %d restored", state_slot);
-
+   free(game_name);
    return 0;
 
 _error:
    gui_sendmsg(GUI_RED, "error: %s", SNSS_GetErrorString(status));
    SNSS_CloseFile(&snssFile);
+   free(game_name);
    return -1;
 }
 
