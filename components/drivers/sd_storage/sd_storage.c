@@ -170,35 +170,35 @@ uint8_t sd_game_list(char *game_list[100],uint8_t console){
             game_list[i] = malloc(256);
             sprintf(game_list[i],"%s",entry->d_name);
             ESP_LOGI(TAG, "Found %s ",(char *)game_list[i]);
-            if(i>0) organize_list(game_list, i);
+            //if(i>0) organize_list(game_list, i);
             i++;
         }
         else if ((strcmp(entry->d_name + (nameLength - 3), ".gb") == 0) && console == GAMEBOY){
             game_list[i] = malloc(256);
             sprintf(game_list[i],"%s",entry->d_name);
             ESP_LOGI(TAG, "Found %s ",(char *)game_list[i]);
-            if(i>0) organize_list(game_list, i);
+            //if(i>0) organize_list(game_list, i);
             i++;
         }
         else if ((strcmp(entry->d_name + (nameLength - 4), ".gbc") == 0) && console == GAMEBOY_COLOR){
             game_list[i] = malloc(256);
             sprintf(game_list[i],"%s",entry->d_name);
             ESP_LOGI(TAG, "Found %s ",(char *)game_list[i]);
-            if(i>0) organize_list(game_list, i);
+            //if(i>0) organize_list(game_list, i);
             i++;
         }
         else if ((strcmp(entry->d_name + (nameLength - 4), ".sms") == 0) && console == SMS){
             game_list[i] = malloc(256);
             sprintf(game_list[i],"%s",entry->d_name);
             ESP_LOGI(TAG, "Found %s ",(char *)game_list[i]);
-            if(i>0) organize_list(game_list, i);
+            //if(i>0) organize_list(game_list, i);
             i++;
         }
         else if ((strcmp(entry->d_name + (nameLength - 3), ".gg") == 0) && console == GG){
             game_list[i] = malloc(256);
             sprintf(game_list[i],"%s",entry->d_name);
             ESP_LOGI(TAG, "Found %s ",(char *)game_list[i]);
-            if(i>0) organize_list(game_list, i);
+            //if(i>0) organize_list(game_list, i);
             i++;
         }
     }
