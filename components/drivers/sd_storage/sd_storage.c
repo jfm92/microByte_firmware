@@ -40,6 +40,8 @@ struct sd_card_info sd_card_info;
 **********************/
 static const char *TAG = "SD_CARD";
 
+static void organize_list(char *list[30], uint8_t index);
+
 /**********************
  *      MACROS
  **********************/
@@ -165,33 +167,38 @@ uint8_t sd_game_list(char *game_list[100],uint8_t console){
 
         // TODO: Rework game list maker, set by alphabetical order
         if ((strcmp(entry->d_name + (nameLength - 4), ".nes") == 0) && console == NES) {
-            game_list[i] = malloc(nameLength + 1);
+            game_list[i] = malloc(256);
             sprintf(game_list[i],"%s",entry->d_name);
             ESP_LOGI(TAG, "Found %s ",(char *)game_list[i]);
+            if(i>0) organize_list(game_list, i);
             i++;
         }
         else if ((strcmp(entry->d_name + (nameLength - 3), ".gb") == 0) && console == GAMEBOY){
-            game_list[i] = malloc(nameLength + 1);
+            game_list[i] = malloc(256);
             sprintf(game_list[i],"%s",entry->d_name);
             ESP_LOGI(TAG, "Found %s ",(char *)game_list[i]);
+            if(i>0) organize_list(game_list, i);
             i++;
         }
         else if ((strcmp(entry->d_name + (nameLength - 4), ".gbc") == 0) && console == GAMEBOY_COLOR){
-            game_list[i] = malloc(nameLength + 1);
+            game_list[i] = malloc(256);
             sprintf(game_list[i],"%s",entry->d_name);
             ESP_LOGI(TAG, "Found %s ",(char *)game_list[i]);
+            if(i>0) organize_list(game_list, i);
             i++;
         }
         else if ((strcmp(entry->d_name + (nameLength - 4), ".sms") == 0) && console == SMS){
-            game_list[i] = malloc(nameLength + 1);
+            game_list[i] = malloc(256);
             sprintf(game_list[i],"%s",entry->d_name);
             ESP_LOGI(TAG, "Found %s ",(char *)game_list[i]);
+            if(i>0) organize_list(game_list, i);
             i++;
         }
         else if ((strcmp(entry->d_name + (nameLength - 3), ".gg") == 0) && console == GG){
-            game_list[i] = malloc(nameLength + 1);
+            game_list[i] = malloc(256);
             sprintf(game_list[i],"%s",entry->d_name);
             ESP_LOGI(TAG, "Found %s ",(char *)game_list[i]);
+            if(i>0) organize_list(game_list, i);
             i++;
         }
     }
@@ -338,5 +345,19 @@ void sd_sav_remove(char *file_name, uint8_t emulator){
     else if(emulator == GG) sprintf(file_route,"/sdcard/Game_Gear/Save_Data/%s.sav",file_name);
 
     remove(file_route);
+}
+
+static void organize_list(char *list[30], uint8_t index){
+    uint8_t index_aux = index;
+    char * list_aux = malloc(256);
+    while(strcmp(list[index_aux-1],list[index_aux])>0 && index_aux > 0){
+        memcpy(list_aux,list[index_aux -1],255);
+        memcpy(list[index_aux-1],list[index_aux],255);
+        memcpy(list[index_aux],list_aux,255);
+        index_aux --;
+        if(!index_aux) break;
+    }
+    free(list_aux);
+    
 }
 
