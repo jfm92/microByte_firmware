@@ -13,6 +13,8 @@
 #include "battery.h"
 #include "system_manager.h"
 
+#include "math.h"
+
 /**********************
  *      VARIABLES
  **********************/
@@ -59,7 +61,6 @@ uint8_t battery_get_percentage(){
 }
 
 void batteryTask(void *arg){
-    
     while(1){
 
         uint32_t adc_reading = 0;
@@ -74,7 +75,17 @@ void batteryTask(void *arg){
 
         voltage += 1310; //Add 1000 mV to offset the value obtained from the voltage divider
         battery_status.voltage = voltage;
-        battery_status.percentage = (voltage*100-300000)/((416400-300000)/100);
+
+        //To avoid lost of precision, first we calculate the percentage in float.
+        float percentage_aux = (voltage-3570.6)/5.2128;
+        //Explanation of this weird thing:
+        // The curve from this point (3576 mV) is not lineal so, to avoid split the curve and
+        // add a new polinomic function I've follow the ugly/lazy path, it's 1% all the time.
+        if(battery_status.voltage < 3576)  percentage_aux = 1.00;
+        battery_status.percentage = (uint8_t)percentage_aux;
+
+        //When you're charging the battery, the percentage can higher than 100%
+        if(battery_status.percentage > 100) battery_status.percentage = 100;
 
         if(!game_mode_active){
             // If we're playing, we don't need the battery info. We only need the an alert if we're on very low percentage
@@ -95,6 +106,7 @@ void batteryTask(void *arg){
 
             battery_alert = true; //The alert was done, it's not necessay to do it again 
         }
+        else if(battery_status.percentage>10 && battery_alert == true) battery_alert = false;
 
         vTaskDelay(1000 / portTICK_RATE_MS);
     }
