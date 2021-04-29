@@ -3,7 +3,7 @@
 # project subdirectory.
 #
 
-PROJECT_NAME := micro-gnuboy
+PROJECT_NAME := microByte
 
 
 EXTRA_COMPONENT_DIRS := components/GUI \
