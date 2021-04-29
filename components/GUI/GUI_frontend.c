@@ -307,7 +307,7 @@ static void emulators_game_menu(char * game_name){
 static void on_game_menu(){
     sub_menu = true;
 
-    lv_obj_t * list_on_game = lv_list_create(lv_layer_top(), NULL);
+    list_on_game = lv_list_create(lv_layer_top(), NULL);
     lv_obj_set_size(list_on_game, 240, 240);
     lv_obj_align(list_on_game, NULL, LV_ALIGN_CENTER, 0, 0);
 
@@ -360,6 +360,7 @@ static void external_app_menu(lv_obj_t * parent){
 /* System Configuration main function */
 
 void config_menu(lv_obj_t * parent){
+
     config_btn = lv_btn_create(parent, NULL);
     lv_obj_align(config_btn, NULL, LV_ALIGN_CENTER, -15, -40);
     lv_obj_set_size(config_btn,150,150);
@@ -545,10 +546,6 @@ static void emulators_list_cb(lv_obj_t * parent, lv_event_t e){
         lv_obj_set_size(emulator_NES_btn, 200, 10);
         lv_obj_set_event_cb(emulator_NES_btn, game_list_cb);
 
-        //lv_obj_t * emulator_SNES_btn = lv_list_add_btn(list_emulators_main,  &snes_icon, "SNES");
-        //lv_obj_set_size(emulator_SNES_btn, 200, 10);
-        //lv_obj_set_event_cb(emulator_SNES_btn, game_list_cb);
-
         lv_obj_t * emulator_GB_btn = lv_list_add_btn(list_emulators_main,  &gameboy_icon, "GameBoy");
         lv_obj_set_size(emulator_GB_btn, 200, 20);
         lv_obj_set_event_cb(emulator_GB_btn, game_list_cb);
@@ -589,7 +586,6 @@ static void game_menu_cb(lv_obj_t * parent, lv_event_t e){
         btn_game_new = lv_list_add_btn(list_game_options, LV_SYMBOL_HOME, "New Game");
         lv_obj_set_event_cb(btn_game_new, game_execute_cb);
 
-        //TODO: Check if exist a saved data of the game. If not, don't create the button
         if(sd_sav_exist((char *)lv_list_get_btn_text(parent),emulator_selected)){
             btn_game_resume = lv_list_add_btn(list_game_options, LV_SYMBOL_SAVE, "Resume Game");
             lv_obj_set_event_cb(btn_game_resume, game_execute_cb);
@@ -602,7 +598,7 @@ static void game_menu_cb(lv_obj_t * parent, lv_event_t e){
         lv_group_add_obj(group_interact, list_game_options);
         lv_group_focus_obj(list_game_options);
 
-        //TODO: Get time played
+        //TODO: Get player time
 
 
 
@@ -1204,11 +1200,12 @@ static void GUI_theme_color(uint8_t color_selected){
 /****** External Async functions ***********/
 void async_battery_alert(bool game_mode){
 
-    lv_obj_t * mbox_battery_Alert = lv_msgbox_create(lv_layer_top(), NULL);
+    lv_obj_t * mbox_battery_Alert = lv_msgbox_create(lv_scr_act(), NULL);
     lv_msgbox_set_text(mbox_battery_Alert, "Battery Alert");
 
     lv_obj_t * mbox_battery = lv_label_create(mbox_battery_Alert, NULL);
-    lv_label_set_text(mbox_battery,"The battery level is below 5%\n The device will turn off.");
+    lv_label_set_text(mbox_battery,"Battery level below 10%");
+    lv_obj_align(mbox_battery, NULL, LV_ALIGN_CENTER, -50, 0);
 
     static const char * btns[] = {"Ok", "", ""};
     lv_msgbox_add_btns(mbox_battery_Alert, btns);
@@ -1242,11 +1239,18 @@ static void battery_status_task(lv_task_t * task){
         }
         else{
             lv_obj_set_hidden(Charging_label,true);
-            char battery_level[4];
-            sprintf(battery_level,"%i",management.percentage);
-
-            lv_label_set_text(battery_label, battery_level);
-            lv_bar_set_value(battery_bar, management.percentage, NULL);
+            if(management.percentage == 1){
+                lv_label_set_text(battery_label, LV_SYMBOL_WARNING);
+                lv_bar_set_value(battery_bar, 100, NULL);
+            }
+            else{
+                 char *battery_level = malloc(4); 
+                sprintf(battery_level,"%i",management.percentage);
+                lv_label_set_text(battery_label, battery_level);
+                lv_bar_set_value(battery_bar, management.percentage, NULL);
+                free(battery_level);
+            }
+            lv_obj_align(battery_label, NULL, LV_ALIGN_CENTER, 0, 0);
 
             // If the battery is equal or less than the 25% the bar change to red, otherwise the bar is green.
             if(management.percentage <= 25){
@@ -1255,6 +1259,8 @@ static void battery_status_task(lv_task_t * task){
             else{
                 lv_obj_set_style_local_bg_color(battery_bar, LV_BAR_PART_INDIC, LV_STATE_DEFAULT, lv_color_hex(0x0CC62D));
             }
+
+            
         }  
     }
 }
