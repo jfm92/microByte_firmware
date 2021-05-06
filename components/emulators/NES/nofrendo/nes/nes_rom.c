@@ -330,6 +330,7 @@ static int rom_getheader(FILE *fp, rominfo_t *rominfo)
 
    rominfo->rom_banks = head.rom_banks;
    rominfo->vrom_banks = head.vrom_banks;
+   if(!rominfo->vrom_banks) rominfo->vrom_banks = 1; //This solve a bug with the on game menu, if no vrom mem is allocated it doesn't work.
    /* iNES assumptions */
    rominfo->sram_banks = 8; /* 1kB banks, so 8KB */
    rominfo->vram_banks = 1; /* 8kB banks, so 8KB */
@@ -403,7 +404,6 @@ char *rom_getinfo(rominfo_t *rominfo)
    sprintf(temp, " [%d] %dk/%dk %c", rominfo->mapper_number,
            rominfo->rom_banks * 16, rominfo->vrom_banks * 8,
            (rominfo->mirror == MIRROR_VERT) ? 'V' : 'H');
-
    /* Stick it on there! */
    strncat(info, temp, PATH_MAX - strlen(info));
 
