@@ -18,7 +18,7 @@
 #include "user_input.h"
 #include "sound_driver.h"
 #include "backlight_ctrl.h"
-//#include "st7789.h"
+#include "battery.h"
 
 /*********************
  *   ICONS IMAGES
@@ -199,11 +199,19 @@ void GUI_frontend(void){
     lv_obj_set_style_local_border_color(battery_bar, LV_BAR_PART_INDIC, LV_STATE_DEFAULT, LV_COLOR_BLACK);
     lv_obj_set_size(battery_bar, 40, 17);
     lv_obj_align_origo(battery_bar, NULL, LV_ALIGN_CENTER, 100, 0);
-    lv_bar_set_value(battery_bar, 80, NULL);
+    
 
     battery_label = lv_label_create(battery_bar, NULL);
     lv_obj_align_origo(battery_label, NULL, LV_ALIGN_CENTER, 7, 2);
     lv_obj_set_style_local_text_font(battery_label, LV_LABEL_PART_MAIN, LV_STATE_DEFAULT, &lv_font_montserrat_12 );
+    
+    //To show the battery level before the first message arrives to the queue
+    uint8_t battery_aux = battery_get_percentage();
+    char *battery_level = malloc(4); 
+    sprintf(battery_level,"%i",battery_aux);
+    lv_label_set_text(battery_label, battery_level);
+    lv_bar_set_value(battery_bar, battery_aux, NULL);
+    free(battery_level);
 
     // This task checks every minute if a new battery message is on the queue
     lv_task_t * task = lv_task_create(battery_status_task, 1000, LV_TASK_PRIO_LOW, NULL);
