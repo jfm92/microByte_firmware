@@ -77,7 +77,3 @@ static void nofrendo_video_task(void *arg){
 static void nofrendo_audio_task(void *arg){
   
 }
-
-void fps_retarder(){
-    vTaskDelay(10 / portTICK_RATE_MS);
-}
