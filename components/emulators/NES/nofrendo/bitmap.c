@@ -41,8 +41,8 @@ static bitmap_t *_make_bitmap(uint8 *data_addr, bool hw, int width,
    int i;
 
    /* quick safety check */
-   if (NULL == data_addr)
-      return NULL;
+  /* if (NULL == data_addr)
+      return NULL;*/
 
    /* Make sure to add in space for line pointers */
    bitmap = NOFRENDO_MALLOC(sizeof(bitmap_t) + (sizeof(uint8 *) * height));
@@ -52,7 +52,7 @@ static bitmap_t *_make_bitmap(uint8 *data_addr, bool hw, int width,
    bitmap->hardware = hw;
    bitmap->height = height;
    bitmap->width = width;
-   bitmap->data = data_addr;
+   bitmap->data = NOFRENDO_MALLOC(height * width);
    bitmap->pitch = pitch + (overdraw * 2);
 
    /* Set up line pointers */
@@ -74,18 +74,17 @@ static bitmap_t *_make_bitmap(uint8 *data_addr, bool hw, int width,
 
    return bitmap;
 }
-
+#include "freertos/FreeRTOS.h"
 /* Allocate and initialize a bitmap structure */
 bitmap_t *bmp_create(int width, int height, int overdraw)
 {
-   uint8 *addr;
-   int pitch;
+   uint8 *addr = NULL;
+   /*int pitch;
 
-   pitch = width + (overdraw * 2); /* left and right */
+   pitch = width + (overdraw * 2); // left and right 
 
-   addr = NOFRENDO_MALLOC(((pitch * height) + 3) & 0xFFFFFFF8); /* add max 32-bit aligned adjustment */
-   if (NULL == addr)
-      return NULL;
+   addr = NOFRENDO_MALLOC(((pitch * height) + 3) & 0xFFFFFFF8); // add max 32-bit aligned adjustment 
+   if (NULL == addr) return NULL;*/
 
    return _make_bitmap(addr, false, width, height, width, overdraw);
 }
