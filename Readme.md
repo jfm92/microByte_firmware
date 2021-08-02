@@ -60,7 +60,7 @@ Create workspace folder.
 To have the possibility of managing these files directly from Windows interface I recommend placing the workspace folder on the mounted folder.
 
 ```console
-mkidr /mnt/c/Users/<user_name>/Documents/esp-ws
+mkdir /mnt/c/Users/<user_name>/Documents/esp-ws
 cd /mnt/c/Users/<user_name>/Documents/esp-ws
 ```
 
@@ -83,7 +83,7 @@ Note: Each time you open a new terminal you need to reinstall the ESP-IDF, but t
 ### Linux
 
 ```console
-mkidr ~/esp-ws
+mkdir ~/esp-ws
 cd ~/esp-ws
 ```
 
