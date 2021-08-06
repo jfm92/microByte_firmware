@@ -505,7 +505,7 @@ static void game_list_cb(lv_obj_t * parent, lv_event_t e){
             lv_obj_del(container_header_game_icon);
 
             lv_obj_t * mbox = lv_msgbox_create(lv_layer_top(), NULL);
-            lv_msgbox_set_text(mbox, "Oops! Any game available.");
+            lv_msgbox_set_text(mbox, "Oops! No games available.");
             lv_obj_set_event_cb(mbox, msgbox_no_game_cb);
             lv_group_add_obj(group_interact, mbox);
             lv_group_focus_obj(mbox);
@@ -831,7 +831,7 @@ static void external_app_cb(lv_obj_t * parent, lv_event_t e){
             //TODO: Repair where it focus this message once is close
             //Show a message
             lv_obj_t * mbox = lv_msgbox_create(lv_layer_top(), NULL);
-            lv_msgbox_set_text(mbox, "Any app available.");
+            lv_msgbox_set_text(mbox, "No apps available.");
             lv_obj_set_event_cb(mbox, msgbox_no_game_cb);
             lv_group_add_obj(group_interact, mbox);
             lv_group_focus_obj(mbox);
