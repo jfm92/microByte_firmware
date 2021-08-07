@@ -4,7 +4,7 @@
 #
 
 PROJECT_NAME := microByte
-
+PROJECT_VER  := 0.83
 
 EXTRA_COMPONENT_DIRS := components/GUI \
 						components/drivers/system_configuration \
