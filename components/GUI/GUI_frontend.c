@@ -515,8 +515,8 @@ static void game_list_cb(lv_obj_t * parent, lv_event_t e){
             lv_img_set_src(nogame_image, &nogame_icon);
             lv_obj_align(nogame_image, mbox, LV_ALIGN_CENTER, 0, 0);
 
-            static const char * btns[] = {"Ok", "", ""};
-            lv_msgbox_add_btns(mbox, btns);
+            //static const char * btns[] = {"Ok", "", ""};
+            //lv_msgbox_add_btns(mbox, btns);
             lv_obj_align(mbox, NULL, LV_ALIGN_CENTER, 0, 0);
 
             lv_obj_set_style_local_bg_opa(lv_layer_top(), LV_OBJ_PART_MAIN, LV_STATE_DEFAULT, LV_OPA_70);
@@ -534,10 +534,11 @@ static void game_list_cb(lv_obj_t * parent, lv_event_t e){
 
 static void msgbox_no_game_cb(lv_obj_t * msgbox, lv_event_t e){
     // Delete the message of no games
-    if(e == LV_EVENT_CLICKED) {
+    if(e == LV_EVENT_CANCEL) {
+        sub_menu = false;
         lv_obj_del(msgbox);
+        lv_group_focus_obj(btn_emulator_lib);
         lv_obj_reset_style_list(lv_layer_top(), LV_OBJ_PART_MAIN);
-        lv_obj_set_click(lv_layer_top(), false);
     }
 }
 
