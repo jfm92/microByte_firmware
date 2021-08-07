@@ -213,6 +213,11 @@ uint8_t sd_app_list(char *app_list[100],bool update){
     DIR *dir = NULL;
     if(update) dir =  opendir("/sdcard");
     else dir =  opendir("/sdcard/apps");
+
+    if (!dir) {
+        ESP_LOGE(TAG, "Failed to stat dir ");
+        return 0;
+    }
     
     // Only find .bin file on the apps folder
     uint8_t i =0;
