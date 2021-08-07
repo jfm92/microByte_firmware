@@ -962,7 +962,7 @@ static void config_option_cb(lv_obj_t * parent, lv_event_t e){
 
             lv_obj_t * label_fw_version = lv_label_create(mbox_about, NULL);
             aux_text = malloc(256); 
-            sprintf(aux_text,"%s",app_version);
+            sprintf(aux_text,"v%s",app_version);
             lv_label_set_text(label_fw_version,aux_text);
             free(aux_text);
 
