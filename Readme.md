@@ -66,9 +66,9 @@ cd /mnt/c/Users/<user_name>/Documents/esp-ws
 
 This give you access to the workspace throught the Documents folder of Windows.
 
-Download ESP-IDF version 4.1.
+Download ESP-IDF version 4.3.
 ```console
-git clone https://github.com/espressif/esp-idf -b v4.1
+git clone https://github.com/espressif/esp-idf -b v4.3
 ```
 
 Install the ESP-IDF
@@ -88,9 +88,9 @@ cd ~/esp-ws
 ```
 
 
-Download ESP-IDF version 4.1.
+Download ESP-IDF version 4.3.
 ```console
-git clone https://github.com/espressif/esp-idf -b v4.1
+git clone https://github.com/espressif/esp-idf -b v4.3
 ```
 
 Install the ESP-IDF
@@ -116,8 +116,10 @@ git clone https://github.com/jfm92/microByte_firmware --recursive
 To build type the next commands:
 ```console
 cd microByte_firmware
-make -j4
+idf.py build
 ```
+(The newest Espressif builder use idf.py to compile.)
+
 
 The build process could take a few minutes. If everything goes fine it should return the next output:
 
